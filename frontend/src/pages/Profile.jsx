@@ -38,7 +38,7 @@ export default function Profile({ showToast }) {
     setError('');
     const email = normalizeEmail(form.email);
     if (email && !isValidComEmail(email)) {
-      setError('أدخل بريدًا إلكترونيًا صحيحًا ينتهي بـ .com.');
+      setError('أدخل بريدًا إلكترونيًا صحيحًا.');
       return;
     }
     setSaving(true);
@@ -116,7 +116,7 @@ export default function Profile({ showToast }) {
             />
           </label>
           <label className="block text-xs text-slate-400">
-            البريد الإلكتروني (.com) (اختياري)
+            البريد الإلكتروني (اختياري)
             <input
               type="email"
               autoComplete="email"

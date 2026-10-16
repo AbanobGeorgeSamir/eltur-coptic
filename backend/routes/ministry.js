@@ -31,10 +31,43 @@ const receiveMediaUpload = multer({
     limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 0, parts: 1 },
 }).single('file');
 const postTypes = new Set(['bible', 'psalm', 'agpeya', 'sunday_lesson', 'liturgy', 'newsletter', 'gallery', 'trip']);
+const liturgyWeekdayOrder = ['saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+const cairoWeekdayTime = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Africa/Cairo',
+    weekday: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+});
 const objectId = (value) => mongoose.isValidObjectId(value);
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const isGlobalAdmin = (user) => user?.role === 'admin';
 const isAdmin = (user) => isGlobalAdmin(user) || isGradeAdminRole(user?.role);
+const isPermanentLiturgy = (post) => post.liturgyType === 'permanent' || (!post.liturgyType && !post.eventAt);
+const nextLiturgyOffsetMinutes = (post, now) => {
+    if (isPermanentLiturgy(post)) {
+        const parts = Object.fromEntries(cairoWeekdayTime.formatToParts(now)
+            .map(({ type, value }) => [type, value]));
+        const currentDay = liturgyWeekdayOrder.indexOf(parts.weekday.toLowerCase());
+        const targetDay = liturgyWeekdayOrder.indexOf(post.dayOfWeek || 'friday');
+        if (currentDay < 0 || targetDay < 0) return Number.POSITIVE_INFINITY;
+
+        const currentMinute = Number(parts.hour) * 60 + Number(parts.minute);
+        const startMatch = /^(?:([01]\d|2[0-3])):([0-5]\d)$/.exec(post.startTime || '00:00');
+        const startMinute = startMatch ? Number(startMatch[1]) * 60 + Number(startMatch[2]) : 0;
+        const endMatch = /^(?:([01]\d|2[0-3])):([0-5]\d)$/.exec(post.endTime || '');
+        const endMinute = endMatch ? Number(endMatch[1]) * 60 + Number(endMatch[2]) : -1;
+        let daysAhead = (targetDay - currentDay + liturgyWeekdayOrder.length) % liturgyWeekdayOrder.length;
+        if (daysAhead === 0 && startMinute < currentMinute) {
+            if (endMinute > currentMinute) return 0;
+            daysAhead = liturgyWeekdayOrder.length;
+        }
+        return daysAhead * 24 * 60 + startMinute - currentMinute;
+    }
+
+    const eventTime = new Date(post.startAt || post.eventAt || '').getTime();
+    return Number.isFinite(eventTime) ? (eventTime - now.getTime()) / 60_000 : Number.POSITIVE_INFINITY;
+};
 const productionMediaApiOrigin = 'https://eltur-coptic-api-server.vercel.app';
 const requestOrigin = (req) => {
     const configured = String(process.env.PUBLIC_API_URL || '').trim();
@@ -493,7 +526,7 @@ router.post('/administrators', auth, async (req, res, next) => {
         }
         if (name.length < 7 || name.length > 160 || !username || username.length > 160
             || !validPhone(phone) || (email && !validEmail(email)) || password.length < 8 || password.length > 256) {
-            return res.status(422).json({ message: 'Enter a name (7–160 characters), an international phone number such as +201001234567, an optional .com email, and a password of 8–256 characters.' });
+            return res.status(422).json({ message: 'Enter a name (7–160 characters), an international phone number such as +201001234567, a valid optional email, and a password of 8–256 characters.' });
         }
         const admin = await User.create({
             name, username, ...(email ? { email } : {}), phone, password: await hashPassword(password),
@@ -758,19 +791,40 @@ router.get('/students/unassigned', auth, adminOnly, async (req, res, next) => {
 });
 
 router.post('/students/:id/reject', auth, adminOnly, async (req, res, next) => {
+    let session;
+    let deletedStudentId = '';
     try {
+        session = await mongoose.startSession();
         if (!objectId(req.params.id)) return res.status(404).json({ message: 'Student not found.' });
-        const student = await User.findOneAndUpdate(
-            { _id: req.params.id, ...pendingStudentScope(req.user), assignedAdmin: null },
-            { $set: { isActive: false, rejectedAt: new Date(), rejectedBy: req.user._id } },
-            { returnDocument: 'after' },
-        );
-        if (!student) {
+        await session.withTransaction(async () => {
+            const student = await User.findOne({
+                _id: req.params.id,
+                ...pendingStudentScope(req.user),
+                assignedAdmin: null,
+            }).select('_id').session(session);
+            if (!student) return;
+
+            const userId = student._id;
+            await Attendance.deleteMany({ student: userId }, { session });
+            await Confession.deleteMany({ student: userId }, { session });
+            await Task.deleteMany({ student: userId }, { session });
+            await Task.updateMany({ assignToGroup: true }, { $pull: { completions: { student: userId } } }, { session });
+            await PrayerChecklist.deleteMany({ student: userId }, { session });
+            await QuizAttempt.deleteMany({ student: userId }, { session });
+            await TripRegistration.deleteMany({ student: userId }, { session });
+            await MinistryPost.updateMany({ assignedStudents: userId }, { $pull: { assignedStudents: userId } }, { session });
+            await User.updateMany({ parentApprovedStudentIds: userId }, { $pull: { parentApprovedStudentIds: userId } }, { session });
+            await User.deleteOne({ _id: userId }, { session });
+            deletedStudentId = String(userId);
+        });
+        if (!deletedStudentId) {
             return res.status(409).json({ message: 'This student is already assigned, rejected, or outside your management scope.' });
         }
-        return res.json({ message: 'Student registration rejected and archived.', id: String(student._id) });
+        return res.json({ message: 'Student registration rejected and the account with its personal records was deleted.', id: deletedStudentId });
     } catch (error) {
         return next(error);
+    } finally {
+        if (session) await session.endSession();
     }
 });
 
@@ -828,7 +882,7 @@ router.patch('/students/:id', auth, adminOnly, async (req, res, next) => {
                 ? req.body.email.trim().toLowerCase()
                 : req.body.email == null ? '' : String(req.body.email).trim().toLowerCase();
         if (email !== undefined && !validEmail(email)) {
-            return res.status(422).json({ message: 'Email must be a valid address without spaces and end in .com.' });
+            return res.status(422).json({ message: 'Email must be a valid address without spaces.' });
         }
         if (email !== undefined) student.email = email || undefined;
         if (req.body?.interests !== undefined) {
@@ -986,7 +1040,17 @@ router.get('/ministry/posts', auth, async (req, res, next) => {
         }
         const filter = { published: true };
         if (type) filter.type = type;
-        if (upcomingOnly) filter.eventAt = { $gte: new Date() };
+        if (upcomingOnly) {
+            const now = new Date();
+            filter.$and = [{
+                $or: [
+                    { liturgyType: 'permanent' },
+                    { liturgyType: { $exists: false }, eventAt: { $exists: false } },
+                    { liturgyType: 'temporary', eventAt: { $gte: now } },
+                    { liturgyType: { $exists: false }, eventAt: { $gte: now } },
+                ],
+            }];
+        }
         if (isAdmin(req.user)) {
             if (type === 'trip') delete filter.published;
             if (type === 'liturgy' && includeUnpublished) delete filter.published;
@@ -1009,14 +1073,16 @@ router.get('/ministry/posts', auth, async (req, res, next) => {
                 : [req.user];
             const studentIds = students.map((student) => student._id);
             if (type === 'trip') {
-                filter.$and = [{
+                filter.$and ||= [];
+                filter.$and.push({
                     $or: [
                         { $and: [{ assignToGroup: { $ne: false } }, audienceForStudents(students)] },
                         { assignedStudents: { $in: studentIds } },
                     ],
-                }];
+                });
             } else {
-                filter.$and = [audienceForStudents(students)];
+                filter.$and ||= [];
+                filter.$and.push(audienceForStudents(students));
             }
         }
         if (type === 'liturgy' && !includeUnpublished) {
@@ -1035,7 +1101,9 @@ router.get('/ministry/posts', auth, async (req, res, next) => {
         let postsQuery = MinistryPost.find(filter).sort(upcomingOnly
             ? { eventAt: 1, _id: 1 }
             : { createdAt: -1, _id: -1 });
-        if (paginationRequested) {
+        if (upcomingOnly) {
+            postsQuery = postsQuery.limit(200);
+        } else if (paginationRequested) {
             postsQuery = postsQuery.skip((page - 1) * limit).limit(limit + 1);
         } else if (!(isAdmin(req.user) && type === 'trip')) {
             postsQuery = postsQuery.limit(200);
@@ -1047,9 +1115,13 @@ router.get('/ministry/posts', auth, async (req, res, next) => {
         }) : results;
         if (!paginationRequested) return res.json({ data: normalizedResults });
 
-        const hasMore = normalizedResults.length > limit;
+        const orderedResults = upcomingOnly
+            ? normalizedResults.sort((a, b) => nextLiturgyOffsetMinutes(a, new Date()) - nextLiturgyOffsetMinutes(b, new Date()))
+            : normalizedResults;
+        const startIndex = upcomingOnly ? (page - 1) * limit : 0;
+        const hasMore = orderedResults.length > startIndex + limit;
         return res.json({
-            data: normalizedResults.slice(0, limit),
+            data: orderedResults.slice(startIndex, startIndex + limit),
             pagination: { page, limit, hasMore },
         });
     } catch (error) {

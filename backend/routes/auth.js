@@ -217,7 +217,7 @@ router.patch('/users/me', auth, async (req, res, next) => {
                 ? changes.email.trim().toLowerCase()
                 : changes.email == null ? '' : String(changes.email).trim().toLowerCase();
             if (!validEmail(changes.email)) {
-                return res.status(422).json({ message: 'Please enter a valid email address ending in .com.' });
+                return res.status(422).json({ message: 'Please enter a valid email address.' });
             }
             if (!changes.email) delete changes.email;
         }

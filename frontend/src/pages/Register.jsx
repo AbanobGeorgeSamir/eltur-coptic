@@ -50,7 +50,7 @@ export default function Register() {
       return;
     }
     if (form.email.trim() && !isValidComEmail(form.email)) {
-      setError('أدخل بريداً إلكترونياً بلا مسافات وينتهي بـ .com.');
+      setError('أدخل بريداً إلكترونياً صحيحاً بلا مسافات.');
       return;
     }
     if (!form.interests.trim()) {

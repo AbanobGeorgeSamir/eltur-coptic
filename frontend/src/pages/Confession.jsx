@@ -113,15 +113,15 @@ export default function Confession({ showToast }) {
       {error && <p role="alert" className="text-sm text-rose-300">{error}</p>}
       {!records.length && !error && <p className="rounded-2xl bg-slate-900 p-5 text-slate-400">لا توجد سجلات اعتراف محفوظة.</p>}
       {isAdmin ? <>
-        <div className="grid gap-3 sm:hidden">
+        <div className="grid gap-4 sm:hidden">
           {students.map((student) => {
             const record = latestByStudent.get(String(student.id));
-            return <article key={student.id} className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+            return <article key={student.id} className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0"><h2 className="break-words font-bold text-white">{student.name}</h2><p className="mt-1 text-xs text-slate-400">آخر موعد اعتراف</p></div>
                 {record && <button type="button" onClick={() => startEdit(record)} className="min-h-10 shrink-0 rounded-xl border border-amber-500/30 px-3 text-xs font-bold text-amber-300">تعديل</button>}
               </div>
-              <p className="mt-3 rounded-xl bg-slate-950/60 p-3 text-sm font-semibold text-slate-200">{record ? new Date(record.date).toLocaleDateString('ar-EG') : 'لم يسجل بعد'}</p>
+              <p className="mt-4 rounded-xl bg-slate-950/60 p-3 text-sm font-semibold text-slate-200">{record ? new Date(record.date).toLocaleDateString('ar-EG') : 'لم يسجل بعد'}</p>
               {record?.note && <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-400">{record.note}</p>}
             </article>;
           })}

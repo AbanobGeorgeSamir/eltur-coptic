@@ -5,6 +5,7 @@ import PostMedia from './PostMedia';
 import { useAuth } from '../contexts/useAuth';
 import GradeScopeFields from './GradeScopeFields';
 import { uploadMediaFile } from '../utils/uploadMediaFile';
+import { compareUpcomingLiturgies, isPermanentLiturgy } from '../utils/liturgySchedule';
 
 const cairoDateTimeParts = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'Africa/Cairo',
@@ -53,9 +54,6 @@ const cairoDateTime = (value) => {
   }).format(date);
 };
 
-const liturgyWeekdayOrder = ['saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
-const isPermanentLiturgy = (post) => post.liturgyType === 'permanent' || (!post.liturgyType && !post.eventAt);
-
 const emptyForm = (type) => ({
   type,
   title: '',
@@ -73,11 +71,7 @@ const emptyForm = (type) => ({
 const sortPosts = (items, isSchedule, now) => items.slice().sort((a, b) => {
   if (isSchedule) {
     if (isPermanentLiturgy(a) && isPermanentLiturgy(b)) {
-      const aDay = liturgyWeekdayOrder.indexOf(a.dayOfWeek);
-      const bDay = liturgyWeekdayOrder.indexOf(b.dayOfWeek);
-      const dayDifference = (aDay < 0 ? liturgyWeekdayOrder.length : aDay)
-        - (bDay < 0 ? liturgyWeekdayOrder.length : bDay);
-      return dayDifference || String(a.startTime || '').localeCompare(String(b.startTime || ''));
+      return compareUpcomingLiturgies(a, b, new Date(now));
     }
     const aTime = a.eventAt ? new Date(a.eventAt).getTime() : Number.POSITIVE_INFINITY;
     const bTime = b.eventAt ? new Date(b.eventAt).getTime() : Number.POSITIVE_INFINITY;
@@ -400,7 +394,7 @@ export default function AdminPostManager({ type, title, description, showToast }
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="font-bold text-white">{isGallery ? 'الصور المنشورة' : 'القداديس المسجلة'}</h2>
+          <h2 className="font-bold text-white">{isGallery ? 'الصور المنشورة' : 'القداسات المسجلة'}</h2>
           <div className="flex items-center gap-2">
             {isSchedule && <button type="button" onClick={() => void load(true)} disabled={loading} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-amber-400/40 disabled:opacity-50">
               <RefreshCw aria-hidden="true" className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />تحديث القائمة

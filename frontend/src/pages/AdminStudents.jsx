@@ -77,14 +77,14 @@ export default function AdminStudents() {
     }
   };
   const reject = async (student) => {
-    const confirmed = window.confirm(`هل تريد رفض تسجيل ${student.name || 'هذا الطالب'}؟ سيُؤرشف الحساب ولن يظهر ضمن الطلاب النشطين.`);
+    const confirmed = window.confirm(`هل تريد رفض تسجيل ${student.name || 'هذا الطالب'}؟ سيُحذف الحساب وسجلاته المرتبطة نهائيًا.`);
     if (!confirmed) return;
     setError('');
     setNotice('');
     setRejectingId(student.id);
     try {
       await api.rejectStudent(student.id);
-      setNotice('تم رفض تسجيل الطالب وأرشفة الحساب.');
+      setNotice('تم رفض تسجيل الطالب وحذف الحساب وسجلاته المرتبطة.');
       await refresh();
     } catch (requestError) {
       setError(requestError.message);
@@ -205,7 +205,7 @@ export default function AdminStudents() {
             {editingId === student.id && draft && <form onSubmit={saveStudent} className="mt-4 space-y-3 border-t border-slate-800 pt-4">
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
-                  ['name', 'الاسم رباعي', 'text'], ['email', 'البريد الإلكتروني (.com) (اختياري)', 'email'],
+                  ['name', 'الاسم رباعي', 'text'], ['email', 'البريد الإلكتروني (اختياري)', 'email'],
                   ['phone', 'هاتف الطالب', 'tel'], ['fatherName', 'اسم الأب', 'text'],
                   ['confessionFather', 'أب الاعتراف', 'text'], ['guardianPhone', 'هاتف ولي الأمر', 'tel'],
                   ['whatsappNumber', 'رقم واتساب', 'tel'], ['address', 'العنوان', 'text'],

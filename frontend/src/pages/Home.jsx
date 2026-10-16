@@ -7,6 +7,7 @@ import PostMedia from '../components/PostMedia';
 import FeaturedVerseCard from '../components/FeaturedVerseCard';
 import ChurchDate from '../components/ChurchDate';
 import { formatAttendanceCount, formatAttendancePercentage } from '../services/attendance';
+import { cairoWeekdayLabels, compareUpcomingLiturgies, isPermanentLiturgy } from '../utils/liturgySchedule';
 import tawadrosImage from '../images/saints/tawadros.jpeg';
 import apolloImage from '../images/saints/apollo.jpeg';
 import { isAdminRole } from '../data/grades';
@@ -29,8 +30,8 @@ const dateLabel = (value, withTime = false) => {
 };
 
 const selectUpcomingLiturgies = (items) => items
-  .filter((item) => item.eventAt && new Date(item.eventAt) >= new Date())
-  .sort((a, b) => new Date(a.eventAt) - new Date(b.eventAt))
+  .filter((item) => isPermanentLiturgy(item) || (item.eventAt && new Date(item.eventAt) >= new Date()))
+  .sort(compareUpcomingLiturgies)
   .slice(0, 2);
 
 function SectionTitle({ title, description, to, action = 'عرض الكل' }) {
@@ -189,7 +190,7 @@ export default function Home() {
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {posts.liturgies.map((post) => <article key={post._id} className="flex gap-3 rounded-2xl border border-amber-500/20 bg-slate-900 p-4 sm:p-5">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-400/10 text-amber-300"><CalendarDays className="h-5 w-5" /></span>
-            <div><h3 className="font-bold text-white">{post.title}</h3><p className="mt-1 text-sm font-semibold text-amber-300">{dateLabel(post.eventAt, String(post.eventAt).includes('T'))}</p>{post.body && <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-400">{post.body}</p>}</div>
+            <div><h3 className="font-bold text-white">{post.title}</h3><p className="mt-1 text-sm font-semibold text-amber-300">{isPermanentLiturgy(post) ? `${cairoWeekdayLabels[post.dayOfWeek] || 'الجمعة'} · ${post.startTime || ''}` : dateLabel(post.startAt || post.eventAt, String(post.startAt || post.eventAt).includes('T'))}</p>{post.body && <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-400">{post.body}</p>}</div>
           </article>)}
         </div>
       </section>

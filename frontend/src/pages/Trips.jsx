@@ -34,6 +34,7 @@ export default function Trips({ showToast }) {
   const [file, setFile] = useState(null);
   const [audience, setAudience] = useState({ grade: '', meetingGroup: '' });
   const [paymentDrafts, setPaymentDrafts] = useState({});
+  const [savingPaymentId, setSavingPaymentId] = useState('');
   const [deletingRegistrationId, setDeletingRegistrationId] = useState('');
   const [deletingTripId, setDeletingTripId] = useState('');
   const [error, setError] = useState('');
@@ -113,12 +114,26 @@ export default function Trips({ showToast }) {
 
   const savePayment = async (registration) => {
     setError('');
+    const draft = String(paymentDrafts[registration._id] ?? registration.amountPaid ?? '').trim();
+    const amountPaid = Number(draft);
+    if (!draft || !Number.isFinite(amountPaid) || amountPaid < 0 || amountPaid > Number(registration.amountDue || 0)) {
+      setError('أدخل مبلغًا صحيحًا لا يتجاوز قيمة الرحلة.');
+      return;
+    }
+    setSavingPaymentId(registration._id);
     try {
-      await api.updateTripPayment(registration._id, Number(paymentDrafts[registration._id] ?? registration.amountPaid));
+      await api.updateTripPayment(registration._id, amountPaid);
+      setPaymentDrafts((current) => {
+        const next = { ...current };
+        delete next[registration._id];
+        return next;
+      });
       await load();
       showToast('تم تحديث المبلغ المدفوع');
     } catch (requestError) {
       setError(requestError.message);
+    } finally {
+      setSavingPaymentId('');
     }
   };
 
@@ -381,8 +396,8 @@ export default function Trips({ showToast }) {
             <div className="min-w-0"><h3 className="break-words font-bold text-white">{registration.student?.name || 'طالب'} · {registration.trip?.title || 'رحلة'}</h3><p className="mt-1 text-sm text-slate-400">{registration.student?.phone || '—'} · المستحق: {money(due)} · المدفوع: {money(paid)} · المتبقي: {money(due - paid)}</p></div>
             {isAdmin && <div className="flex flex-wrap gap-2">
               <form className="flex flex-wrap gap-2" onSubmit={(event) => { event.preventDefault(); savePayment(registration); }}>
-                <input aria-label="المبلغ المدفوع" type="number" min="0" max={due} step="0.01" value={paymentDrafts[registration._id] ?? paid} onChange={(event) => setPaymentDrafts((current) => ({ ...current, [registration._id]: event.target.value }))} className="min-h-10 w-32 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-white" />
-                <button className="min-h-10 rounded-lg border border-amber-400/40 px-3 text-sm font-bold text-amber-200">حفظ التحصيل</button>
+                <input aria-label="المبلغ المدفوع" type="number" min="0" max={due} step="0.01" disabled={savingPaymentId === registration._id} value={paymentDrafts[registration._id] ?? paid} onChange={(event) => setPaymentDrafts((current) => ({ ...current, [registration._id]: event.target.value }))} className="min-h-10 w-32 rounded-lg border border-slate-700 bg-slate-800 px-3 text-sm text-white disabled:opacity-60" />
+                <button disabled={savingPaymentId === registration._id} className="min-h-10 rounded-lg border border-amber-400/40 px-3 text-sm font-bold text-amber-200 disabled:opacity-60">{savingPaymentId === registration._id ? 'جارٍ الحفظ...' : 'حفظ التحصيل'}</button>
               </form>
               <button
                 type="button"
