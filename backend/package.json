@@ -1,0 +1,30 @@
+{
+  "name": "eltor-coptic-backend",
+  "version": "1.0.0",
+  "description": "Eltor Coptic Sunday school and church service API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "check:db": "node scripts/check-mongodb.js",
+    "make-admin": "node scripts/make-admin.js",
+    "check": "node --check server.js && node --check scripts/check-mongodb.js && node --check middleware/authMiddleware.js && node --check middleware/adminMiddleware.js && node --check middleware/rateLimit.js && node --check config/db.js && node --check config/grades.js && node --check models/User.js && node --check models/MeetingGroup.js && node --check models/Attendance.js && node --check models/Confession.js && node --check models/MinistryPost.js && node --check models/PhotoAsset.js && node --check models/Task.js && node --check models/Quiz.js && node --check models/QuizAttempt.js && node --check models/FeaturedVerse.js && node --check routes/auth.js && node --check routes/ministry.js && node --check utils/passwords.js && node --check utils/responses.js && node --check utils/validation.js && node --check scripts/make-admin.js",
+    "test": "npm run check && node --test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "dependencies": {
+    "compression": "^1.8.2",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.8",
+    "express": "^5.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.11.2",
+    "multer": "^2.4.0"
+  }
+}
