@@ -588,6 +588,65 @@ router.patch('/administrators/:id', auth, async (req, res, next) => {
     }
 });
 
+router.delete('/administrators/:id', auth, async (req, res, next) => {
+    if (!isGlobalAdmin(req.user)) return res.status(403).json({ message: 'Public administrator access required.' });
+    if (!objectId(req.params.id)) return res.status(404).json({ message: 'Administrator not found.' });
+
+    let session;
+    let removedAdministratorId = '';
+    let removalError = '';
+    try {
+        session = await mongoose.startSession();
+        await session.withTransaction(async () => {
+            const administrator = await User.findOne({
+                _id: req.params.id,
+                role: { $in: ['admin', ...gradeAdminRoles] },
+            }).session(session);
+            if (!administrator) return;
+            if (String(administrator._id) === String(req.user._id)) {
+                removalError = 'You cannot delete your own administrator account.';
+                return;
+            }
+            if (administrator.role === 'admin' && administrator.isActive !== false) {
+                const activeGlobalAdmins = await User.countDocuments({ role: 'admin', isActive: { $ne: false } }).session(session);
+                if (activeGlobalAdmins <= 1) {
+                    removalError = 'The last active global administrator cannot be deleted.';
+                    return;
+                }
+            }
+
+            const administratorId = administrator._id;
+            const replacementAdminId = req.user._id;
+            await Attendance.updateMany({ admin: administratorId }, { $set: { admin: replacementAdminId } }, { session });
+            await Confession.updateMany({ admin: administratorId }, { $set: { admin: replacementAdminId } }, { session });
+            await MinistryPost.updateMany({ admin: administratorId }, { $set: { admin: replacementAdminId } }, { session });
+            await Task.updateMany({ admin: administratorId }, { $set: { admin: replacementAdminId } }, { session });
+            await PrayerChecklist.updateMany({ admin: administratorId }, { $set: { admin: replacementAdminId } }, { session });
+            await Quiz.updateMany({ admin: administratorId }, { $set: { admin: replacementAdminId } }, { session });
+            await TripRegistration.updateMany({ admin: administratorId }, { $set: { admin: replacementAdminId } }, { session });
+            await MeetingGroup.updateMany({ createdBy: administratorId }, { $set: { createdBy: replacementAdminId } }, { session });
+            await FeaturedVerse.updateMany({ updatedBy: administratorId }, { $set: { updatedBy: replacementAdminId } }, { session });
+            await PhotoAsset.updateMany({ owner: administratorId }, { $set: { owner: replacementAdminId } }, { session });
+            await User.updateMany({ assignedAdmin: administratorId }, { $set: { assignedAdmin: null } }, { session });
+            await User.updateMany({ rejectedBy: administratorId }, { $set: { rejectedBy: replacementAdminId } }, { session });
+            await User.updateMany({ parentApprovedStudentIds: administratorId }, { $pull: { parentApprovedStudentIds: administratorId } }, { session });
+            const result = await User.deleteOne({ _id: administratorId }, { session });
+            if (result.deletedCount) removedAdministratorId = String(administratorId);
+        });
+
+        if (removalError) return res.status(409).json({ message: removalError });
+        if (!removedAdministratorId) return res.status(404).json({ message: 'Administrator not found.' });
+        return res.json({
+            message: 'Administrator account deleted. Existing administrative records were retained.',
+            id: removedAdministratorId,
+        });
+    } catch (error) {
+        return next(error);
+    } finally {
+        if (session) await session.endSession();
+    }
+});
+
 router.get('/maintenance/expire-liturgies', async (req, res, next) => {
     if (!cronAuthorized(req)) return res.status(401).json({ message: 'Unauthorized.' });
     try {

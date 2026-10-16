@@ -45,7 +45,7 @@ export default function Login() {
         <button disabled={loading} className="min-h-12 w-full rounded-xl bg-amber-400 px-5 py-3 font-extrabold text-slate-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60">
           {loading ? 'جارٍ تسجيل الدخول...' : 'تسجيل الدخول'}
         </button>
-        <p className="mt-5 text-center text-sm text-slate-400">ليس لديك حساب؟ <Link to="/register" className="font-bold text-amber-300 underline-offset-4 hover:underline">إنشاء حساب مخدوم</Link></p>
+        <p className="mt-5 text-center text-sm text-slate-400">ليس لديك حساب؟ <Link to="/register" className="font-bold text-amber-300 underline-offset-4 hover:underline">إنشاء حساب</Link></p>
         <p className="mt-6 border-t border-white/[0.08] pt-4 text-center text-xs text-slate-500"><Link to="/privacy" className="underline decoration-white/20 underline-offset-4 hover:text-slate-300">سياسة الخصوصية</Link></p>
       </form>
     </main>

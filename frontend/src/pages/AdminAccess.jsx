@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FolderOpen } from 'lucide-react';
+import { FolderOpen, Trash2 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/useAuth';
 import { grades, gradeLabel } from '../data/grades';
@@ -162,6 +162,19 @@ export default function AdminAccess() {
     finally { setSaving(false); }
   };
 
+  const deleteAdmin = async (admin) => {
+    if (!admin?.id || admin.id === user?.id) return;
+    const confirmed = window.confirm(`سيُحذف حساب «${admin.name}» من قاعدة البيانات. ستُنقل سجلاته الإدارية إلى حسابك، وستعود حسابات الطلاب المعيّنة إليه إلى قائمة غير المعيّنين. لا يمكن التراجع. متابعة؟`);
+    if (!confirmed) return;
+    setError(''); setNotice(''); setSaving(true);
+    try {
+      await api.deleteAdministrator(admin.id);
+      setNotice('تم حذف حساب المسؤول مع الاحتفاظ بسجلاته الإدارية.');
+      await loadAdmins();
+    } catch (requestError) { setError(requestError.message); }
+    finally { setSaving(false); }
+  };
+
   const mergeGroups = async (event) => {
     event.preventDefault();
     const source = meetingGroups.find((group) => group.id === mergeSourceId && group.isActive);
@@ -295,7 +308,10 @@ export default function AdminAccess() {
                 <label className="text-xs text-slate-400 sm:col-span-2">الاجتماع (فارغ = المرحلة كاملة)<AdminGroupSelect grade={draft.grade} value={draft.meetingGroup} onChange={(value) => updateAdminDraft(admin.id, 'meetingGroup', value)} /></label>
               </>}
               <label className="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" checked={draft.isActive !== false} onChange={(event) => updateAdminDraft(admin.id, 'isActive', event.target.checked)} />الحساب مفعّل</label>
-              <button type="button" disabled={saving} onClick={() => void saveAdmin(admin.id)} className="min-h-10 rounded-lg border border-amber-400/30 px-4 text-xs font-bold text-amber-200 disabled:opacity-50">حفظ الصلاحيات</button>
+              <div className="flex flex-wrap gap-2 sm:col-span-4">
+                <button type="button" disabled={saving} onClick={() => void saveAdmin(admin.id)} className="min-h-10 rounded-lg border border-amber-400/30 px-4 text-xs font-bold text-amber-200 disabled:opacity-50">حفظ الصلاحيات</button>
+                <button type="button" disabled={saving || admin.id === user?.id} onClick={() => void deleteAdmin(admin)} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-rose-400/30 px-4 text-xs font-bold text-rose-200 disabled:opacity-50" aria-label={`حذف حساب ${admin.name}`}><Trash2 aria-hidden="true" className="h-4 w-4" />حذف المسؤول</button>
+              </div>
             </div>
           </article>;
         })}

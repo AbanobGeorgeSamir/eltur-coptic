@@ -65,6 +65,7 @@ export const api = {
   })),
   createAdministrator: (payload) => request('/administrators', { method: 'POST', body: payload }),
   updateAdministrator: (id, payload) => request(`/administrators/${encodeURIComponent(id)}`, { method: 'PATCH', body: payload }),
+  deleteAdministrator: (id) => request(`/administrators/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   logout: () => request('/auth/logout', { method: 'POST', body: {}, timeoutMs: 5000 }),
   updateProfile: (payload) => request('/users/me', { method: 'PATCH', body: payload }),
   deleteAccount: (password) => request('/users/me', { method: 'DELETE', body: { password } }),
