@@ -8,7 +8,9 @@ export default function AdminStudents() {
   const [students, setStudents] = useState([]);
   const [pendingParents, setPendingParents] = useState([]);
   const [approvingParent, setApprovingParent] = useState('');
+  const [rejectingId, setRejectingId] = useState('');
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [query, setQuery] = useState('');
   const [editingId, setEditingId] = useState('');
   const [draft, setDraft] = useState(null);
@@ -62,6 +64,22 @@ export default function AdminStudents() {
       await refresh();
     } catch (requestError) {
       setError(requestError.message);
+    }
+  };
+  const reject = async (student) => {
+    const confirmed = window.confirm(`هل تريد رفض تسجيل ${student.name || 'هذا الطالب'}؟ سيُؤرشف الحساب ولن يظهر ضمن الطلاب النشطين.`);
+    if (!confirmed) return;
+    setError('');
+    setNotice('');
+    setRejectingId(student.id);
+    try {
+      await api.rejectStudent(student.id);
+      setNotice('تم رفض تسجيل الطالب وأرشفة الحساب.');
+      await refresh();
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setRejectingId('');
     }
   };
   const approveParent = async (parentId, studentId) => {
@@ -126,6 +144,7 @@ export default function AdminStudents() {
         <input value={query} onChange={(event) => setQuery(event.target.value)} type="search" placeholder="ابحث عن طالب أو رقم واتساب" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white placeholder:text-slate-500" />
       </label>
       {error && <p role="alert" className="text-sm text-rose-300">{error}</p>}
+      {notice && <p role="status" className="text-sm text-emerald-300">{notice}</p>}
       {pendingParents.length > 0 && <section aria-labelledby="parent-approval-title" className="space-y-3 rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-4 sm:p-5">
         <div><h2 id="parent-approval-title" className="font-bold text-white">طلبات ربط أولياء الأمور</h2><p className="mt-1 text-sm leading-6 text-slate-400">تأكد من هوية ولي الأمر خارج التطبيق قبل منح الوصول إلى بيانات الطالب.</p></div>
         <div className="grid gap-2 sm:grid-cols-2">{pendingParents.map((item) => {
@@ -156,7 +175,10 @@ export default function AdminStudents() {
               <span>واتساب:</span><span dir="ltr" className="font-mono">{student.whatsappNumber}</span>
               <a className="text-xs hover:underline" href={`https://wa.me/${student.whatsappNumber.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">فتح المحادثة</a>
             </div>}
-            {!student.assignedAdmin && <button type="button" onClick={() => void assign(student.id)} className="mt-4 ml-2 min-h-10 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950">ضمّ للمجموعة</button>}
+            {!student.assignedAdmin && <div role="group" aria-label="إجراءات الطالب غير المعيّن" className="mt-4 flex flex-wrap gap-2">
+              <button type="button" disabled={Boolean(rejectingId)} onClick={() => void assign(student.id)} className="min-h-10 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950 disabled:cursor-wait disabled:opacity-50">ضمّ للمجموعة</button>
+              <button type="button" disabled={Boolean(rejectingId)} onClick={() => void reject(student)} className="min-h-10 rounded-xl border border-rose-400/40 bg-rose-400/10 px-4 py-2 text-sm font-bold text-rose-200 hover:bg-rose-400/20 disabled:cursor-wait disabled:opacity-50">{rejectingId === student.id ? 'جارٍ الرفض...' : 'رفض'}</button>
+            </div>}
             <button type="button" onClick={() => editingId === student.id ? (setEditingId(''), setDraft(null)) : edit(student)} className="mt-4 min-h-10 rounded-xl border border-amber-400/40 px-4 py-2 text-sm font-bold text-amber-200 hover:bg-amber-400/10">
               {editingId === student.id ? 'إلغاء التعديل' : 'تعديل بيانات الطالب'}
             </button>
