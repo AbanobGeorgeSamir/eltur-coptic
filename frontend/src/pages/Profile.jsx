@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/useAuth';
@@ -18,7 +18,6 @@ const initialForm = (user) => ({
   address: user?.address || '',
   isDeacon: Boolean(user?.isDeacon),
   grade: user?.grade || '',
-  meetingGroup: user?.meetingGroup || '',
 });
 
 export default function Profile({ showToast }) {
@@ -28,27 +27,11 @@ export default function Profile({ showToast }) {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [pictureFailed, setPictureFailed] = useState(false);
-  const [meetingGroups, setMeetingGroups] = useState([]);
-  const [groupsLoading, setGroupsLoading] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
   const update = (key, value) => setForm((old) => ({ ...old, [key]: value }));
-
-  useEffect(() => {
-    let active = true;
-    if (user?.role !== 'student' || user.grade || !form.grade) {
-      setMeetingGroups([]);
-      return () => { active = false; };
-    }
-    setGroupsLoading(true);
-    api.meetingGroups(form.grade)
-      .then((groups) => { if (active) setMeetingGroups(groups); })
-      .catch((requestError) => { if (active) setError(requestError.message); })
-      .finally(() => { if (active) setGroupsLoading(false); });
-    return () => { active = false; };
-  }, [user?.role, user?.grade, form.grade]);
 
   const save = async (event) => {
     event.preventDefault();
@@ -66,7 +49,6 @@ export default function Profile({ showToast }) {
       };
       if (user?.role !== 'student' || user.grade) {
         delete profilePayload.grade;
-        delete profilePayload.meetingGroup;
       }
       const result = await api.updateProfile(profilePayload);
       updateUser(result.user);
@@ -152,17 +134,11 @@ export default function Profile({ showToast }) {
           />
           {user?.role === 'student' && !user.grade && <>
             <label className="block text-xs text-slate-400">المرحلة الدراسية (تُحدد مرة واحدة)
-              <select required value={form.grade} onChange={(event) => setForm((old) => ({ ...old, grade: event.target.value, meetingGroup: '' }))} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-800 p-2.5 text-sm text-white">
+              <select required value={form.grade} onChange={(event) => setForm((old) => ({ ...old, grade: event.target.value }))} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-800 p-2.5 text-sm text-white">
                 <option value="">اختر المرحلة</option>
                 {grades.map((grade) => <option key={grade.id} value={grade.id}>{grade.label}</option>)}
               </select>
             </label>
-            {meetingGroups.length > 0 && <label className="block text-xs text-slate-400">الاجتماع الفرعي
-              <select required value={form.meetingGroup} disabled={groupsLoading} onChange={(event) => update('meetingGroup', event.target.value)} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-800 p-2.5 text-sm text-white disabled:opacity-60">
-                <option value="">{groupsLoading ? 'جارٍ تحميل الاجتماعات...' : 'اختر الاجتماع'}</option>
-                {meetingGroups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
-              </select>
-            </label>}
           </>}
           <label className="block text-xs text-slate-400">
             اسم الأب

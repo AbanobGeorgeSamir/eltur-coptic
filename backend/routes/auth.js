@@ -1,5 +1,4 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Attendance = require('../models/Attendance');
@@ -8,8 +7,7 @@ const Task = require('../models/Task');
 const PrayerChecklist = require('../models/PrayerChecklist');
 const QuizAttempt = require('../models/QuizAttempt');
 const TripRegistration = require('../models/TripRegistration');
-const MeetingGroup = require('../models/MeetingGroup');
-const { gradeIds, gradeAdminRoles, isGradeAdminRole } = require('../config/grades');
+const { gradeIds, isGradeAdminRole } = require('../config/grades');
 const { hashPassword, verifyPassword, needsRehash } = require('../utils/passwords');
 const { sanitizeUser } = require('../utils/responses');
 const auth = require('../middleware/authMiddleware');
@@ -94,29 +92,6 @@ const completeRegistration = async (req, res, role) => {
         if (!child) return res.status(404).json({ message: 'No student is registered with this guardian phone.' });
     }
 
-    let meetingGroup = null;
-    let assignedAdmin = null;
-    if (role === 'student') {
-        const activeGroups = await MeetingGroup.countDocuments({ grade: input.grade, isActive: true });
-        if (activeGroups && !input.meetingGroup) {
-            return res.status(422).json({ message: 'Choose the meeting group for your grade.' });
-        }
-        if (input.meetingGroup) {
-            if (!mongoose.isValidObjectId(input.meetingGroup)) {
-                return res.status(422).json({ message: 'Choose a valid meeting group.' });
-            }
-            meetingGroup = await MeetingGroup.findOne({ _id: input.meetingGroup, grade: input.grade, isActive: true }).select('_id').lean();
-            if (!meetingGroup) return res.status(422).json({ message: 'That meeting group is unavailable for the selected grade.' });
-            meetingGroup = meetingGroup._id;
-        }
-        const admins = await User.find({ role: { $in: gradeAdminRoles }, grade: input.grade, isActive: true })
-            .select('_id meetingGroup')
-            .lean();
-        assignedAdmin = admins.find((admin) => String(admin.meetingGroup || '') === String(meetingGroup || ''))?._id
-            || admins.find((admin) => !admin.meetingGroup)?._id
-            || null;
-    }
-
     try {
         const user = await User.create({
             name: input.name,
@@ -126,7 +101,7 @@ const completeRegistration = async (req, res, role) => {
             interests: input.interests,
             password: await hashPassword(input.password),
             role,
-            ...(role === 'student' ? { grade: input.grade, meetingGroup, assignedAdmin } : {}),
+            ...(role === 'student' ? { grade: input.grade, meetingGroup: null, assignedAdmin: null } : {}),
             ...(role === 'student' ? {
                 fatherName: input.fatherName,
                 confessionFather: input.confessionFather,
@@ -232,23 +207,10 @@ router.patch('/users/me', auth, async (req, res, next) => {
                 return res.status(403).json({ message: 'The study grade can only be selected once by a student account without an assigned grade.' });
             }
             const grade = String(req.body?.grade || '');
-            const meetingGroupId = String(req.body?.meetingGroup || '');
             if (!gradeIds.has(grade)) return res.status(422).json({ message: 'Choose a valid study grade.' });
-            let meetingGroup = null;
-            if (meetingGroupId) {
-                if (!mongoose.isValidObjectId(meetingGroupId)) return res.status(422).json({ message: 'Choose a valid meeting group.' });
-                meetingGroup = await MeetingGroup.findOne({ _id: meetingGroupId, grade, isActive: true }).select('_id').lean();
-                if (!meetingGroup) return res.status(422).json({ message: 'The selected meeting group does not belong to that grade.' });
-            }
-            if (!meetingGroupId && await MeetingGroup.exists({ grade, isActive: true })) {
-                return res.status(422).json({ message: 'Choose an active meeting group for your study grade.' });
-            }
             changes.grade = grade;
-            changes.meetingGroup = meetingGroup?._id || null;
-            const admins = await User.find({ role: { $in: gradeAdminRoles }, grade, isActive: true }).select('_id meetingGroup').lean();
-            changes.assignedAdmin = admins.find((admin) => String(admin.meetingGroup || '') === String(changes.meetingGroup || ''))?._id
-                || admins.find((admin) => !admin.meetingGroup)?._id
-                || null;
+            changes.meetingGroup = null;
+            changes.assignedAdmin = null;
         }
         if (changes.email !== undefined) {
             changes.email = typeof changes.email === 'string'

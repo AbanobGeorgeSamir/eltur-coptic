@@ -100,7 +100,7 @@ export const api = {
   unassignedStudents: () => request('/students/unassigned').then((res) => res.data || []),
   pendingParents: () => request('/parents/pending').then((res) => res.data || []),
   approveParent: (id, studentId) => request(`/parents/${encodeURIComponent(id)}/approve`, { method: 'POST', body: { studentId } }),
-  assignStudent: (id) => request(`/students/${encodeURIComponent(id)}/assign`, { method: 'POST', body: {} }),
+  assignStudent: (id, meetingGroup = '') => request(`/students/${encodeURIComponent(id)}/assign`, { method: 'POST', body: { meetingGroup } }),
   rejectStudent: (id) => request(`/students/${encodeURIComponent(id)}/reject`, { method: 'POST', body: {} }),
   updateStudent: (id, payload) => request(`/students/${encodeURIComponent(id)}`, { method: 'PATCH', body: payload }),
   tasks: () => request('/tasks').then((res) => res.data || []),

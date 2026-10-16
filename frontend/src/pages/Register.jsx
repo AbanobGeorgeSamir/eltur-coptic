@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/useAuth';
@@ -15,10 +15,7 @@ const fields = [
   ['address', 'العنوان', 'text'], ['birthDate', 'تاريخ الميلاد', 'date'], ['nationalId', 'الرقم القومي (14 رقم)', 'text'],
 ];
 export default function Register() {
-  const [form, setForm] = useState({ name: '', username: '', email: '', phone: '', password: '', fatherName: '', confessionFather: '', guardianPhone: '', address: '', interests: '', birthDate: '', nationalId: '', gender: 'male', grade: '', meetingGroup: '', privacyAccepted: false });
-  const [meetingGroups, setMeetingGroups] = useState([]);
-  const [groupsLoading, setGroupsLoading] = useState(false);
-  const [groupsError, setGroupsError] = useState('');
+  const [form, setForm] = useState({ name: '', username: '', email: '', phone: '', password: '', fatherName: '', confessionFather: '', guardianPhone: '', address: '', interests: '', birthDate: '', nationalId: '', gender: 'male', grade: '', privacyAccepted: false });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const fatherNameManuallyEdited = useRef(false);
@@ -45,22 +42,6 @@ export default function Register() {
     });
   };
 
-  useEffect(() => {
-    let active = true;
-    if (!form.grade) {
-      setMeetingGroups([]);
-      setGroupsError('');
-      return () => { active = false; };
-    }
-    setGroupsLoading(true);
-    setGroupsError('');
-    api.meetingGroups(form.grade)
-      .then((groups) => { if (active) setMeetingGroups(groups); })
-      .catch((requestError) => { if (active) setGroupsError(requestError.message); })
-      .finally(() => { if (active) setGroupsLoading(false); });
-    return () => { active = false; };
-  }, [form.grade]);
-
   const submit = async (event) => {
     event.preventDefault();
     setError('');
@@ -82,14 +63,6 @@ export default function Register() {
     }
     if (!form.grade) {
       setError('يرجى اختيار المرحلة الدراسية أو الاجتماع.');
-      return;
-    }
-    if (meetingGroups.length && !form.meetingGroup) {
-      setError('يرجى اختيار الاجتماع التابع لمرحلتك.');
-      return;
-    }
-    if (groupsLoading || groupsError) {
-      setError(groupsLoading ? 'انتظر حتى يتم تحميل اجتماعات المرحلة.' : `تعذر تحميل الاجتماعات: ${groupsError}`);
       return;
     }
     if (!form.privacyAccepted) {
@@ -118,20 +91,12 @@ export default function Register() {
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="text-sm text-slate-300">المرحلة الدراسية
-            <select required value={form.grade} onChange={(event) => setForm((current) => ({ ...current, grade: event.target.value, meetingGroup: '' }))} className="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-white focus:border-amber-400 focus:outline-none">
+            <select required value={form.grade} onChange={(event) => setForm((current) => ({ ...current, grade: event.target.value }))} className="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-white focus:border-amber-400 focus:outline-none">
               <option value="">اختر المرحلة</option>
               {grades.map((grade) => <option key={grade.id} value={grade.id}>{grade.label}</option>)}
             </select>
-            <span className="mt-1 block text-xs leading-5 text-slate-500">ستُحفظ المرحلة في حسابك لعرض محتوى مجموعتك فقط.</span>
-            {form.grade && groupsLoading && <span role="status" className="mt-1 block text-xs text-slate-400">جارٍ تحميل الاجتماعات المتاحة…</span>}
-            {groupsError && <span role="alert" className="mt-1 block text-xs text-rose-300">تعذر تحميل الاجتماعات: {groupsError}</span>}
+            <span className="mt-1 block text-xs leading-5 text-slate-500">سيظهر طلب التسجيل للأدمن لاختيار المجموعة أو رفض الطلب.</span>
           </label>
-          {form.grade && meetingGroups.length > 0 && <label className="text-sm text-slate-300">الاجتماع
-            <select required value={form.meetingGroup} onChange={(event) => setForm((current) => ({ ...current, meetingGroup: event.target.value }))} disabled={groupsLoading} className="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-white focus:border-amber-400 focus:outline-none disabled:opacity-60">
-              <option value="">{groupsLoading ? 'جارٍ تحميل الاجتماعات...' : 'اختر الاجتماع'}</option>
-              {meetingGroups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
-            </select>
-          </label>}
           {fields.map(([key, label, type]) => (
             <label key={key} className="text-sm text-slate-300">{label}
               <input required={key !== 'email'} type={type} autoComplete={key === 'username' ? 'username' : key === 'email' ? 'email' : key === 'name' ? 'name' : key === 'password' ? 'new-password' : undefined} inputMode={key === 'nationalId' ? 'numeric' : undefined} minLength={key === 'password' ? 8 : key === 'nationalId' ? 14 : undefined} maxLength={key === 'nationalId' ? 14 : key === 'username' ? 64 : undefined}

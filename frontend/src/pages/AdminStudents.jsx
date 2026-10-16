@@ -7,7 +7,9 @@ export default function AdminStudents() {
   const { user } = useAuth();
   const [students, setStudents] = useState([]);
   const [pendingParents, setPendingParents] = useState([]);
+  const [meetingGroups, setMeetingGroups] = useState([]);
   const [approvingParent, setApprovingParent] = useState('');
+  const [assigningId, setAssigningId] = useState('');
   const [rejectingId, setRejectingId] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -18,13 +20,15 @@ export default function AdminStudents() {
   const [loading, setLoading] = useState(true);
   const load = useCallback(async () => {
     try {
-      const [assignedStudents, unassignedStudents, parents] = await Promise.all([
+      const [assignedStudents, unassignedStudents, parents, groups] = await Promise.all([
         api.students(),
         api.unassignedStudents(),
         api.pendingParents(),
+        api.adminMeetingGroups('', false),
       ]);
       setStudents([...new Map([...unassignedStudents, ...assignedStudents].map((student) => [student.id, student])).values()]);
       setPendingParents(parents);
+      setMeetingGroups(groups.filter((group) => group.isActive !== false));
       setError('');
     } catch (requestError) {
       setError(requestError.message);
@@ -56,14 +60,20 @@ export default function AdminStudents() {
     return students.filter((student) => [student.name, student.email, student.phone, student.whatsappNumber]
       .some((value) => String(value || '').toLocaleLowerCase('ar').includes(normalized)));
   }, [students, query]);
+  const pendingCount = visibleStudents.filter((student) => !student.assignedAdmin).length;
 
-  const assign = async (id) => {
+  const assign = async (id, meetingGroup) => {
     setError('');
+    setNotice('');
+    setAssigningId(id);
     try {
-      await api.assignStudent(id);
+      await api.assignStudent(id, meetingGroup);
+      setNotice(meetingGroup ? 'تم ضم الطالب إلى المجموعة.' : 'تم قبول طلب الطالب.');
       await refresh();
     } catch (requestError) {
       setError(requestError.message);
+    } finally {
+      setAssigningId('');
     }
   };
   const reject = async (student) => {
@@ -137,7 +147,7 @@ export default function AdminStudents() {
   return (
     <div className="max-w-5xl mx-auto space-y-5" dir="rtl">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div><h1 className="text-2xl font-bold text-white">الطلاب</h1><p className="text-sm text-slate-400 mt-1">بيانات مجموعتك، مع أسماء الطلاب غير المعيّنين لإضافتهم عند الحاجة.</p></div>
+        <div><h1 className="text-2xl font-bold text-white">الطلاب</h1><p className="text-sm text-slate-400 mt-1">راجع طلبات التسجيل، ثم اضمم كل طالب إلى مجموعة أو ارفض الطلب.</p></div>
         <button type="button" onClick={() => void refresh()} disabled={loading} className="rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 disabled:opacity-50">{loading ? 'جارٍ التحديث…' : 'تحديث القائمة'}</button>
       </div>
       <label className="block text-sm text-slate-300">بحث بالاسم أو البريد أو أرقام التواصل
@@ -159,6 +169,10 @@ export default function AdminStudents() {
       </section>}
       {!error && !loading && students.length === 0 && <p className="bg-slate-900 p-5 rounded-2xl text-slate-400">لا يوجد طلاب مسجلون حاليًا.</p>}
       {!error && !loading && students.length > 0 && visibleStudents.length === 0 && <p className="bg-slate-900 p-5 rounded-2xl text-slate-400">لا توجد نتائج مطابقة للبحث.</p>}
+      {pendingCount > 0 && <section aria-live="polite" className="rounded-2xl border border-amber-400/25 bg-amber-400/[0.05] p-4">
+        <h2 className="font-bold text-amber-200">طلبات تسجيل بانتظار قرار الأدمن ({pendingCount})</h2>
+        <p className="mt-1 text-sm text-slate-400">اختر مجموعة لضم الطالب إليها، أو ارفض طلب التسجيل.</p>
+      </section>}
       <div className="grid sm:grid-cols-2 gap-3">
         {visibleStudents.map((student) => (
           <article key={student.id} className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
@@ -175,10 +189,16 @@ export default function AdminStudents() {
               <span>واتساب:</span><span dir="ltr" className="font-mono">{student.whatsappNumber}</span>
               <a className="text-xs hover:underline" href={`https://wa.me/${student.whatsappNumber.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">فتح المحادثة</a>
             </div>}
-            {!student.assignedAdmin && <div role="group" aria-label="إجراءات الطالب غير المعيّن" className="mt-4 flex flex-wrap gap-2">
-              <button type="button" disabled={Boolean(rejectingId)} onClick={() => void assign(student.id)} className="min-h-10 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950 disabled:cursor-wait disabled:opacity-50">ضمّ للمجموعة</button>
-              <button type="button" disabled={Boolean(rejectingId)} onClick={() => void reject(student)} className="min-h-10 rounded-xl border border-rose-400/40 bg-rose-400/10 px-4 py-2 text-sm font-bold text-rose-200 hover:bg-rose-400/20 disabled:cursor-wait disabled:opacity-50">{rejectingId === student.id ? 'جارٍ الرفض...' : 'رفض'}</button>
-            </div>}
+            {!student.assignedAdmin && <PendingStudentActions
+              student={student}
+              user={user}
+              groups={meetingGroups.filter((group) => group.grade === student.grade)}
+              busy={loading || Boolean(assigningId || rejectingId)}
+              assigning={assigningId === student.id}
+              rejecting={rejectingId === student.id}
+              onAssign={(meetingGroup) => void assign(student.id, meetingGroup)}
+              onReject={() => void reject(student)}
+            />}
             <button type="button" onClick={() => editingId === student.id ? (setEditingId(''), setDraft(null)) : edit(student)} className="mt-4 min-h-10 rounded-xl border border-amber-400/40 px-4 py-2 text-sm font-bold text-amber-200 hover:bg-amber-400/10">
               {editingId === student.id ? 'إلغاء التعديل' : 'تعديل بيانات الطالب'}
             </button>
@@ -240,4 +260,26 @@ function StudentGroupSelector({ user, grade, value, onChange }) {
       {allowedGroups.map((group) => <option key={group.id} value={group.id} disabled={!group.isActive}>{group.name}{group.isActive ? '' : ' (موقوف)'}</option>)}
     </select>
   </label>;
+}
+
+function PendingStudentActions({ student, user, groups, busy, assigning, rejecting, onAssign, onReject }) {
+  const assignedGroup = isGradeAdminRole(user?.role) && user?.meetingGroup
+    && groups.some((group) => group.id === user.meetingGroup)
+    ? user.meetingGroup
+    : '';
+  const [meetingGroup, setMeetingGroup] = useState(assignedGroup);
+  useEffect(() => setMeetingGroup(assignedGroup), [student.id, assignedGroup]);
+
+  return <div className="mt-4 space-y-2">
+    {groups.length > 0 && <label className="block text-xs text-slate-400">المجموعة عند قبول الطلب
+      <select required value={meetingGroup} disabled={busy} onChange={(event) => setMeetingGroup(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-800 p-2.5 text-sm text-white disabled:opacity-60">
+        <option value="">اختر المجموعة</option>
+        {groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
+      </select>
+    </label>}
+    <div role="group" aria-label="إجراءات طلب تسجيل الطالب" className="flex flex-wrap gap-2">
+      <button type="button" disabled={busy || (groups.length > 0 && !meetingGroup)} onClick={() => onAssign(meetingGroup)} className="min-h-10 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950 disabled:cursor-wait disabled:opacity-50">{assigning ? 'جارٍ الضم...' : 'ضمّ للمجموعة'}</button>
+      <button type="button" disabled={busy} onClick={onReject} className="min-h-10 rounded-xl border border-rose-400/40 bg-rose-400/10 px-4 py-2 text-sm font-bold text-rose-200 hover:bg-rose-400/20 disabled:cursor-wait disabled:opacity-50">{rejecting ? 'جارٍ الرفض...' : 'رفض'}</button>
+    </div>
+  </div>;
 }

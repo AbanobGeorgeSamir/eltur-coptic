@@ -111,6 +111,12 @@ const studentScope = (user) => isGlobalAdmin(user) ? { role: 'student', isActive
     isActive: { $ne: false },
     ...adminScope(user),
 };
+const pendingStudentScope = (user) => isGlobalAdmin(user) ? { role: 'student', isActive: { $ne: false } } : {
+    role: 'student',
+    isActive: { $ne: false },
+    grade: user?.grade || '__invalid_grade__',
+    ...(user?.meetingGroup ? { meetingGroup: { $in: [user.meetingGroup, null] } } : {}),
+};
 
 const validAudience = async (user, input = {}) => {
     const requestedGrade = input.grade || null;
@@ -739,7 +745,7 @@ router.get('/students', auth, adminOnly, async (req, res, next) => {
 
 router.get('/students/unassigned', auth, adminOnly, async (req, res, next) => {
     try {
-        const students = await User.find({ ...studentScope(req.user), assignedAdmin: null })
+        const students = await User.find({ ...pendingStudentScope(req.user), assignedAdmin: null })
             .populate('meetingGroup', 'name')
             .select('+nationalId')
             .sort({ createdAt: -1 })
@@ -755,7 +761,7 @@ router.post('/students/:id/reject', auth, adminOnly, async (req, res, next) => {
     try {
         if (!objectId(req.params.id)) return res.status(404).json({ message: 'Student not found.' });
         const student = await User.findOneAndUpdate(
-            { _id: req.params.id, ...studentScope(req.user), assignedAdmin: null },
+            { _id: req.params.id, ...pendingStudentScope(req.user), assignedAdmin: null },
             { $set: { isActive: false, rejectedAt: new Date(), rejectedBy: req.user._id } },
             { returnDocument: 'after' },
         );
@@ -863,13 +869,39 @@ router.patch('/students/:id', auth, adminOnly, async (req, res, next) => {
 router.post('/students/:id/assign', auth, adminOnly, async (req, res, next) => {
     try {
         if (!objectId(req.params.id)) return res.status(404).json({ message: 'Student not found.' });
-        const student = await User.findOneAndUpdate(
-            { _id: req.params.id, ...studentScope(req.user), $or: [{ assignedAdmin: null }, { assignedAdmin: req.user._id }] },
-            { $set: { assignedAdmin: req.user._id } },
-            { returnDocument: 'after' }
-        );
-        if (!student) return res.status(409).json({ message: 'Student is already assigned to another admin or does not exist.' });
-        return res.json({ message: 'Student assigned to your group.', user: sanitizeUser(student) });
+        const student = await User.findOne({
+            _id: req.params.id,
+            ...pendingStudentScope(req.user),
+            assignedAdmin: null,
+        });
+        if (!student) return res.status(409).json({ message: 'This student is already assigned or outside your management scope.' });
+        const grade = String(student.grade || '');
+        if (!gradeIds.has(grade)) return res.status(422).json({ message: 'The student needs a valid study stage before assignment.' });
+
+        let groupId = String(req.body?.meetingGroup || '').trim();
+        if (!groupId && isGradeAdminRole(req.user.role) && req.user.meetingGroup) {
+            groupId = String(req.user.meetingGroup);
+        }
+        let meetingGroup = null;
+        if (groupId) {
+            if (!objectId(groupId)) return res.status(422).json({ message: 'Choose a valid meeting group.' });
+            meetingGroup = await MeetingGroup.findOne({ _id: groupId, grade, isActive: true }).select('_id').lean();
+            if (!meetingGroup) return res.status(422).json({ message: 'Choose an active meeting group for the student stage.' });
+            if (isGradeAdminRole(req.user.role) && req.user.meetingGroup
+                && String(meetingGroup._id) !== String(req.user.meetingGroup)) {
+                return res.status(403).json({ message: 'You can only assign students to your meeting group.' });
+            }
+        } else if (await MeetingGroup.exists({ grade, isActive: true })) {
+            return res.status(422).json({ message: 'Choose an active meeting group before accepting this student.' });
+        }
+
+        student.meetingGroup = meetingGroup?._id || null;
+        student.assignedAdmin = req.user._id;
+        await student.save();
+        return res.json({
+            message: meetingGroup ? 'Student accepted into the selected group.' : 'Student registration accepted.',
+            user: sanitizeUser(student),
+        });
     } catch (error) {
         return next(error);
     }
