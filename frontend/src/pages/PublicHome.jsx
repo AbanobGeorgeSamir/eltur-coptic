@@ -1,21 +1,14 @@
 import { ArrowLeft, BookOpen, CalendarDays, CheckSquare, Heart, Sparkles, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import churchIcon from '../images/kenesa-icon.png';
-import tawadrosImage from '../images/saints/tawadros.jpeg';
-import apolloImage from '../images/saints/apollo.jpeg';
 import ChurchDate from '../components/ChurchDate';
+import FathersSection from '../components/FathersSection';
 
 const features = [
   { icon: BookOpen, title: 'الأجبية والإنجيل', text: 'صلوات وقراءات يومية، مع وصول سريع إلى السفر والإصحاح والآية.' },
   { icon: CheckSquare, title: 'مسيرتك الروحية', text: 'تابع صلواتك ومهامك الأسبوعية بسهولة ومن مكان واحد.' },
   { icon: CalendarDays, title: 'الحياة الكنسية', text: 'اعرف مواعيد القداسات والأنشطة والدروس القادمة.' },
   { icon: Users, title: 'خدمة مترابطة', text: 'مساحة آمنة للطلاب والأسر والخدام لمتابعة الخدمة.' },
-];
-
-const fathers = [
-  { name: 'قداسة البابا تواضروس الثاني', role: 'بابا الإسكندرية وبطريرك الكرازة المرقسية', image: tawadrosImage, wide: false },
-  { name: 'الأنبا أبوللو', role: 'أسقف إيبارشية طور سيناء', image: apolloImage, wide: false },
-  { name: 'تحت رعاية أبائنا الموقرين', role: 'القمص مينا سعد والقس أرسانيوس وجيه', imageAlt: 'الأب مينا سعد والأب أرسانيوس وجيه', image: '/images/Mina%20and%20Arsanius.jpg', wide: true },
 ];
 
 export default function PublicHome() {
@@ -117,29 +110,7 @@ export default function PublicHome() {
         </div>
       </section>
 
-      <section aria-labelledby="fathers-heading" className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
-        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-end">
-          <div>
-            <p className="text-xs font-extrabold tracking-[0.18em] text-amber-300">رعاة الإيبارشية</p>
-            <h2 id="fathers-heading" className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">آباؤنا الأحباء</h2>
-          </div>
-          <p className="max-w-2xl text-sm leading-7 text-slate-400">صلوات قداسة البابا المعظم الأنبا تواضروس الثاني وشريكه في الخدمة الرسولية نيافة الحبر الجليل الأنبا أبوللو أسقف سيناء الجنوبية ورئيس دير موسى النبي</p>
-        </div>
-        <div className="mx-auto mt-7 grid max-w-4xl grid-cols-2 items-stretch gap-3 sm:gap-5">
-          {fathers.map((father) => (
-            <article key={father.name} className={`group flex h-full flex-col ${father.wide ? 'col-span-2' : ''} overflow-hidden rounded-3xl border border-white/[0.08] bg-slate-900 shadow-xl shadow-black/10 transition hover:-translate-y-1 hover:border-amber-300/30`}>
-              <div style={{ aspectRatio: father.wide ? '3 / 1' : '4 / 5' }} className="relative mx-auto w-full shrink-0 overflow-hidden bg-gradient-to-br from-stone-100 to-stone-200">
-                <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(251,191,36,0.17),transparent_65%)]" />
-                <img src={father.image} alt={father.imageAlt ?? father.name} width={father.wide ? 768 : 480} height={father.wide ? 1365 : 600} loading="lazy" decoding="async" style={{ objectPosition: father.wide ? 'center 30%' : 'center top' }} className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300" />
-              </div>
-              <div className="flex min-h-32 flex-1 flex-col items-center justify-center border-t border-white/[0.07] px-3 py-4 text-center sm:min-h-36 sm:px-5">
-                <h3 className={`${father.wide ? '' : 'flex min-h-14 items-center justify-center'} text-sm font-extrabold leading-6 text-amber-200 sm:text-base`}>{father.name}</h3>
-                {father.role && <p className={`${father.wide ? '' : 'min-h-12'} mt-1 text-xs leading-5 text-slate-300 sm:text-sm`}>{father.role}</p>}
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+      <FathersSection className="mx-auto max-w-7xl space-y-3 px-4 py-14 sm:px-6 sm:py-16 lg:px-8" />
 
       <section className="px-4 pb-14 sm:px-6 sm:pb-16 lg:px-8">
         <div className="relative mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 overflow-hidden rounded-[2rem] border border-amber-200/15 bg-gradient-to-br from-amber-400/10 via-slate-900 to-blue-950/60 p-6 sm:flex-row sm:items-center sm:p-9">

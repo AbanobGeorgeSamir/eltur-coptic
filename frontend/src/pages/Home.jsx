@@ -6,10 +6,9 @@ import { useAuth } from '../contexts/useAuth';
 import PostMedia from '../components/PostMedia';
 import FeaturedVerseCard from '../components/FeaturedVerseCard';
 import ChurchDate from '../components/ChurchDate';
+import FathersSection from '../components/FathersSection';
 import { formatAttendanceCount, formatAttendancePercentage } from '../services/attendance';
 import { cairoWeekdayLabels, compareUpcomingLiturgies, isPermanentLiturgy } from '../utils/liturgySchedule';
-import tawadrosImage from '../images/saints/tawadros.jpeg';
-import apolloImage from '../images/saints/apollo.jpeg';
 import { isAdminRole } from '../data/grades';
 
 const studentLinks = [
@@ -195,21 +194,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="space-y-3">
-        <SectionTitle title="آباؤنا الأحباء" description="صلوات قداسة البابا المعظم الأنبا تواضروس الثاني وشريكه في الخدمة الرسولية نيافة الحبر الجليل الأنبا أبوللو أسقف سيناء الجنوبية ورئيس دير موسى النبي" />
-        <div className="mx-auto grid max-w-4xl grid-cols-2 gap-3 sm:gap-4">
-          {[
-            { name: 'قداسة البابا تواضروس الثاني', role: 'بابا الإسكندرية وبطريرك الكرازة المرقسية', image: tawadrosImage, wide: false },
-            { name: 'الأنبا أبوللو', role: 'أسقف إيبارشية طور سيناء', image: apolloImage, wide: false },
-            { name: 'تحت رعاية أبائنا الموقرين', role: 'القمص مينا سعد والقس أرسانيوس وجيه', imageAlt: 'الأب مينا سعد والأب أرسانيوس وجيه', image: '/images/Mina%20and%20Arsanius.jpg', wide: true },
-          ].map((father) => <article key={father.name} className={`${father.wide ? 'col-span-2' : ''} overflow-hidden rounded-2xl border border-amber-500/20 bg-slate-900 shadow-lg shadow-black/10`}>
-            <div style={{ aspectRatio: father.wide ? '3 / 1' : '3 / 2' }} className="relative w-full overflow-hidden bg-stone-100">
-              <img src={father.image} alt={father.imageAlt ?? father.name} width={father.wide ? 768 : 480} height={father.wide ? 1365 : 600} loading="lazy" style={{ objectPosition: father.wide ? 'center 30%' : undefined }} className={`absolute inset-0 h-full w-full ${father.wide ? 'object-cover' : 'object-contain p-2'}`} />
-            </div>
-            <div className="min-h-24 border-t border-amber-500/15 p-3 text-center sm:min-h-28 sm:p-4"><h3 className="text-sm font-bold text-amber-300 sm:text-base">{father.name}</h3><p className="mt-1 text-xs leading-5 text-slate-400">{father.role}</p></div>
-          </article>)}
-        </div>
-      </section>
+      <FathersSection />
 
       <section className="space-y-3">
         <SectionTitle title="آخر الإعلانات" description="تحديثات وأنشطة الخدمة." />
