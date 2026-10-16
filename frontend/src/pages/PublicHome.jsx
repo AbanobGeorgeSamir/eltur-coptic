@@ -32,9 +32,9 @@ export default function PublicHome() {
               <span className="block truncate text-sm font-extrabold sm:text-base">كنيسة موسي النبي ومارمرقس الرسول</span>
             </span>
           </a>
-          <div className="flex shrink-0 items-center gap-2">
-            <Link to="/login" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-white/10 px-3 text-xs font-bold text-white transition hover:border-amber-300/40 hover:bg-white/5 sm:px-4 sm:text-sm">تسجيل الدخول</Link>
-            <Link to="/register" className="inline-flex min-h-10 items-center justify-center rounded-xl bg-amber-400 px-3 text-xs font-extrabold text-slate-950 shadow-md shadow-amber-950/25 transition hover:bg-amber-300 sm:px-4 sm:text-sm">إنشاء حساب</Link>
+          <div className="flex shrink-0 flex-col items-stretch gap-1 sm:flex-row sm:gap-2">
+            <Link to="/login" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/10 px-3 text-xs font-bold text-white transition hover:border-amber-300/40 hover:bg-white/5 sm:min-h-10 sm:px-4 sm:text-sm">تسجيل الدخول</Link>
+            <Link to="/register" className="inline-flex min-h-9 items-center justify-center rounded-xl bg-amber-400 px-3 text-xs font-extrabold text-slate-950 shadow-md shadow-amber-950/25 transition hover:bg-amber-300 sm:min-h-10 sm:px-4 sm:text-sm">إنشاء حساب</Link>
           </div>
         </nav>
       </header>
@@ -53,11 +53,11 @@ export default function PublicHome() {
           <p className="mt-5 max-w-xl text-base leading-8 text-slate-300 sm:text-lg sm:leading-9">
             مساحة تجمع صلواتك وقراءاتك وخدمة مدارس الأحد، وتسهّل على الأسر والخدام متابعة حياة الخدمة اليومية.
           </p>
-          <div className="mt-8 flex flex-col gap-3 xs:flex-row sm:flex-row">
-            <Link to="/login" className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-amber-400 px-6 py-3 text-sm font-extrabold text-slate-950 shadow-lg shadow-amber-950/25 transition hover:-translate-y-0.5 hover:bg-amber-300">
-              ابدأ رحلتك <ArrowLeft aria-hidden="true" className="h-4 w-4 transition group-hover:-translate-x-1" />
+          <div className="mt-8 flex w-full max-w-sm flex-col gap-3">
+            <Link to="/login" className="group inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-amber-400 px-6 py-3 text-sm font-extrabold text-slate-950 shadow-lg shadow-amber-950/25 transition hover:-translate-y-0.5 hover:bg-amber-300">
+              تسجيل الدخول <ArrowLeft aria-hidden="true" className="h-4 w-4 transition group-hover:-translate-x-1" />
             </Link>
-            <Link to="/register" className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.035] px-6 py-3 text-sm font-bold text-white transition hover:border-amber-300/40 hover:bg-white/[0.07]">إنشاء حساب</Link>
+            <Link to="/register" className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-white/15 bg-white/[0.035] px-6 py-3 text-sm font-bold text-white transition hover:border-amber-300/40 hover:bg-white/[0.07]">إنشاء حساب</Link>
           </div>
           <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-slate-400 sm:text-sm">
             <span className="inline-flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />للطلاب</span>
@@ -128,13 +128,13 @@ export default function PublicHome() {
         <div className="mx-auto mt-7 grid max-w-4xl grid-cols-2 items-stretch gap-3 sm:gap-5">
           {fathers.map((father) => (
             <article key={father.name} className={`group flex h-full flex-col ${father.wide ? 'col-span-2' : ''} overflow-hidden rounded-3xl border border-white/[0.08] bg-slate-900 shadow-xl shadow-black/10 transition hover:-translate-y-1 hover:border-amber-300/30`}>
-              <div style={{ aspectRatio: father.wide ? '3 / 1' : '3 / 2' }} className="relative mx-auto w-full shrink-0 overflow-hidden bg-gradient-to-br from-stone-100 to-stone-200">
+              <div style={{ aspectRatio: father.wide ? '3 / 1' : '4 / 5' }} className="relative mx-auto w-full shrink-0 overflow-hidden bg-gradient-to-br from-stone-100 to-stone-200">
                 <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(251,191,36,0.17),transparent_65%)]" />
-                <img src={father.image} alt={father.imageAlt ?? father.name} width={father.wide ? 768 : 480} height={father.wide ? 1365 : 600} loading="lazy" decoding="async" style={{ objectPosition: father.wide ? 'center 30%' : 'center 24%' }} className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300" />
+                <img src={father.image} alt={father.imageAlt ?? father.name} width={father.wide ? 768 : 480} height={father.wide ? 1365 : 600} loading="lazy" decoding="async" style={{ objectPosition: father.wide ? 'center 30%' : 'center top' }} className="absolute inset-0 h-full w-full object-cover transition-opacity duration-300" />
               </div>
-              <div className="flex min-h-28 flex-1 flex-col items-center justify-start border-t border-white/[0.07] px-3 py-4 text-center sm:min-h-32 sm:px-5">
-                <h3 className={`${father.wide ? '' : 'flex min-h-12 items-center justify-center'} text-xs font-extrabold leading-6 text-amber-200 sm:text-base`}>{father.name}</h3>
-                {father.role && <p className={`${father.wide ? '' : 'min-h-10'} mt-1 text-[10px] leading-5 text-slate-400 sm:text-xs`}>{father.role}</p>}
+              <div className="flex min-h-32 flex-1 flex-col items-center justify-center border-t border-white/[0.07] px-3 py-4 text-center sm:min-h-36 sm:px-5">
+                <h3 className={`${father.wide ? '' : 'flex min-h-14 items-center justify-center'} text-sm font-extrabold leading-6 text-amber-200 sm:text-base`}>{father.name}</h3>
+                {father.role && <p className={`${father.wide ? '' : 'min-h-12'} mt-1 text-xs leading-5 text-slate-300 sm:text-sm`}>{father.role}</p>}
               </div>
             </article>
           ))}
