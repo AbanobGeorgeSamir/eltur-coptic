@@ -3,6 +3,14 @@
 **Reviewed:** 2026-10-19  
 **Scope:** repository code, locally available test suites, Git history reachable in this checkout, and the MongoDB connection configured for the backup run. Vercel, Atlas, mobile store, and production log consoles were not available for inspection.
 
+## Dependency refresh follow-up (2026-10-19)
+
+- Node package manifests now require Node.js `24.x`; Vercel supports that LTS line and rolls out patch updates. Dependency checks and npm tests/builds were run with Node **24.21.0**. The workstation's system `node.exe` remains **24.11.0**.
+- `npm outdated` returned no outdated packages in `backend/`, `frontend/`, or `Mobile/backend/`. The frontend `lucide-react` range and lock entry were advanced to **1.59.0**. Backend package versions were already current within their declared ranges.
+- Flutter direct dependencies were current. `flutter pub upgrade --major-versions` updated `shared_preferences_android` to **2.5.0** and `shared_preferences_foundation` to **2.6.0**. Pub still reports newer transitive releases for `cross_file`, `material_color_utilities`, `cli_util`, and `test_api` as unresolvable under the current upstream/Flutter SDK constraints; no dependency overrides were added.
+- Android build tooling is **AGP 9.4.0**, **Gradle 9.7.0**, and **Kotlin Gradle Plugin 2.4.21**. The Android debug APK built successfully with this toolchain.
+- After the refresh, both npm audits reported zero vulnerabilities; backend and frontend tests passed (26 and 4), Flutter tests passed (10), Flutter analysis was clean, and the frontend production build succeeded. Frontend lint completed with existing React hook warnings.
+
 ## Implemented
 
 - **Sessions and authorization:** protected API requests reload the user and role from MongoDB; browser-provided role/permission fields are not authorization inputs. Session versions are checked on requests, and logout increments the version to revoke outstanding sessions. Browser sessions use HttpOnly cookies with production Secure/SameSite settings and CSRF checks. Native clients use platform secure storage. Passwords use salted scrypt. MongoDB queries enforce the applicable grade, meeting-group, owner, and parent-approval scopes; MongoDB does not provide SQL-style row-level security.
@@ -20,7 +28,7 @@
 - `backend`: `npm test` passed, **26 tests**. Additional MongoDB integration checks verified transactional ayah update/inbox delivery, preference opt-out, duplicate replay, student authorization denial, and shared rate limits across two limiter instances (10 accepted, next request HTTP 429).
 - `frontend`: **4 tests passed**; lint completed with existing React hook warnings; production build completed with existing dynamic-import warnings.
 - `Mobile`: **10 Flutter tests passed** and `flutter analyze` reported no issues. The notification screen test confirms tapping an inbox entry opens the updated ayah content.
-- `npm audit --audit-level=high` reported no high/critical vulnerabilities for backend or frontend packages. An OSV batch scan of **112 resolved hosted Pub packages** reported no known vulnerabilities. No dependency lockfile changes were needed.
+- `npm audit --audit-level=high` reported no high/critical vulnerabilities for backend or frontend packages. An OSV batch scan of the refreshed lockfile's **112 resolved hosted Pub packages** reported no known vulnerabilities.
 - History and built-frontend scans found no matching private-key/API-token patterns, Mongo connection strings, or server-only secret names in tracked history or generated frontend assets. These were pattern scans, not credential-provider scans.
 
 ## Remaining risks and follow-up
