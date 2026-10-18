@@ -18,9 +18,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
-  bool _isCheckingServer = true;
-  bool? _serverConnected;
-  String? _serverMessage;
 
   @override
   void initState() {
@@ -29,22 +26,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _checkServerConnection() async {
-    if (mounted) {
-      setState(() {
-        _isCheckingServer = true;
-        _serverMessage = null;
-      });
-    }
     try {
       final health = await ApiService.checkHealth();
-      if (!mounted) return;
-      setState(() {
-        _serverConnected = health['status'] == 'ok';
-        _serverMessage = _serverConnected == true
-            ? 'Connected to the backend.'
-            : 'The backend database is unavailable.';
-      });
-      if (_serverConnected == true &&
+      final serverIsReady = health['status'] == 'ok';
+      if (serverIsReady &&
           AuthService.isLoggedIn &&
           AuthService.token != null) {
         try {
@@ -66,14 +51,8 @@ class _LoginScreenState extends State<LoginScreen> {
           // Leave the login form available if the session cannot be restored.
         }
       }
-    } catch (error) {
-      if (!mounted) return;
-      setState(() {
-        _serverConnected = false;
-        _serverMessage = error.toString().replaceAll('Exception: ', '');
-      });
-    } finally {
-      if (mounted) setState(() => _isCheckingServer = false);
+    } catch (_) {
+      // Keep the login form available when the health check cannot complete.
     }
   }
 
@@ -183,56 +162,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _serverConnected == true
-                                  ? Colors.green.withValues(alpha: 0.08)
-                                  : Colors.red.withValues(alpha: 0.06),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: _serverConnected == true
-                                    ? Colors.green.withValues(alpha: 0.35)
-                                    : Colors.red.withValues(alpha: 0.25),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  _isCheckingServer
-                                      ? Icons.sync
-                                      : _serverConnected == true
-                                      ? Icons.cloud_done_outlined
-                                      : Icons.cloud_off_outlined,
-                                  color: _serverConnected == true
-                                      ? Colors.green.shade700
-                                      : Colors.red.shade700,
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    _isCheckingServer
-                                        ? 'Checking backend connection…'
-                                        : _serverMessage ??
-                                              'Backend connection not checked.',
-                                    style: const TextStyle(fontSize: 13),
-                                    textDirection: TextDirection.ltr,
-                                  ),
-                                ),
-                                IconButton(
-                                  tooltip: 'Check again',
-                                  onPressed: _isCheckingServer
-                                      ? null
-                                      : _checkServerConnection,
-                                  icon: const Icon(Icons.refresh),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
                           TextField(
                             controller: _usernameController,
                             decoration: const InputDecoration(

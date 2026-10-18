@@ -118,7 +118,6 @@ export default function Home() {
           <span className="inline-flex rounded-full border border-amber-400/25 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300">الخدمات الكنسية</span>
           <ChurchDate className="mt-3" />
           <h1 className="mt-4 text-2xl font-extrabold leading-tight text-white sm:text-3xl md:text-4xl">أهلاً بك، {user?.name}</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 md:text-base">مساحتك لمتابعة القراءات والخدمة والأنشطة في كنيسة موسي النبي ومارمرقس الرسول.</p>
           <div className="mt-5 flex flex-wrap gap-2">
             {!isAdminRole(user?.role) && <Link to="/tasks" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-600 bg-slate-950/30 px-4 py-3 text-sm font-semibold text-white transition hover:border-amber-300"><CheckSquare className="h-4 w-4" />تابع مهامك</Link>}
           </div>

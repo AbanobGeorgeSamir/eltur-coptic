@@ -62,7 +62,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (!mounted) return;
       setState(() => _enabled = oldValue);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString().replaceFirst('Exception: ', ''))),
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
       );
     } finally {
       if (mounted) setState(() => _savingPreference = false);
@@ -70,9 +72,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   void _openVerse() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const UpdatedVerseScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const UpdatedVerseScreen()));
   }
 
   @override
@@ -81,10 +83,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Notifications'),
+          title: const Text('الإشعارات'),
           actions: [
             IconButton(
-              tooltip: 'Refresh',
+              tooltip: 'تحديث',
               onPressed: _loading ? null : _load,
               icon: const Icon(Icons.refresh),
             ),
@@ -95,38 +97,48 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           children: [
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Featured ayah updates'),
-              subtitle: const Text('Receive an inbox notice when the shared ayah changes.'),
+              title: const Text('تحديثات الآية للجميع'),
+              subtitle: const Text(
+                'استقبل إشعارًا داخل التطبيق عند تغيير الآية المشتركة.',
+              ),
               value: _enabled,
               onChanged: _savingPreference ? null : _setPreference,
             ),
             const SizedBox(height: 12),
             if (_loading)
-              const Center(child: Padding(
-                padding: EdgeInsets.all(24),
-                child: CircularProgressIndicator(),
-              ))
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: CircularProgressIndicator(),
+                ),
+              )
             else if (_error != null)
               Center(child: Text(_error!))
             else if (!_enabled || _items.isEmpty)
-              const Center(child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text('No ayah update notifications yet.'),
-              ))
-            else
-              ..._items.map((item) => Card(
-                child: ListTile(
-                  leading: const Icon(Icons.menu_book_outlined),
-                  title: Text(item['title']?.toString() ?? 'Featured ayah updated'),
-                  subtitle: Text(
-                    '${item['reference'] ?? ''}\n${item['text'] ?? ''}',
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  isThreeLine: true,
-                  onTap: _openVerse,
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text('لا توجد إشعارات لتحديثات الآية حتى الآن.'),
                 ),
-              )),
+              )
+            else
+              ..._items.map(
+                (item) => Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.menu_book_outlined),
+                    title: Text(
+                      item['title']?.toString() ?? 'تم تحديث الآية للجميع',
+                    ),
+                    subtitle: Text(
+                      '${item['reference'] ?? ''}\n${item['text'] ?? ''}',
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    isThreeLine: true,
+                    onTap: _openVerse,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -173,32 +185,32 @@ class _UpdatedVerseScreenState extends State<UpdatedVerseScreen> {
   Widget build(BuildContext context) => Directionality(
     textDirection: TextDirection.rtl,
     child: Scaffold(
-      appBar: AppBar(title: const Text('Updated featured ayah')),
+      appBar: AppBar(title: const Text('الآية المحدثة للجميع')),
       body: Center(
         child: _loading
             ? const CircularProgressIndicator()
             : _error != null
-                ? Padding(padding: const EdgeInsets.all(24), child: Text(_error!))
-                : _verse == null
-                    ? const Text('No featured ayah is available.')
-                    : Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              _verse!['text']?.toString() ?? '',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.headlineSmall,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              _verse!['reference']?.toString() ?? '',
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
+            ? Padding(padding: const EdgeInsets.all(24), child: Text(_error!))
+            : _verse == null
+            ? const Text('No featured ayah is available.')
+            : Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _verse!['text']?.toString() ?? '',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      _verse!['reference']?.toString() ?? '',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
       ),
     ),
   );

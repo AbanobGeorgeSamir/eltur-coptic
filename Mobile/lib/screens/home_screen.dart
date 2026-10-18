@@ -52,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? _featuredVerse;
   bool _isLoading = true;
   bool _refreshingLiturgies = false;
+  bool _notificationPopupShown = false;
   String? _liturgyError;
   String? _dashboardError;
 
@@ -179,6 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
               : null;
           _isLoading = false;
         });
+        _showNotificationPopup();
       }
     } catch (error) {
       if (mounted) {
@@ -187,6 +189,37 @@ class _HomeScreenState extends State<HomeScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _showNotificationPopup() async {
+    if (_notificationPopupShown) return;
+    _notificationPopupShown = true;
+    try {
+      final notifications = await ApiService.getNotifications();
+      if (!mounted || notifications.isEmpty) return;
+      final latest = notifications.first;
+      final title = latest['title']?.toString().trim();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            title?.isNotEmpty == true
+                ? 'تحديث جديد: $title'
+                : 'لديك تحديث جديد للآية للجميع.',
+          ),
+          duration: const Duration(seconds: 6),
+          action: SnackBarAction(
+            label: 'عرض',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
+          ),
+        ),
+      );
+    } catch (_) {
+      // A missing popup must not block the dashboard from loading.
     }
   }
 
@@ -636,15 +669,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           actions: [
-            IconButton(
-              tooltip: 'Notifications',
-              icon: const Icon(Icons.notifications_outlined),
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-                );
-              },
-            ),
             IconButton(
               icon: const Icon(Icons.person),
               onPressed: () {
@@ -1228,6 +1252,12 @@ class _HomeScreenState extends State<HomeScreen> {
       Icons.campaign_rounded,
       Colors.indigo,
       const NewslettersScreen(),
+    );
+    addPage(
+      'الإشعارات',
+      Icons.notifications_none_rounded,
+      Colors.blueGrey,
+      const NotificationsScreen(),
     );
     addPage(
       'الرحلات والتسجيل',

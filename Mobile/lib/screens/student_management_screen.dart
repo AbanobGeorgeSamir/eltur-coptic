@@ -24,6 +24,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
   String? _error;
   String? _approvingParentKey;
   String? _rejectingStudentId;
+  String? _assigningStudentId;
 
   Future<void> _load() async {
     setState(() {
@@ -65,12 +66,13 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
       error.toString().replaceFirst('Exception: ', '');
 
   Future<void> _assign(UserModel student) async {
+    setState(() => _assigningStudentId = student.id);
     try {
       await ApiService.assignStudent(student.id);
       await _load();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Student added to your group.')),
+          const SnackBar(content: Text('تم قبول الطالب وضمّه بنجاح.')),
         );
       }
     } catch (error) {
@@ -79,6 +81,8 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
           context,
         ).showSnackBar(SnackBar(content: Text(_message(error))));
       }
+    } finally {
+      if (mounted) setState(() => _assigningStudentId = null);
     }
   }
 
@@ -500,12 +504,23 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
               runSpacing: 8,
               children: [
                 if (unassigned) ...[
-                  if (AuthService.currentUser?.role != 'admin')
-                    OutlinedButton.icon(
-                      onPressed: () => _assign(student),
-                      icon: const Icon(Icons.person_add_alt_1),
-                      label: const Text('ضم للمجموعة'),
+                  OutlinedButton.icon(
+                    onPressed: _assigningStudentId == null
+                        ? () => _assign(student)
+                        : null,
+                    icon: _assigningStudentId == student.id
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.person_add_alt_1),
+                    label: Text(
+                      _assigningStudentId == student.id
+                          ? 'جارٍ الضم...'
+                          : 'ضم للمجموعة',
                     ),
+                  ),
                   OutlinedButton.icon(
                     onPressed: _rejectingStudentId == null
                         ? () => _reject(student)

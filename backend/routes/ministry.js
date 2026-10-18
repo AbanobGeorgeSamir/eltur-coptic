@@ -1108,7 +1108,7 @@ router.post('/students/:id/assign', auth, adminOnly, async (req, res, next) => {
                 && String(meetingGroup._id) !== String(req.user.meetingGroup)) {
                 return res.status(403).json({ message: 'You can only assign students to your meeting group.' });
             }
-        } else if (await MeetingGroup.exists({ grade, isActive: true })) {
+        } else if (!isGlobalAdmin(req.user) && await MeetingGroup.exists({ grade, isActive: true })) {
             return res.status(422).json({ message: 'Choose an active meeting group before accepting this student.' });
         }
 

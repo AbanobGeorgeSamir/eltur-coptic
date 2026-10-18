@@ -38,7 +38,9 @@ class ApiService {
     final bytes = List<int>.generate(16, (_) => random.nextInt(256));
     bytes[6] = (bytes[6] & 0x0f) | 0x40;
     bytes[8] = (bytes[8] & 0x3f) | 0x80;
-    final hex = bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+    final hex = bytes
+        .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+        .join();
     return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
   }
 
@@ -284,9 +286,9 @@ class ApiService {
   );
 
   static Future<List<Map<String, dynamic>>> getNotifications() async =>
-      _dataList(await _request('GET', '/notifications'))
-          .map((item) => Map<String, dynamic>.from(item as Map))
-          .toList();
+      _dataList(
+        await _request('GET', '/notifications'),
+      ).map((item) => Map<String, dynamic>.from(item as Map)).toList();
 
   static Future<bool> getVerseUpdatePreference() async {
     final response = await _request('GET', '/notification-preferences');
@@ -470,10 +472,7 @@ class ApiService {
   }
 
   static Future<void> deleteAdministrator(String id) async {
-    await _request(
-      'DELETE',
-      '/administrators/${Uri.encodeComponent(id)}',
-    );
+    await _request('DELETE', '/administrators/${Uri.encodeComponent(id)}');
   }
 
   static Future<List<UserModel>> getUsers({
@@ -564,11 +563,17 @@ class ApiService {
     return UserModel.fromJson(Map<String, dynamic>.from(response['user']));
   }
 
-  static Future<UserModel?> assignStudent(String id) async {
+  static Future<UserModel?> assignStudent(
+    String id, {
+    String? meetingGroup,
+  }) async {
     final response = await _request(
       'POST',
       '/students/${Uri.encodeComponent(id)}/assign',
-      body: const {},
+      body: {
+        if (meetingGroup != null && meetingGroup.isNotEmpty)
+          'meetingGroup': meetingGroup,
+      },
     );
     if (response is! Map || response['user'] is! Map) return null;
     return UserModel.fromJson(Map<String, dynamic>.from(response['user']));

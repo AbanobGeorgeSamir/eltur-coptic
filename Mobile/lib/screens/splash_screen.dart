@@ -128,32 +128,12 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'بوابة الخدمات الكنسية',
+                  'بوابة الكنيسة',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.white70,
                     fontStyle: FontStyle.italic,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentGold.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppTheme.accentGold),
-                  ),
-                  child: const Text(
-                    'الخدمات الكنسية',
-                    style: TextStyle(
-                      color: AppTheme.accentGold,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
                   ),
                 ),
                 const SizedBox(height: 48),
