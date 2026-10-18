@@ -24,8 +24,9 @@ if (process.env.NODE_ENV === 'production' && process.env.JWT_SECRET.length < 32)
 
 app.use(cors({
     origin(origin, callback) {
+        if (!origin) return callback(null, false);
         if (isAllowedOrigin(origin)) {
-            return callback(null, true);
+            return callback(null, origin);
         }
 
         return callback(new Error('Origin is not allowed by CORS.'));
@@ -63,19 +64,20 @@ const ensureDatabaseConnection = async (req, res, next) => {
     }
 };
 
-app.use('/api', apiRateLimit);
 app.use('/api/media', express.json({ limit: '7mb' }));
 app.use('/api', express.json({ limit: '1mb' }));
 app.use('/api', (req, res, next) => {
     const unsafeMethod = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method);
     if (!unsafeMethod || !getSessionCookie(req)) return next();
 
-    if (!isAllowedOrigin(req.get('origin')) || req.get('x-requested-with') !== 'XMLHttpRequest') {
+    const origin = req.get('origin');
+    if ((origin && !isAllowedOrigin(origin)) || req.get('x-requested-with') !== 'XMLHttpRequest') {
         return res.status(403).json({ message: 'تعذر التحقق من مصدر الطلب. أعد تحميل الصفحة وحاول مجدداً.' });
     }
     return next();
 });
 app.use('/api', ensureDatabaseConnection);
+app.use('/api', apiRateLimit);
 app.use('/api', (req, res, next) => {
     res.set('Cache-Control', 'private, no-store');
     res.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
@@ -122,20 +124,24 @@ app.use((error, req, res, next) => {
         console.error('Unhandled request error:', {
             name: error?.name || 'Error',
             method: req.method,
-            path: req.path,
         });
     }
 
+    const safeMessages = {
+        400: error?.name === 'CastError' ? 'The request contains an invalid identifier.' : 'The request is invalid.',
+        401: 'Please sign in again to continue.',
+        403: 'You are not allowed to perform this action.',
+        404: 'The requested resource was not found.',
+        409: 'A record with these unique details already exists.',
+        413: 'The request is too large.',
+        422: 'The submitted data is invalid.',
+        429: 'Too many requests. Wait a while and try again.',
+        503: 'The service is temporarily unavailable. Please try again shortly.',
+    };
     return res.status(statusCode).json({
         message: statusCode >= 500
             ? 'An unexpected server error occurred.'
-            : statusCode === 422
-                ? 'The submitted data is invalid.'
-                : statusCode === 409
-                    ? 'A record with these unique details already exists.'
-                    : statusCode === 400 && error?.name === 'CastError'
-                        ? 'The request contains an invalid identifier.'
-                        : error.message
+            : safeMessages[statusCode] || 'The request could not be completed.',
     });
 });
 
@@ -159,8 +165,8 @@ const startServer = async () => {
 };
 
 if (require.main === module) {
-    startServer().catch((error) => {
-        console.error('Unable to start backend:', error.message);
+    startServer().catch(() => {
+        console.error('Unable to start backend. Review server configuration and database availability.');
         process.exit(1);
     });
 }

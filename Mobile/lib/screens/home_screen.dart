@@ -30,6 +30,7 @@ import 'featured_verse_screen.dart';
 import 'student_management_screen.dart';
 import 'parent_dashboard_screen.dart';
 import 'admin_access_screen.dart';
+import 'notifications_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -636,6 +637,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           actions: [
             IconButton(
+              tooltip: 'Notifications',
+              icon: const Icon(Icons.notifications_outlined),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                );
+              },
+            ),
+            IconButton(
               icon: const Icon(Icons.person),
               onPressed: () {
                 Navigator.of(context).push(
@@ -646,7 +656,7 @@ class _HomeScreenState extends State<HomeScreen> {
             IconButton(
               icon: const Icon(Icons.logout),
               onPressed: () async {
-                await AuthService.logout();
+                await ApiService.logout();
                 if (!context.mounted) return;
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(builder: (_) => const PublicHomeScreen()),

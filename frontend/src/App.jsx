@@ -52,10 +52,6 @@ class AppErrorBoundary extends Component {
     return { hasError: true };
   }
 
-  componentDidCatch(error) {
-    console.error('The page could not be rendered.', error);
-  }
-
   render() {
     if (this.state.hasError) {
       return (

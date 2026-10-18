@@ -9,7 +9,9 @@ const allowedOrigins = new Set([...productionOrigins, ...localOrigins, ...config
     .map((origin) => origin.trim())
     .filter(Boolean));
 
-const isAllowedOrigin = (origin) => !origin || allowedOrigins.has(origin);
+// Native and server-to-server requests do not need CORS. A missing Origin must
+// never turn into a wildcard CORS grant.
+const isAllowedOrigin = (origin) => Boolean(origin && allowedOrigins.has(origin));
 const isBrowserOrigin = (origin) => Boolean(origin && allowedOrigins.has(origin));
 const getRequestOrigin = (req) => {
     const origin = req.get('origin');

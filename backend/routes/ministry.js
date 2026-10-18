@@ -11,6 +11,7 @@ const PrayerChecklist = require('../models/PrayerChecklist');
 const Quiz = require('../models/Quiz');
 const QuizAttempt = require('../models/QuizAttempt');
 const FeaturedVerse = require('../models/FeaturedVerse');
+const VerseUpdateEvent = require('../models/VerseUpdateEvent');
 const PhotoAsset = require('../models/PhotoAsset');
 const TripRegistration = require('../models/TripRegistration');
 const MeetingGroup = require('../models/MeetingGroup');
@@ -807,15 +808,118 @@ router.put('/featured-verse', auth, adminOnly, async (req, res, next) => {
     try {
         const text = typeof req.body?.text === 'string' ? req.body.text.trim() : '';
         const reference = typeof req.body?.reference === 'string' ? req.body.reference.trim() : '';
+        const requestIdInput = typeof req.body?.requestId === 'string' ? req.body.requestId.trim() : '';
+        const requestId = requestIdInput || crypto.randomUUID();
         if (!text || text.length > 1200 || !reference || reference.length > 160) {
             return res.status(422).json({ message: 'Enter a verse (up to 1200 characters) and its reference (up to 160 characters).' });
         }
-        const verse = await FeaturedVerse.findOneAndUpdate(
-            { key: 'global' },
-            { $set: { text, reference, updatedBy: req.user._id } },
-            { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true },
-        ).select('text reference updatedAt').lean();
-        return res.json({ message: 'The featured verse was updated.', data: verse });
+        if (requestIdInput && !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestId)) {
+            return res.status(422).json({ message: 'A valid update request ID is required.' });
+        }
+
+        await VerseUpdateEvent.init();
+        const priorEvent = await VerseUpdateEvent.findOne({ requestId }).lean();
+        if (priorEvent) {
+            if (priorEvent.text !== text || priorEvent.reference !== reference) {
+                return res.status(409).json({ message: 'This update request ID was already used for different content.' });
+            }
+            return res.json({ message: 'The featured verse was already updated.', data: {
+                text: priorEvent.text,
+                reference: priorEvent.reference,
+                updatedAt: priorEvent.updatedAt,
+            } });
+        }
+
+        const session = await mongoose.startSession();
+        let savedVerse;
+        try {
+            await session.withTransaction(async () => {
+                const current = await FeaturedVerse.findOne({ key: 'global' }).session(session).lean();
+                if (current?.text === text && current?.reference === reference) {
+                    savedVerse = { text: current.text, reference: current.reference, updatedAt: current.updatedAt };
+                    await VerseUpdateEvent.create([{
+                        requestId,
+                        title: 'The featured ayah was updated',
+                        text: current.text,
+                        reference: current.reference,
+                        deepLink: 'eltorcoptic://featured-verse',
+                        updatedAt: current.updatedAt,
+                        notify: false,
+                    }], { session });
+                    return;
+                }
+                const verse = await FeaturedVerse.findOneAndUpdate(
+                    { key: 'global' },
+                    { $set: { text, reference, updatedBy: req.user._id } },
+                    { upsert: true, returnDocument: 'after', runValidators: true, setDefaultsOnInsert: true, session },
+                ).select('text reference updatedAt').lean();
+                await VerseUpdateEvent.create([{
+                    requestId,
+                    title: 'The featured ayah was updated',
+                    text: verse.text,
+                    reference: verse.reference,
+                    deepLink: 'eltorcoptic://featured-verse',
+                    updatedAt: verse.updatedAt,
+                }], { session });
+                savedVerse = verse;
+            });
+        } catch (error) {
+            if (error?.code === 11000) {
+                const existing = await VerseUpdateEvent.findOne({ requestId }).lean();
+                if (existing?.text === text && existing?.reference === reference) {
+                    return res.json({ message: 'The featured verse was already updated.', data: {
+                        text: existing.text,
+                        reference: existing.reference,
+                        updatedAt: existing.updatedAt,
+                    } });
+                }
+            }
+            throw error;
+        } finally {
+            await session.endSession();
+        }
+        return res.json({ message: 'The featured verse was updated.', data: savedVerse });
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.get('/notifications', auth, async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user._id).select('notificationPreferences').lean();
+        if (user?.notificationPreferences?.verseUpdates === false) return res.json({ data: [] });
+        const events = await VerseUpdateEvent.find()
+            .where({ notify: true })
+            .select('title text reference deepLink updatedAt createdAt')
+            .sort({ createdAt: -1, _id: -1 })
+            .limit(50)
+            .lean();
+        return res.json({ data: events });
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.get('/notification-preferences', auth, async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user._id).select('notificationPreferences').lean();
+        return res.json({ data: { verseUpdates: user?.notificationPreferences?.verseUpdates !== false } });
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.patch('/notification-preferences', auth, async (req, res, next) => {
+    if (typeof req.body?.verseUpdates !== 'boolean') {
+        return res.status(422).json({ message: 'Choose whether to receive featured ayah updates.' });
+    }
+    try {
+        const user = await User.findByIdAndUpdate(
+            req.user._id,
+            { $set: { 'notificationPreferences.verseUpdates': req.body.verseUpdates } },
+            { returnDocument: 'after', runValidators: true },
+        ).select('notificationPreferences').lean();
+        return res.json({ data: { verseUpdates: user?.notificationPreferences?.verseUpdates !== false } });
     } catch (error) {
         return next(error);
     }
@@ -1612,7 +1716,7 @@ router.post('/prayer-checklists', auth, async (req, res, next) => {
         const record = await PrayerChecklist.findOneAndUpdate(
             { student: req.user._id, date },
             { $set: { admin: req.user.assignedAdmin || req.user._id, checks } },
-            { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true },
+            { upsert: true, returnDocument: 'after', runValidators: true, setDefaultsOnInsert: true },
         );
         return res.json({ message: 'Prayer checklist saved.', data: record });
     } catch (error) {
@@ -1634,7 +1738,7 @@ router.patch('/prayer-checklists/:studentId', auth, adminOnly, async (req, res, 
         const record = await PrayerChecklist.findOneAndUpdate(
             { student: studentId, date },
             { $set: { admin: req.user._id, checks } },
-            { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true },
+            { upsert: true, returnDocument: 'after', runValidators: true, setDefaultsOnInsert: true },
         );
         return res.json({ message: 'Prayer checklist updated.', data: record });
     } catch (error) {

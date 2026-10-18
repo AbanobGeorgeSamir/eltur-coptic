@@ -70,7 +70,10 @@ export const api = {
   updateProfile: (payload) => request('/users/me', { method: 'PATCH', body: payload }),
   deleteAccount: (password) => request('/users/me', { method: 'DELETE', body: { password } }),
   featuredVerse: () => request('/featured-verse').then((res) => res.data || null),
-  saveFeaturedVerse: (payload) => request('/featured-verse', { method: 'PUT', body: payload }),
+  saveFeaturedVerse: (payload) => request('/featured-verse', {
+    method: 'PUT',
+    body: { ...payload, requestId: crypto.randomUUID() },
+  }),
   posts: (type, options = {}) => {
     const params = new URLSearchParams();
     if (type) params.set('type', type);

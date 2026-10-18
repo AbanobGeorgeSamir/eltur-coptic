@@ -39,11 +39,14 @@ module.exports = async (req, res, next) => {
         if (user.isActive === false) {
             return res.status(403).json({ message: 'This account is disabled. Contact the church administrator.' });
         }
+        if (Number(payload.sessionVersion || 0) !== Number(user.sessionVersion || 0)) {
+            return res.status(401).json({ message: 'Unauthorized. Please login again.' });
+        }
 
         req.user = user;
         if (browserRequest) {
             const renewedToken = jwt.sign(
-                { userId: String(user._id) },
+                { userId: String(user._id), sessionVersion: Number(user.sessionVersion || 0) },
                 process.env.JWT_SECRET,
                 { expiresIn: SESSION_MAX_AGE_SECONDS, algorithm: 'HS256' },
             );
@@ -51,7 +54,7 @@ module.exports = async (req, res, next) => {
         } else if (authenticatedWithBearer && Number.isFinite(payload.exp)
             && payload.exp - Math.floor(Date.now() / 1000) <= SESSION_REFRESH_THRESHOLD_SECONDS) {
             const renewedToken = jwt.sign(
-                { userId: String(user._id) },
+                { userId: String(user._id), sessionVersion: Number(user.sessionVersion || 0) },
                 process.env.JWT_SECRET,
                 { expiresIn: SESSION_MAX_AGE_SECONDS, algorithm: 'HS256' },
             );

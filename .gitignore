@@ -2,6 +2,20 @@
 .env
 .env.*
 !.env.example
+*.db.enc
+*.db.enc.key.dpapi
+backups/
+**/key.properties
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.mobileprovision
+*.provisionprofile
+.firebase/
+firebase-service-account*.json
+google-services.json
+GoogleService-Info.plist
 
 # Dependencies and generated output
 node_modules/

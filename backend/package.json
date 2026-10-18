@@ -7,8 +7,10 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "check:db": "node scripts/check-mongodb.js",
+    "backup:db": "node scripts/backup-database.js",
+    "restore:test": "node scripts/restore-database.js",
     "make-admin": "node scripts/make-admin.js",
-    "check": "node --check server.js && node --check scripts/check-mongodb.js && node --check middleware/authMiddleware.js && node --check middleware/adminMiddleware.js && node --check middleware/rateLimit.js && node --check config/db.js && node --check config/grades.js && node --check models/User.js && node --check models/MeetingGroup.js && node --check models/Attendance.js && node --check models/Confession.js && node --check models/MinistryPost.js && node --check models/PhotoAsset.js && node --check models/Task.js && node --check models/Quiz.js && node --check models/QuizAttempt.js && node --check models/FeaturedVerse.js && node --check routes/auth.js && node --check routes/ministry.js && node --check utils/passwords.js && node --check utils/responses.js && node --check utils/validation.js && node --check scripts/make-admin.js",
+    "check": "node --check server.js && node --check scripts/check-mongodb.js && node --check scripts/backup-database.js && node --check scripts/restore-database.js && node --check middleware/authMiddleware.js && node --check middleware/adminMiddleware.js && node --check middleware/rateLimit.js && node --check config/db.js && node --check config/grades.js && node --check models/User.js && node --check models/MeetingGroup.js && node --check models/Attendance.js && node --check models/Confession.js && node --check models/MinistryPost.js && node --check models/PhotoAsset.js && node --check models/Task.js && node --check models/Quiz.js && node --check models/QuizAttempt.js && node --check models/FeaturedVerse.js && node --check models/VerseUpdateEvent.js && node --check routes/auth.js && node --check routes/ministry.js && node --check utils/passwords.js && node --check utils/responses.js && node --check utils/validation.js && node --check scripts/make-admin.js",
     "test": "npm run check && node --test"
   },
   "keywords": [],
@@ -16,7 +18,7 @@
   "license": "ISC",
   "type": "commonjs",
   "engines": {
-    "node": ">=20.19.0"
+    "node": "24.x"
   },
   "dependencies": {
     "compression": "^1.8.2",

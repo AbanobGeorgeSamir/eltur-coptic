@@ -37,6 +37,10 @@ const userSchema = new mongoose.Schema({
     privacyAcceptedAt: { type: Date },
     assignedAdmin: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     isActive: { type: Boolean, default: true, index: true },
+    sessionVersion: { type: Number, default: 0, min: 0 },
+    notificationPreferences: {
+        verseUpdates: { type: Boolean, default: true },
+    },
     rejectedAt: { type: Date, default: null },
     rejectedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     parentApprovedStudentIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],

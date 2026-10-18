@@ -13,7 +13,7 @@ const run = async () => {
     }
 };
 
-run().catch((error) => {
-    console.error('MongoDB connection test failed:', error.message);
+run().catch(() => {
+    console.error('MongoDB connection test failed. Check local configuration without sharing secrets.');
     process.exitCode = 1;
 });

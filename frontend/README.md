@@ -2,7 +2,7 @@
 
 Responsive React/Vite client for the shared church API. Production builds use the same-origin `/api` route, which Vercel forwards to the backend. MongoDB credentials belong only in the backend environment.
 
-Use Node.js 20.19 or newer, as required by Vite.
+Use Node.js 24.x LTS, as required by the current Vite toolchain.
 
 ## Local development
 

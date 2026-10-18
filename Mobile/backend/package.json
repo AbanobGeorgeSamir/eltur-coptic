@@ -8,6 +8,6 @@
     "dev": "node --watch server.js"
   },
   "engines": {
-    "node": ">=20.19.0"
+    "node": "24.x"
   }
 }

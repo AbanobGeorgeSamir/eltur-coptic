@@ -4,7 +4,7 @@ React/Vite web client, Flutter mobile client, and Express/MongoDB API for the ch
 
 ## Local setup
 
-Use Node.js 20.19 or newer for both the frontend and backend.
+Use Node.js 24.x LTS for both the frontend and backend.
 
 1. Configure `backend\.env` from `backend\.env.example`. Set `MONGODB_URI` to the MongoDB connection string, `DB_NAME=eltor_coptic`, a strong `JWT_SECRET`, and the allowed frontend origins.
 2. Configure the local web API URL:
@@ -69,6 +69,7 @@ The web client defaults to its same-origin `/api` proxy. The backend allows the 
 Build the mobile app separately from its source in `Mobile/`. The backend's `/api/mobile-app/download` endpoint needs `MOBILE_APP_DOWNLOAD_URL` set to a hosted package before it can serve a download link.
 
 See `backend\README.md` for API routes, account setup, and production data-handling guidance.
+See `backend\DATABASE_BACKUP.md` for the encrypted database backup and isolated restore procedure.
 "# eltur-coptic" 
 "# eltur-coptic" 
 "# eltur-coptic" 

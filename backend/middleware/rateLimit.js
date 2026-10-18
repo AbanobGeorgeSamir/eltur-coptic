@@ -1,6 +1,47 @@
 const crypto = require('node:crypto');
+const mongoose = require('mongoose');
 
 const MAX_CLIENTS = 50_000;
+const distributedStoreEnabled = () => process.env.NODE_ENV === 'production' || Boolean(process.env.VERCEL);
+const rateLimitSchema = new mongoose.Schema({
+    _id: { type: String },
+    count: { type: Number, required: true },
+    expiresAt: { type: Date, required: true, expires: 0 },
+}, { versionKey: false, collection: 'rate_limit_buckets' });
+const RateLimitBucket = mongoose.models.RateLimitBucket
+    || mongoose.model('RateLimitBucket', rateLimitSchema);
+let indexesReady;
+
+const incrementDistributedBucket = async (key, now, windowMs) => {
+    if (!indexesReady) {
+        indexesReady = RateLimitBucket.createIndexes().catch((error) => {
+            indexesReady = null;
+            throw error;
+        });
+    }
+    await indexesReady;
+    const start = Math.floor(now / windowMs) * windowMs;
+    const bucketKey = crypto.createHmac('sha256', process.env.JWT_SECRET)
+        .update(`${key}:${start}`)
+        .digest('hex');
+    const update = {
+        $inc: { count: 1 },
+        $setOnInsert: { expiresAt: new Date(start + windowMs + 60_000) },
+    };
+    try {
+        const entry = await RateLimitBucket.findOneAndUpdate(
+            { _id: bucketKey }, update, { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
+        ).lean();
+        return { count: entry.count, resetAt: start + windowMs };
+    } catch (error) {
+        // Concurrent first requests can race to upsert the same bucket.
+        if (error?.code !== 11000) throw error;
+        const entry = await RateLimitBucket.findOneAndUpdate(
+            { _id: bucketKey }, { $inc: { count: 1 } }, { returnDocument: 'after' },
+        ).lean();
+        return { count: entry.count, resetAt: start + windowMs };
+    }
+};
 
 const createRateLimiter = ({ limit, windowMs, message, keyFor }) => {
     const clients = new Map();
@@ -19,20 +60,28 @@ const createRateLimiter = ({ limit, windowMs, message, keyFor }) => {
             lastCleanup = now;
         }
 
-        let entry = clients.get(key);
-        if (!entry || entry.resetAt <= now) {
-            entry = { count: 0, resetAt: now + windowMs };
-            clients.set(key, entry);
-        }
+        if (distributedStoreEnabled()) {
+            try {
+                ({ count, resetAt } = await incrementDistributedBucket(key, now, windowMs));
+            } catch (error) {
+                return next(Object.assign(new Error('Rate limiting is temporarily unavailable.'), { statusCode: 503 }));
+            }
+        } else {
+            let entry = clients.get(key);
+            if (!entry || entry.resetAt <= now) {
+                entry = { count: 0, resetAt: now + windowMs };
+                clients.set(key, entry);
+            }
 
-        if (clients.size > MAX_CLIENTS) {
-            const oldestKey = clients.keys().next().value;
-            if (oldestKey !== undefined && oldestKey !== key) clients.delete(oldestKey);
-        }
+            if (clients.size > MAX_CLIENTS) {
+                const oldestKey = clients.keys().next().value;
+                if (oldestKey !== undefined && oldestKey !== key) clients.delete(oldestKey);
+            }
 
-        count = entry.count + 1;
-        resetAt = entry.resetAt;
-        if (count <= limit) entry.count = count;
+            count = entry.count + 1;
+            resetAt = entry.resetAt;
+            if (count <= limit) entry.count = count;
+        }
 
         const remaining = Math.max(0, limit - count);
         res.set({
@@ -68,7 +117,8 @@ const loginAccountRateLimit = createRateLimiter({
     windowMs: 15 * 60_000,
     keyFor: (req) => {
         const identifier = String(req.body?.name || req.body?.username || '').trim().toLowerCase();
-        return `account:${crypto.createHash('sha256').update(identifier).digest('hex')}`;
+        const secret = process.env.JWT_SECRET || 'local-rate-limit-key';
+        return `account:${crypto.createHmac('sha256', secret).update(identifier).digest('hex')}`;
     },
     message: 'Too many login attempts for this account. Wait a while and try again.',
 });
@@ -100,4 +150,5 @@ module.exports = {
     registrationRateLimit,
     mediaUploadRateLimit,
     bulkWriteRateLimit,
+    createRateLimiter,
 };

@@ -322,3 +322,27 @@ test('uploaded PDFs open inline and can be explicitly downloaded', async (t) => 
     assert.equal(downloaded.response.statusCode, 200);
     assert.equal(downloaded.response.headers['content-disposition'], 'attachment; filename="lesson.pdf"');
 });
+
+test('media upload requires an administrator and rejects files without a supported signature', async (t) => {
+    const server = http.createServer(app);
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    t.after(() => server.close());
+
+    const anonymous = await makeRequest(server, '/api/media', {
+        'content-type': 'application/json',
+    }, { method: 'POST', body: JSON.stringify({ data: Buffer.from('not a file').toString('base64') }) });
+    assert.equal(anonymous.response.statusCode, 401);
+
+    const userId = new mongoose.Types.ObjectId();
+    const admin = { _id: userId, role: 'admin', isActive: true, sessionVersion: 0 };
+    const token = jwt.sign({ userId: String(userId), sessionVersion: 0 }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const originalFindById = User.findById;
+    User.findById = async () => admin;
+    t.after(() => { User.findById = originalFindById; });
+
+    const invalidFile = await makeRequest(server, '/api/media', {
+        authorization: `Bearer ${token}`,
+        'content-type': 'application/json',
+    }, { method: 'POST', body: JSON.stringify({ data: Buffer.from('not a file').toString('base64') }) });
+    assert.equal(invalidFile.response.statusCode, 422);
+});

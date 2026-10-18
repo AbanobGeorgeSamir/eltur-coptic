@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,8 +33,17 @@ class ApiResponseException implements Exception {
 }
 
 class ApiService {
+  static String _newRequestId() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    final hex = bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
+  }
+
   // Reuse connections across requests made by different screens.
-  static final http.Client _client = http.Client();
+  static http.Client _client = http.Client();
   static const String _productionBaseUrl =
       'https://eltur-coptic-api-server.vercel.app/api';
   static const String _configuredBaseUrl = String.fromEnvironment(
@@ -42,6 +52,10 @@ class ApiService {
   static const String _apiUrlKey = 'eltor_coptic_api_base_url';
   static String? _runtimeBaseUrl;
   static String? _sessionBaseUrl;
+
+  static void setHttpClientForTesting(http.Client? client) {
+    _client = client ?? http.Client();
+  }
 
   static String get baseUrl {
     final configured =
@@ -260,13 +274,52 @@ class ApiService {
     await _request(
           'PUT',
           '/featured-verse',
-          body: {'text': text, 'reference': reference},
+          body: {
+            'text': text,
+            'reference': reference,
+            'requestId': _newRequestId(),
+          },
         )
         as Map,
   );
 
+  static Future<List<Map<String, dynamic>>> getNotifications() async =>
+      _dataList(await _request('GET', '/notifications'))
+          .map((item) => Map<String, dynamic>.from(item as Map))
+          .toList();
+
+  static Future<bool> getVerseUpdatePreference() async {
+    final response = await _request('GET', '/notification-preferences');
+    if (response is Map && response['data'] is Map) {
+      return (response['data'] as Map)['verseUpdates'] != false;
+    }
+    return true;
+  }
+
+  static Future<bool> setVerseUpdatePreference(bool enabled) async {
+    final response = await _request(
+      'PATCH',
+      '/notification-preferences',
+      body: {'verseUpdates': enabled},
+    );
+    if (response is Map && response['data'] is Map) {
+      return (response['data'] as Map)['verseUpdates'] != false;
+    }
+    return enabled;
+  }
+
   static Future<void> deleteAccount(String password) async {
     await _request('DELETE', '/users/me', body: {'password': password});
+  }
+
+  static Future<void> logout() async {
+    try {
+      await _request('POST', '/auth/logout', body: {});
+    } catch (_) {
+      // Clear the local session even if the server cannot be reached.
+    } finally {
+      await AuthService.logout();
+    }
   }
 
   static Future<Map<String, dynamic>> login(

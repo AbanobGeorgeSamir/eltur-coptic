@@ -18,7 +18,7 @@ const { validEmail, validPhone, normalizePhone, hasFourPartName } = require('../
 
 const router = express.Router();
 const signToken = (user) => jwt.sign(
-    { userId: String(user._id) },
+    { userId: String(user._id), sessionVersion: Number(user.sessionVersion || 0) },
     process.env.JWT_SECRET,
     { expiresIn: SESSION_MAX_AGE_SECONDS, algorithm: 'HS256' }
 );
@@ -153,7 +153,8 @@ router.post(['/login', '/auth/login'], loginRateLimit, loginAccountRateLimit, as
             return res.status(422).json({ message: 'Choose a valid study grade or account type.' });
         }
 
-        const user = await User.findOne({ $or: [{ username }, { email: username }] }).select('+password');
+        const user = await User.findOne({ $or: [{ username }, { email: username }] })
+            .select('+password');
         const passwordMatches = user
             ? await verifyPassword(password, user.password)
             : (await hashPassword(password), false);
@@ -311,7 +312,12 @@ router.patch('/users/me/phone', auth, async (req, res, next) => {
     }
 });
 
-router.post(['/logout', '/auth/logout'], (req, res) => {
+router.post(['/logout', '/auth/logout'], auth, async (req, res, next) => {
+    try {
+        await User.updateOne({ _id: req.user._id }, { $inc: { sessionVersion: 1 } });
+    } catch (error) {
+        return next(error);
+    }
     clearSessionCookie(res);
     return res.json({ message: 'Logout successful.' });
 });

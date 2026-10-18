@@ -31,7 +31,7 @@ const run = async () => {
 
 run()
     .then(() => process.exit(0))
-    .catch((error) => {
-        console.error(error.message);
+    .catch(() => {
+        console.error('Administrator setup failed. Check the account and database configuration.');
         process.exit(1);
     });
