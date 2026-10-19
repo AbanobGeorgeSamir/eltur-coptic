@@ -36,6 +36,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final phoneNotificationsEnabled = results[1] == true
           ? await PushNotificationService.syncIfPermissionGranted()
           : false;
+      if (results[1] != true) {
+        await PushNotificationService.setVerseUpdatesEnabled(false);
+      }
       if (!mounted) return;
       setState(() {
         _items = results[0] as List<Map<String, dynamic>>;
@@ -70,10 +73,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             () => _phoneNotificationsEnabled = phoneNotificationsEnabled,
           );
           if (!phoneNotificationsEnabled) _showPhoneNotificationMessage();
+          if (phoneNotificationsEnabled) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('تم تفعيل إشعارات الآية على هذا الهاتف.'),
+              ),
+            );
+          }
         }
         await _load();
+      } else {
+        await PushNotificationService.setVerseUpdatesEnabled(false);
+        if (mounted) setState(() => _items = []);
       }
-      if (!saved && mounted) setState(() => _items = []);
     } catch (error) {
       if (!mounted) return;
       setState(() => _enabled = oldValue);
@@ -98,6 +110,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       if (!mounted) return;
       setState(() => _phoneNotificationsEnabled = enabled);
       if (!enabled) _showPhoneNotificationMessage();
+      if (enabled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم تفعيل إشعارات الآية على هذا الهاتف.'),
+          ),
+        );
+      }
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -110,8 +129,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   void _showPhoneNotificationMessage() {
     final message = PushNotificationService.isAvailable
-        ? 'اسمح بالإشعارات من إعدادات هاتفك وتأكد من الاتصال بالإنترنت ثم حاول مجددًا.'
-        : 'إشعارات الهاتف تحتاج إلى إعداد Firebase لهذا الإصدار.';
+        ? 'اسمح بإشعارات التطبيق من إعدادات الهاتف، وتأكد من اتصال الإنترنت.'
+        : 'تعذر تهيئة الإشعارات على هذا الهاتف. أعد تشغيل التطبيق وحاول مجددًا.';
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
@@ -145,7 +164,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               contentPadding: EdgeInsets.zero,
               title: const Text('إشعارات الآية المميزة'),
               subtitle: const Text(
-                'استقبل إشعارًا على هاتفك عندما يغيّر المسؤول الآية المميزة.',
+                'استقبل إشعارًا عند تغيير الآية. في الخلفية يفحص أندرويد التحديثات دوريًا وقد يتأخر وصول التنبيه.',
               ),
               value: _enabled,
               onChanged: _savingPreference ? null : _setPreference,

@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
 import '../models/user_model.dart';
@@ -15,8 +16,8 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
+  late final AnimationController _controller;
+  late final Animation<double> _fadeAnimation;
 
   @override
   void initState() {
@@ -80,6 +81,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.deepNavy,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -92,58 +94,116 @@ class _SplashScreenState extends State<SplashScreen>
             end: Alignment.bottomCenter,
           ),
         ),
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.1),
-                    border: Border.all(color: AppTheme.accentGold, width: 3),
-                  ),
-                  child: ClipOval(
-                    child: Image.asset(
-                      'resources/images/kenesa.jpeg',
-                      width: 90,
-                      height: 90,
-                      fit: BoxFit.cover,
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final screenWidth = constraints.maxWidth;
+              final screenHeight = constraints.maxHeight;
+              final scale = (screenWidth / 412).clamp(0.82, 1.0).toDouble();
+              final logoSize = (screenWidth * 0.36)
+                  .clamp(112.0, 148.0)
+                  .toDouble();
+
+              return FadeTransition(
+                opacity: _fadeAnimation,
+                child: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: screenHeight),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: logoSize,
+                              height: logoSize,
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: 0.08),
+                                border: Border.all(
+                                  color: AppTheme.accentGold,
+                                  width: 3,
+                                ),
+                              ),
+                              child: ClipOval(
+                                child: Image.asset(
+                                  'resources/images/kenesa.jpeg',
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: screenHeight * 0.045),
+                            Text(
+                              'كنيسة موسى النبي\nومارمرقس الرسول',
+                              textAlign: TextAlign.center,
+                              textDirection: TextDirection.rtl,
+                              style: TextStyle(
+                                fontSize: 34 * scale,
+                                height: 1.24,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.accentGold,
+                              ),
+                            ),
+                            SizedBox(height: screenHeight * 0.015),
+                            Text(
+                              'بوابة الخدمات الكنسية',
+                              textAlign: TextAlign.center,
+                              textDirection: TextDirection.rtl,
+                              style: TextStyle(
+                                fontSize: 19 * scale,
+                                height: 1.35,
+                                fontStyle: FontStyle.italic,
+                                color: const Color(0xFFB6B8C2),
+                              ),
+                            ),
+                            SizedBox(height: screenHeight * 0.012),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 7,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.accentGold.withValues(
+                                  alpha: 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(32),
+                                border: Border.all(
+                                  color: AppTheme.accentGold,
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Text(
+                                'الخدمات الكنسية',
+                                textDirection: TextDirection.rtl,
+                                style: TextStyle(
+                                  fontSize: 19 * scale,
+                                  height: 1.25,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.accentGold,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: screenHeight * 0.058),
+                            SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 3.2,
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                  AppTheme.accentGold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                const Text(
-                  'كنيسة موسي النبي ومارمرقس الرسول',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.accentGold,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'بوابة الكنيسة',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white70,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-                const SizedBox(height: 48),
-                const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppTheme.accentGold,
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),

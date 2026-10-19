@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_localizations/flutter_localizations.dart'
     show GlobalWidgetsLocalizations;
@@ -8,10 +10,13 @@ import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await PushNotificationService.initialize();
   runApp(const EltorCopticApp());
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    PushNotificationService.openPendingNotification();
+    unawaited(
+      PushNotificationService.initialize().then((_) {
+        PushNotificationService.openPendingNotification();
+      }),
+    );
   });
 }
 

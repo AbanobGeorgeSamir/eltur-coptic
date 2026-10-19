@@ -25,7 +25,7 @@ On Windows, Flutter may require Developer Mode (or another symlink-enabled setup
 
 ## Phone ayah notifications
 
-The app uses Firebase Cloud Messaging for alerts. Register the Android app in Firebase with application ID `com.example.project`. If you build for iOS, register the matching iOS bundle ID and enable Push Notifications and Background Modes (Remote notifications) in Xcode, then upload an APNs authentication key to the Firebase project.
+The app uses Firebase Cloud Messaging for immediate alerts when Firebase is configured. On Android, it can still show ayah update notifications without Firebase: after notification permission is granted in the Notifications screen, WorkManager checks the public featured-ayah endpoint while the app is in the background. Android permits periodic work at intervals of 15 minutes or longer and may defer a check to conserve battery, so this fallback is not immediate.
 
 Pass the Firebase client settings from the Firebase project to Flutter as build-time defines. These are client app identifiers; keep the service account only on the backend:
 
@@ -39,4 +39,4 @@ flutter build apk `
 
 For iOS, pass `FIREBASE_IOS_APP_ID=<ios-app-id>` and set `FIREBASE_IOS_BUNDLE_ID` to the exact bundle ID registered in Firebase (currently `com.example.project`).
 
-For production, set `FIREBASE_PROJECT_ID` and the sensitive `FIREBASE_SERVICE_ACCOUNT_JSON` backend environment variable, then redeploy the API. The service account JSON must be stored on one line. In the app, open Notifications and enable phone notifications; Android 13 and newer and iOS will ask for notification permission. Tapping an alert opens the latest featured ayah. Phone push requires the Firebase client settings, a deployed backend with the service account configured, and permission from the user.
+For immediate push in production, set `FIREBASE_PROJECT_ID` and the sensitive `FIREBASE_SERVICE_ACCOUNT_JSON` backend environment variable, then redeploy the API. The service account JSON must be stored on one line. In the app, open Notifications and enable phone notifications; Android 13 and newer and iOS will ask for notification permission. Tapping an alert opens the latest featured ayah. Without Firebase, the Android background check is best effort and may be delayed by Android battery management; iOS background alerts still require Firebase push configuration.
