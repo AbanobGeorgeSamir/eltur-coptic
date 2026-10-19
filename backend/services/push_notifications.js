@@ -30,48 +30,15 @@ function getMessagingClient() {
     return messagingClient;
 }
 
-async function sendFeaturedVerseUpdate(verse) {
-    const messaging = getMessagingClient();
-    if (!messaging) return { sent: 0, configured: false };
-
-    const subscribedUsers = await User.find({
-        isActive: { $ne: false },
-        'notificationPreferences.verseUpdates': { $ne: false },
-        pushTokens: { $exists: true, $ne: [] },
-    }).select('+pushTokens').lean();
-    const tokens = [...new Set(subscribedUsers.flatMap((user) => user.pushTokens || []))];
-    if (tokens.length === 0) return { sent: 0, configured: true };
-
-    const reference = String(verse.reference || '').trim();
-    const text = String(verse.text || '').trim();
-    const excerpt = text.length > 110 ? `${text.slice(0, 107)}…` : text;
-    const body = [reference, excerpt].filter(Boolean).join(' · ').slice(0, 240);
-    const invalidTokens = [];
+async function sendToTargets(messaging, targetField, targets, message, invalidCodes) {
+    const invalidTargets = [];
     let sent = 0;
 
-    for (let index = 0; index < tokens.length; index += 500) {
-        const batch = tokens.slice(index, index + 500);
+    for (let index = 0; index < targets.length; index += 500) {
+        const batch = targets.slice(index, index + 500);
         const response = await messaging.sendEachForMulticast({
-            tokens: batch,
-            notification: {
-                title: 'تم تحديث الآية المميزة',
-                body: body || 'تم تغيير الآية المميزة.',
-            },
-            data: {
-                type: 'featured_verse_updated',
-                reference,
-                deepLink: 'eltorcoptic://featured-verse',
-            },
-            android: {
-                priority: 'high',
-                notification: {
-                    channelId: 'verse_updates',
-                    clickAction: 'FLUTTER_NOTIFICATION_CLICK',
-                },
-            },
-            apns: {
-                payload: { aps: { sound: 'default' } },
-            },
+            ...message,
+            [targetField]: batch,
         });
 
         response.responses.forEach((result, responseIndex) => {
@@ -79,19 +46,80 @@ async function sendFeaturedVerseUpdate(verse) {
                 sent += 1;
                 return;
             }
-            if ([
-                'messaging/invalid-registration-token',
-                'messaging/registration-token-not-registered',
-            ].includes(result.error?.code)) {
-                invalidTokens.push(batch[responseIndex]);
+            if (invalidCodes.includes(result.error?.code)) {
+                invalidTargets.push(batch[responseIndex]);
             }
         });
     }
 
-    if (invalidTokens.length > 0) {
+    return { sent, invalidTargets };
+}
+
+async function sendFeaturedVerseUpdate(verse) {
+    const messaging = getMessagingClient();
+    if (!messaging) return { sent: 0, configured: false };
+
+    const subscribedUsers = await User.find({
+        isActive: { $ne: false },
+        'notificationPreferences.verseUpdates': { $ne: false },
+        $or: [
+            { pushTokens: { $exists: true, $ne: [] } },
+            { pushFids: { $exists: true, $ne: [] } },
+        ],
+    }).select('+pushTokens +pushFids').lean();
+    const tokens = [...new Set(subscribedUsers.flatMap((user) => user.pushTokens || []))];
+    const fids = [...new Set(subscribedUsers.flatMap((user) => user.pushFids || []))];
+    if (tokens.length === 0 && fids.length === 0) return { sent: 0, configured: true };
+
+    const reference = String(verse.reference || '').trim();
+    const text = String(verse.text || '').trim();
+    const excerpt = text.length > 110 ? `${text.slice(0, 107)}…` : text;
+    const body = [reference, excerpt].filter(Boolean).join(' · ').slice(0, 240);
+    const message = {
+        notification: {
+            title: 'تم تحديث الآية المميزة',
+            body: body || 'تم تغيير الآية المميزة.',
+        },
+        data: {
+            type: 'featured_verse_updated',
+            reference,
+            deepLink: 'eltorcoptic://featured-verse',
+        },
+        android: {
+            priority: 'high',
+            notification: {
+                channelId: 'verse_updates',
+                clickAction: 'FLUTTER_NOTIFICATION_CLICK',
+            },
+        },
+        apns: {
+            payload: { aps: { sound: 'default' } },
+        },
+    };
+
+    const tokenResult = tokens.length > 0
+        ? await sendToTargets(messaging, 'tokens', tokens, message, [
+            'messaging/invalid-registration-token',
+            'messaging/registration-token-not-registered',
+        ])
+        : { sent: 0, invalidTargets: [] };
+    const fidResult = fids.length > 0
+        ? await sendToTargets(messaging, 'fids', fids, message, [
+            'messaging/installation-id-not-registered',
+        ])
+        : { sent: 0, invalidTargets: [] };
+    const sent = tokenResult.sent + fidResult.sent;
+
+    if (tokenResult.invalidTargets.length > 0) {
         await User.updateMany(
-            { pushTokens: { $in: invalidTokens } },
-            { $pull: { pushTokens: { $in: invalidTokens } } },
+            { pushTokens: { $in: tokenResult.invalidTargets } },
+            { $pull: { pushTokens: { $in: tokenResult.invalidTargets } } },
+        );
+    }
+    if (fidResult.invalidTargets.length > 0) {
+        await User.updateMany(
+            { pushFids: { $in: fidResult.invalidTargets } },
+            { $pull: { pushFids: { $in: fidResult.invalidTargets } } },
         );
     }
 

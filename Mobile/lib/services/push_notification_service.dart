@@ -49,7 +49,8 @@ class PushNotificationService {
       FlutterLocalNotificationsPlugin();
   static StreamSubscription<RemoteMessage>? _foregroundSubscription;
   static StreamSubscription<RemoteMessage>? _tapSubscription;
-  static StreamSubscription<String>? _tokenSubscription;
+  static StreamSubscription<String>? _fidRegistrationSubscription;
+  static StreamSubscription<String>? _fidUnregistrationSubscription;
   static AppLifecycleListener? _lifecycleListener;
   static Timer? _foregroundTimer;
   static bool _initialized = false;
@@ -69,10 +70,7 @@ class PushNotificationService {
     try {
       await initializeLocalNotifications();
       if (defaultTargetPlatform == TargetPlatform.android) {
-        await Workmanager().initialize(
-          ayahUpdateBackgroundDispatcher,
-          isInDebugMode: kDebugMode,
-        );
+        await Workmanager().initialize(ayahUpdateBackgroundDispatcher);
       }
       _initialized = true;
     } catch (error) {
@@ -146,11 +144,14 @@ class PushNotificationService {
       _tapSubscription = FirebaseMessaging.onMessageOpenedApp.listen(
         _openFromMessage,
       );
-      _tokenSubscription = FirebaseMessaging.instance.onTokenRefresh.listen((
-        token,
-      ) {
-        unawaited(_registerToken(token));
-      });
+      _fidRegistrationSubscription = FirebaseMessaging.instance.onRegistered
+          .listen((fid) {
+            unawaited(_registerFid(fid));
+          });
+      _fidUnregistrationSubscription = FirebaseMessaging.instance.onUnregistered
+          .listen((fid) {
+            unawaited(_unregisterFid(fid));
+          });
 
       if (defaultTargetPlatform == TargetPlatform.iOS) {
         await FirebaseMessaging.instance
@@ -175,7 +176,7 @@ class PushNotificationService {
     final allowed = await _hasNotificationPermission();
     if (!allowed) return false;
     await _activateAyahNotifications();
-    if (_firebaseInitialized) await _syncFirebaseToken();
+    if (_firebaseInitialized) await _syncFirebaseInstallation();
     return true;
   }
 
@@ -213,7 +214,7 @@ class PushNotificationService {
 
     if (!allowed) return false;
     await _activateAyahNotifications();
-    if (_firebaseInitialized) await _syncFirebaseToken();
+    if (_firebaseInitialized) await _syncFirebaseInstallation();
     return true;
   }
 
@@ -278,26 +279,38 @@ class PushNotificationService {
     }
   }
 
-  static Future<void> _syncFirebaseToken() async {
+  static Future<void> _syncFirebaseInstallation() async {
     if (!_firebaseInitialized || !AuthService.isLoggedIn) return;
     try {
-      final token = await FirebaseMessaging.instance.getToken();
-      if (token != null && token.isNotEmpty) await _registerToken(token);
+      await FirebaseMessaging.instance.register();
     } catch (error) {
-      debugPrint('Could not sync phone notification token: $error');
+      debugPrint('Could not sync phone notification installation: $error');
     }
   }
 
-  static Future<bool> _registerToken(String token) async {
-    if (!_firebaseInitialized || !AuthService.isLoggedIn || token.isEmpty) {
+  static Future<bool> _registerFid(String fid) async {
+    if (!_firebaseInitialized || !AuthService.isLoggedIn || fid.isEmpty) {
       return false;
     }
     try {
-      await ApiService.registerPushToken(token);
+      await ApiService.registerPushFid(fid);
       return true;
     } catch (error) {
-      debugPrint('Could not register phone notification token: $error');
+      debugPrint('Could not register phone notification installation: $error');
       return false;
+    }
+  }
+
+  static Future<void> _unregisterFid(String fid) async {
+    if (!_firebaseInitialized || !AuthService.isLoggedIn || fid.isEmpty) {
+      return;
+    }
+    try {
+      await ApiService.unregisterPushFid(fid);
+    } catch (error) {
+      debugPrint(
+        'Could not unregister phone notification installation: $error',
+      );
     }
   }
 
@@ -453,7 +466,8 @@ class PushNotificationService {
   static Future<void> dispose() async {
     await _foregroundSubscription?.cancel();
     await _tapSubscription?.cancel();
-    await _tokenSubscription?.cancel();
+    await _fidRegistrationSubscription?.cancel();
+    await _fidUnregistrationSubscription?.cancel();
     _foregroundTimer?.cancel();
     _lifecycleListener?.dispose();
     _lifecycleListener = null;

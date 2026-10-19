@@ -53,6 +53,7 @@ class ApiService {
   );
   static const String _apiUrlKey = 'eltor_coptic_api_base_url';
   static const String _pushTokenKey = 'eltor_coptic_push_token';
+  static const String _pushFidKey = 'eltor_coptic_push_fid';
   static String? _runtimeBaseUrl;
   static String? _sessionBaseUrl;
 
@@ -325,6 +326,20 @@ class ApiService {
     }
   }
 
+  static Future<void> registerPushFid(String fid) async {
+    await _request('POST', '/push-fid', body: {'fid': fid});
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(_pushFidKey, fid);
+  }
+
+  static Future<void> unregisterPushFid(String fid) async {
+    await _request('DELETE', '/push-fid', body: {'fid': fid});
+    final preferences = await SharedPreferences.getInstance();
+    if (preferences.getString(_pushFidKey) == fid) {
+      await preferences.remove(_pushFidKey);
+    }
+  }
+
   static Future<void> deleteAccount(String password) async {
     await _request('DELETE', '/users/me', body: {'password': password});
   }
@@ -336,6 +351,14 @@ class ApiService {
       if (pushToken != null && pushToken.isNotEmpty) {
         try {
           await unregisterPushToken(pushToken);
+        } catch (_) {
+          // Continue logout even when the notification API is unreachable.
+        }
+      }
+      final pushFid = preferences.getString(_pushFidKey);
+      if (pushFid != null && pushFid.isNotEmpty) {
+        try {
+          await unregisterPushFid(pushFid);
         } catch (_) {
           // Continue logout even when the notification API is unreachable.
         }

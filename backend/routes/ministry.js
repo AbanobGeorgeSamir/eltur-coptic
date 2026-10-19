@@ -962,6 +962,33 @@ router.delete('/push-token', auth, async (req, res, next) => {
     }
 });
 
+router.post('/push-fid', auth, async (req, res, next) => {
+    const fid = typeof req.body?.fid === 'string' ? req.body.fid.trim() : '';
+    if (fid.length < 20 || fid.length > 4096) {
+        return res.status(422).json({ message: 'A valid phone notification installation ID is required.' });
+    }
+    try {
+        await User.updateMany({ pushFids: fid }, { $pull: { pushFids: fid } });
+        await User.updateOne({ _id: req.user._id }, { $addToSet: { pushFids: fid } });
+        return res.json({ message: 'Phone notifications are enabled for this device.' });
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.delete('/push-fid', auth, async (req, res, next) => {
+    const fid = typeof req.body?.fid === 'string' ? req.body.fid.trim() : '';
+    if (!fid || fid.length > 4096) {
+        return res.status(422).json({ message: 'A valid phone notification installation ID is required.' });
+    }
+    try {
+        await User.updateMany({ pushFids: fid }, { $pull: { pushFids: fid } });
+        return res.json({ message: 'Phone notifications were disabled for this device.' });
+    } catch (error) {
+        return next(error);
+    }
+});
+
 router.get('/students', auth, adminOnly, async (req, res, next) => {
     try {
         const students = await User.find(studentScope(req.user))
