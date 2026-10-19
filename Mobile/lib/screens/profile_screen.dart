@@ -16,7 +16,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _fullNameArabicController = TextEditingController();
   final _confessionFatherController = TextEditingController();
-  final _phoneController = TextEditingController();
+  String _phone = '';
   String _whatsapp = '';
   final _addressController = TextEditingController();
   final _fatherNameController = TextEditingController();
@@ -46,7 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (user != null) {
       _fullNameArabicController.text = user.fullNameArabic;
       _confessionFatherController.text = user.confessionFather;
-      _phoneController.text = user.phone;
+      _phone = user.phone;
       _whatsapp = user.whatsappNumber;
       _addressController.text = user.address;
       _fatherNameController.text = user.fatherName;
@@ -109,7 +109,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'name': _fullNameArabicController.text.trim(),
       'email': _emailController.text.trim().toLowerCase(),
       'interests': _interestsController.text.trim(),
-      'phone': _phoneController.text.trim(),
+      'phone': _phone,
       'confessionFather': _confessionFatherController.text.trim(),
       'whatsappNumber': _whatsapp,
       'address': _addressController.text.trim(),
@@ -213,7 +213,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void dispose() {
     _fullNameArabicController.dispose();
     _confessionFatherController.dispose();
-    _phoneController.dispose();
     _addressController.dispose();
     _fatherNameController.dispose();
     _emailController.dispose();
@@ -408,25 +407,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      TextFormField(
-                        controller: _phoneController,
-                        keyboardType: TextInputType.phone,
-                        textDirection: TextDirection.ltr,
-                        decoration: const InputDecoration(
-                          labelText: 'رقم الهاتف',
-                          prefixIcon: Icon(
-                            Icons.phone,
-                            color: AppTheme.primaryBurgundy,
-                          ),
-                          helperText:
-                              'اكتب الرقم بصيغة دولية، مثال: +201001234567.',
-                        ),
-                        validator: (value) {
-                          final phone = value?.trim() ?? '';
-                          return RegExp(r'^\+[1-9]\d{7,14}$').hasMatch(phone)
-                              ? null
-                              : 'Enter a valid phone number with country code.';
-                        },
+                      PhoneField(
+                        label: 'رقم الهاتف',
+                        value: _phone,
+                        required: true,
+                        onChanged: (value) => setState(() => _phone = value),
                       ),
                       const SizedBox(height: 12),
                       PhoneField(
@@ -473,7 +458,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         textDirection: TextDirection.ltr,
                         autocorrect: false,
                         decoration: const InputDecoration(
-                          labelText: 'البريد الإلكتروني (.com) (اختياري)',
+                          labelText: 'البريد الإلكتروني',
                           prefixIcon: Icon(
                             Icons.email,
                             color: AppTheme.primaryBurgundy,
