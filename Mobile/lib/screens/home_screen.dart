@@ -663,9 +663,9 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Semantics(
-                  label: 'كنيسة موسي النبي ومارمرقس الرسول',
+                  label: 'Eltur Coptic',
                   child: Text(
-                    'كنيسة موسي النبي ومارمرقس الرسول',
+                    'Eltur Coptic',
                     maxLines: 2,
                     style: const TextStyle(fontSize: 14, height: 1.15),
                   ),

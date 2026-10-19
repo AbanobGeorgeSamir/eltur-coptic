@@ -117,7 +117,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  'كنيسة موسي النبي ومارمرقس الرسول',
+                  'Eltur Coptic',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 32,

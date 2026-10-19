@@ -142,7 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 16),
                       const Text(
-                        'كنيسة موسي النبي ومارمرقس الرسول',
+                        'Eltur Coptic',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,

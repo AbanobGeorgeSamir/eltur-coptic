@@ -16,7 +16,7 @@ class EltorCopticApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'كنيسة موسي النبي ومارمرقس الرسول',
+      title: 'Eltur Coptic',
       debugShowCheckedModeBanner: false,
       builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
         value: AppTheme.systemUiOverlayStyle,
