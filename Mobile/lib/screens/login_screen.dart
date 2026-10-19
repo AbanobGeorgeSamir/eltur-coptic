@@ -69,6 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
+    var routeReplaced = false;
     try {
       final res = await ApiService.login(username, password);
       final user = UserModel.fromJson(res['user']);
@@ -80,6 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await AuthService.saveSession(user, token);
 
       if (!mounted) return;
+      routeReplaced = true;
       Navigator.of(
         context,
       ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
@@ -89,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
         SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
       );
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted && !routeReplaced) setState(() => _isLoading = false);
     }
   }
 

@@ -187,10 +187,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (password == null || password.isEmpty || !mounted) return;
 
     setState(() => _isDeleting = true);
+    var routeReplaced = false;
     try {
       await ApiService.deleteAccount(password);
       await AuthService.logout();
       if (!mounted) return;
+      routeReplaced = true;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
         (_) => false,
@@ -203,7 +205,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       );
     } finally {
-      if (mounted) setState(() => _isDeleting = false);
+      if (mounted && !routeReplaced) setState(() => _isDeleting = false);
     }
   }
 

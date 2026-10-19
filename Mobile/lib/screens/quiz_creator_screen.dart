@@ -72,9 +72,12 @@ class _QuizCreatorScreenState extends State<QuizCreatorScreen> {
       'meetingGroup': _audienceMeetingGroup,
     };
 
+    var routeClosed = false;
     try {
       final success = await ApiService.createQuiz(quizData);
       if (success && mounted) {
+        routeClosed = true;
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('تم إنشاء الاختبار بنجاح')),
         );
@@ -87,7 +90,7 @@ class _QuizCreatorScreenState extends State<QuizCreatorScreen> {
         ).showSnackBar(SnackBar(content: Text('خطأ: ${e.toString()}')));
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted && !routeClosed) setState(() => _isLoading = false);
     }
   }
 

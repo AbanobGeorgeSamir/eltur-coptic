@@ -123,6 +123,7 @@ class _ConfessionScreenState extends State<ConfessionScreen> {
         date: _dateController.text.trim(),
         note: _noteController.text.trim(),
       );
+      if (!mounted) return;
       _noteController.clear();
       await _load();
     } catch (error) {
@@ -158,7 +159,9 @@ class _ConfessionScreenState extends State<ConfessionScreen> {
                     firstDate: DateTime(2024),
                     lastDate: DateTime.now(),
                   );
-                  if (picked != null) setDialogState(() => date = picked);
+                  if (picked != null && context.mounted) {
+                    setDialogState(() => date = picked);
+                  }
                 },
                 icon: const Icon(Icons.calendar_month),
                 label: Text(date.toString().split(' ').first),

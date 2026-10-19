@@ -318,11 +318,19 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _openMedia(MinistryPostModel post) async {
     final uri = Uri.tryParse(post.mediaUrl);
     if (uri == null || !['http', 'https'].contains(uri.scheme)) return;
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('تعذر فتح المرفق.')));
+    try {
+      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!opened && mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('تعذر فتح المرفق.')));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('تعذر فتح المرفق.')));
+      }
     }
   }
 
@@ -594,12 +602,9 @@ class _HomeScreenState extends State<HomeScreen> {
         throw Exception('رقم واتساب الكنيسة غير مهيأ في الخادم.');
       }
       final baseUri = Uri.parse(url);
-      final uri = baseUri.replace(
-        queryParameters: {
-          ...baseUri.queryParameters,
-          'text': 'سلام ونعمة، استفسار عن الخدمة',
-        },
-      );
+      final queryParameters = Map<String, String>.from(baseUri.queryParameters)
+        ..remove('text');
+      final uri = baseUri.replace(queryParameters: queryParameters);
       if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
         throw Exception('تعذر فتح واتساب على هذا الجهاز.');
       }
@@ -1358,8 +1363,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           title: option.title,
                           color: option.color,
                           onTap: () {
-                            Navigator.of(sheetContext).pop();
-                            option.onTap();
+                            Navigator.of(sheetContext).maybePop().then((_) {
+                              if (mounted) option.onTap();
+                            });
                           },
                         );
                       },

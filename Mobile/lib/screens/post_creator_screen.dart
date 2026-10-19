@@ -103,7 +103,7 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
       _bodyController.text = post.body;
       _mediaUrlController.text = post.mediaUrl;
       _mediaKind = post.mediaKind;
-      _feeController.text = post.feeAmount.toStringAsFixed(0);
+      _feeController.text = post.feeAmount.toStringAsFixed(2);
       _eventAt = DateTime.tryParse(post.eventAt)?.toLocal();
       if (_isLiturgy) {
         _liturgyDay = post.dayOfWeek.isEmpty ? 'saturday' : post.dayOfWeek;
@@ -283,7 +283,7 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
       context: context,
       initialTime: TimeOfDay.fromDateTime(current),
     );
-    if (time == null) return;
+    if (time == null || !mounted) return;
     final selected = DateTime(
       date.year,
       date.month,
@@ -425,6 +425,7 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
         'studentIds': _assignToGroup ? <String>[] : _selectedStudents.toList(),
     };
 
+    var routeClosed = false;
     try {
       if (_isGallery && _imageSource == 'file') {
         if (_pickedImage == null || _pickedImageBytes == null) {
@@ -445,6 +446,8 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
           ? await ApiService.updatePost(widget.postToEdit!.id, postData)
           : await ApiService.createPost(postData);
       if (success && mounted) {
+        routeClosed = true;
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -461,7 +464,7 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted && !routeClosed) setState(() => _isLoading = false);
     }
   }
 
@@ -762,7 +765,10 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
                     ),
                     validator: (value) {
                       final fee = double.tryParse(value?.trim() ?? '0');
-                      return fee == null || fee < 0 || fee > 1000000
+                      return fee == null ||
+                              !fee.isFinite ||
+                              fee < 0 ||
+                              fee > 1000000
                           ? 'أدخل رسوماً صحيحة.'
                           : null;
                     },

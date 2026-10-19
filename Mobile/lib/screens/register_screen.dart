@@ -201,6 +201,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       'meetingGroup': _meetingGroup,
     };
 
+    var routeReplaced = false;
     try {
       final response = await ApiService.register(userData);
       final user = UserModel.fromJson(
@@ -214,6 +215,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (!mounted) return;
 
+      routeReplaced = true;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const HomeScreen()),
         (_) => false,
@@ -228,7 +230,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       );
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted && !routeReplaced) setState(() => _isLoading = false);
     }
   }
 

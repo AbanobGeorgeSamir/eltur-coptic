@@ -61,7 +61,7 @@ class _NewslettersScreenState extends State<NewslettersScreen> {
     final updated = await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (_) => PostCreatorScreen(postToEdit: post)),
     );
-    if (updated == true) _loadPosts();
+    if (updated == true && mounted) _loadPosts();
   }
 
   Future<void> _deletePost(MinistryPostModel post) async {
@@ -103,6 +103,32 @@ class _NewslettersScreenState extends State<NewslettersScreen> {
     }
   }
 
+  Future<void> _openMedia(String value) async {
+    final uri = Uri.tryParse(value);
+    if (uri == null || !['http', 'https'].contains(uri.scheme)) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('رابط المرفق غير صالح.')));
+      }
+      return;
+    }
+    try {
+      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!opened && mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('تعذر فتح المرفق.')));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('تعذر فتح المرفق.')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final userRole = AuthService.currentUser?.role ?? 'student';
@@ -120,7 +146,7 @@ class _NewslettersScreenState extends State<NewslettersScreen> {
                       builder: (_) => const PostCreatorScreen(),
                     ),
                   );
-                  if (res == true) _loadPosts();
+                  if (res == true && mounted) _loadPosts();
                 },
                 backgroundColor: AppTheme.primaryBurgundy,
                 foregroundColor: AppTheme.accentGold,
@@ -221,10 +247,7 @@ class _NewslettersScreenState extends State<NewslettersScreen> {
                             if (post.mediaUrl.isNotEmpty) ...[
                               if (post.mediaKind == 'image')
                                 InkWell(
-                                  onTap: () => launchUrl(
-                                    Uri.parse(post.mediaUrl),
-                                    mode: LaunchMode.externalApplication,
-                                  ),
+                                  onTap: () => _openMedia(post.mediaUrl),
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(12),
                                     child: Image.network(
@@ -243,10 +266,7 @@ class _NewslettersScreenState extends State<NewslettersScreen> {
                                 )
                               else
                                 OutlinedButton.icon(
-                                  onPressed: () => launchUrl(
-                                    Uri.parse(post.mediaUrl),
-                                    mode: LaunchMode.externalApplication,
-                                  ),
+                                  onPressed: () => _openMedia(post.mediaUrl),
                                   icon: Icon(
                                     post.mediaKind == 'pdf'
                                         ? Icons.picture_as_pdf

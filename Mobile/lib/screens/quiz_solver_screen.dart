@@ -33,6 +33,7 @@ class _QuizSolverScreenState extends State<QuizSolverScreen> {
       answersList.add(_selectedAnswers[i] ?? 0);
     }
 
+    var routeClosed = false;
     try {
       final res = await ApiService.submitQuizAttempt(
         widget.quiz.id,
@@ -43,10 +44,10 @@ class _QuizSolverScreenState extends State<QuizSolverScreen> {
 
       if (!mounted) return;
 
-      showDialog(
+      final shouldReturn = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
-        builder: (_) => Directionality(
+        builder: (dialogContext) => Directionality(
           textDirection: TextDirection.rtl,
           child: AlertDialog(
             scrollable: true,
@@ -72,16 +73,17 @@ class _QuizSolverScreenState extends State<QuizSolverScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pop(true);
-                },
+                onPressed: () => Navigator.of(dialogContext).pop(true),
                 child: const Text('موافق والعودة'),
               ),
             ],
           ),
         ),
       );
+      if (shouldReturn == true && mounted) {
+        routeClosed = true;
+        Navigator.of(context).pop(true);
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -89,7 +91,7 @@ class _QuizSolverScreenState extends State<QuizSolverScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+      if (mounted && !routeClosed) setState(() => _isSubmitting = false);
     }
   }
 

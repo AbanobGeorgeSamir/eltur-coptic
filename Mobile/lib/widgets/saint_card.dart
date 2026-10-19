@@ -83,7 +83,7 @@ class SaintCard extends StatelessWidget {
                       maxLines: 3,
                       overflow: TextOverflow.clip,
                       style: const TextStyle(
-                      fontSize: 11.5,
+                        fontSize: 11.5,
                         height: 1.15,
                         color: AppTheme.darkBurgundy,
                       ),

@@ -71,7 +71,7 @@ class _PrayerChecklistScreenState extends State<PrayerChecklistScreen> {
       firstDate: DateTime(2024),
       lastDate: DateTime.now(),
     );
-    if (picked == null) return;
+    if (picked == null || !mounted) return;
     setState(() => _date = picked.toString().split(' ').first);
     await _load();
   }

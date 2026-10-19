@@ -65,7 +65,9 @@ class _TaskAssignScreenState extends State<TaskAssignScreen> {
       cancelText: 'إلغاء',
       confirmText: 'اختيار',
     );
-    if (selectedDate != null) setState(() => _dueDate = selectedDate);
+    if (selectedDate != null && mounted) {
+      setState(() => _dueDate = selectedDate);
+    }
   }
 
   String _formatDueDate(DateTime date) {
@@ -105,9 +107,12 @@ class _TaskAssignScreenState extends State<TaskAssignScreen> {
       if (_dueDate != null) 'dueAt': _formatDueDate(_dueDate!),
     };
 
+    var routeClosed = false;
     try {
       await ApiService.createTask(taskData);
       if (mounted) {
+        routeClosed = true;
+        setState(() => _saving = false);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('تم إسناد المهمة وحفظها')));
@@ -120,7 +125,7 @@ class _TaskAssignScreenState extends State<TaskAssignScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted && !routeClosed) setState(() => _saving = false);
     }
   }
 

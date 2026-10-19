@@ -216,6 +216,7 @@ class _AdminAccessScreenState extends State<AdminAccessScreen> {
         'grade': selectedStage,
         'meetingGroup': _newAdminGroup,
       });
+      if (!mounted) return;
       _nameController.clear();
       _usernameController.clear();
       _phoneController.clear();
@@ -287,11 +288,17 @@ class _AdminAccessScreenState extends State<AdminAccessScreen> {
                 selectedGrade,
                 includeInactive: false,
               );
-              setDialogState(() => groupOptions = rows);
+              if (dialogContext.mounted) {
+                setDialogState(() => groupOptions = rows);
+              }
             } catch (_) {
-              setDialogState(() => groupOptions = []);
+              if (dialogContext.mounted) {
+                setDialogState(() => groupOptions = []);
+              }
             } finally {
-              setDialogState(() => groupsLoading = false);
+              if (dialogContext.mounted) {
+                setDialogState(() => groupsLoading = false);
+              }
             }
           }
 
@@ -419,7 +426,7 @@ class _AdminAccessScreenState extends State<AdminAccessScreen> {
         },
       ),
     );
-    if (updates == null) return;
+    if (updates == null || !mounted) return;
     try {
       await ApiService.updateAdministrator(id, updates);
       _showMessage('تم حفظ صلاحيات المسؤول.');
@@ -429,9 +436,7 @@ class _AdminAccessScreenState extends State<AdminAccessScreen> {
     }
   }
 
-  Future<void> _deleteAdministrator(
-    Map<String, dynamic> administrator,
-  ) async {
+  Future<void> _deleteAdministrator(Map<String, dynamic> administrator) async {
     final id = administrator['id']?.toString() ?? '';
     if (id.isEmpty || id == _user?.id) return;
     final confirmed = await showDialog<bool>(
@@ -859,7 +864,8 @@ class _AdminAccessScreenState extends State<AdminAccessScreen> {
                                     children: [
                                       ListTile(
                                         title: Text(
-                                          administrator['name']?.toString() ?? '',
+                                          administrator['name']?.toString() ??
+                                              '',
                                         ),
                                         subtitle: Text(
                                           administrator['role'] == 'admin'
@@ -874,14 +880,17 @@ class _AdminAccessScreenState extends State<AdminAccessScreen> {
                                         ),
                                       ),
                                       Align(
-                                        alignment: AlignmentDirectional.centerEnd,
+                                        alignment:
+                                            AlignmentDirectional.centerEnd,
                                         child: Padding(
-                                          padding: const EdgeInsetsDirectional.only(
-                                            end: 8,
-                                            bottom: 4,
-                                          ),
+                                          padding:
+                                              const EdgeInsetsDirectional.only(
+                                                end: 8,
+                                                bottom: 4,
+                                              ),
                                           child: TextButton.icon(
-                                            onPressed: _saving ||
+                                            onPressed:
+                                                _saving ||
                                                     administrator['id'] ==
                                                         _user?.id
                                                 ? null
@@ -894,9 +903,9 @@ class _AdminAccessScreenState extends State<AdminAccessScreen> {
                                             ),
                                             label: const Text('حذف المسؤول'),
                                             style: TextButton.styleFrom(
-                                              foregroundColor: Theme.of(context)
-                                                  .colorScheme
-                                                  .error,
+                                              foregroundColor: Theme.of(
+                                                context,
+                                              ).colorScheme.error,
                                             ),
                                           ),
                                         ),

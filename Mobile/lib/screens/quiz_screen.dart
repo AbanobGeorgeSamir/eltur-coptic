@@ -31,6 +31,7 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     final user = AuthService.currentUser;
     if (user?.role != 'student' && !isAdminRole(user?.role)) {
       if (mounted) {

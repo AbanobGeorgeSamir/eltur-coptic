@@ -27,6 +27,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
   String? _assigningStudentId;
 
   Future<void> _load() async {
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _error = null;
@@ -573,6 +574,7 @@ class _StudentEditorState extends State<_StudentEditor> {
   late bool _isDeacon;
   late DateTime? _birthDate;
   bool _saving = false;
+  bool _routeClosed = false;
   String? _error;
 
   @override
@@ -640,7 +642,11 @@ class _StudentEditorState extends State<_StudentEditor> {
         ).toUtc().toIso8601String(),
       });
       if (result == null) throw Exception('تعذر حفظ بيانات الطالب.');
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) {
+        _routeClosed = true;
+        setState(() => _saving = false);
+        Navigator.of(context).pop(true);
+      }
     } catch (error) {
       if (mounted) {
         setState(
@@ -648,7 +654,7 @@ class _StudentEditorState extends State<_StudentEditor> {
         );
       }
     } finally {
-      if (mounted) setState(() => _saving = false);
+      if (mounted && !_routeClosed) setState(() => _saving = false);
     }
   }
 

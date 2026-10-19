@@ -64,6 +64,10 @@ class MinistryPostModel {
             parsedMediaUrl.host == _productionApiHost
         ? parsedMediaUrl.replace(scheme: 'https').toString()
         : rawMediaUrl;
+    final rawFeeAmount = json['feeAmount'];
+    final parsedFeeAmount = rawFeeAmount is num
+        ? rawFeeAmount.toDouble()
+        : double.tryParse(rawFeeAmount?.toString().trim() ?? '');
     return MinistryPostModel(
       id: json['_id'] ?? json['id'] ?? '',
       type: json['type'] ?? 'newsletter',
@@ -97,7 +101,11 @@ class MinistryPostModel {
           : (json['meetingGroup'] ?? '').toString(),
       createdAt: json['createdAt'] ?? '',
       published: json['published'] == true,
-      feeAmount: (json['feeAmount'] as num?)?.toDouble() ?? 0,
+      feeAmount: parsedFeeAmount != null &&
+              parsedFeeAmount.isFinite &&
+              parsedFeeAmount >= 0
+          ? parsedFeeAmount
+          : 0,
       adminName: aName,
       assignToGroup: json['assignToGroup'] != false,
       assignedStudents: (json['assignedStudents'] as List? ?? const [])

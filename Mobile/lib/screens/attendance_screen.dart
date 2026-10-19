@@ -290,7 +290,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                               firstDate: DateTime(2024),
                               lastDate: DateTime(2030),
                             );
-                            if (picked != null) {
+                            if (picked != null && mounted) {
                               setState(() {
                                 _selectedDate = picked.toString().split(' ')[0];
                                 _attendanceMap

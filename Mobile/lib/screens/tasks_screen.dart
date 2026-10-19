@@ -30,6 +30,7 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 
   Future<void> _loadTasks() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     final user = AuthService.currentUser;
     final studentId = user?.role == 'parent' && user?.childStudentId != null

@@ -34,6 +34,7 @@ class _TripsScreenState extends State<TripsScreen> {
   }
 
   Future<void> _load() async {
+    if (!mounted) return;
     if (!_hasLoaded) {
       setState(() {
         _loading = true;
@@ -69,7 +70,7 @@ class _TripsScreenState extends State<TripsScreen> {
         builder: (_) => const PostCreatorScreen(initialType: 'trip'),
       ),
     );
-    if (saved == true) _load();
+    if (saved == true && mounted) _load();
   }
 
   Future<void> _editTrip(MinistryPostModel trip) async {
@@ -79,7 +80,7 @@ class _TripsScreenState extends State<TripsScreen> {
             PostCreatorScreen(initialType: 'trip', postToEdit: trip),
       ),
     );
-    if (saved == true) _load();
+    if (saved == true && mounted) _load();
   }
 
   Future<void> _deleteTrip(MinistryPostModel trip) async {
@@ -114,7 +115,7 @@ class _TripsScreenState extends State<TripsScreen> {
         ],
       ),
     );
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
     setState(() => _deletingTripId = trip.id);
     try {
       await ApiService.deletePost(trip.id);
@@ -140,11 +141,19 @@ class _TripsScreenState extends State<TripsScreen> {
   Future<void> _openMedia(MinistryPostModel trip) async {
     final uri = Uri.tryParse(trip.mediaUrl);
     if (uri == null || !uri.hasScheme) return;
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open the trip attachment.')),
-      );
+    try {
+      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!opened && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open the trip attachment.')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open the trip attachment.')),
+        );
+      }
     }
   }
 
@@ -169,18 +178,17 @@ class _TripsScreenState extends State<TripsScreen> {
   }
 
   Future<void> _recordPayment(Map<String, dynamic> registration) async {
-    final controller = TextEditingController(
-      text: '${registration['amountPaid'] ?? 0}',
-    );
+    var amountText = '${registration['amountPaid'] ?? 0}';
     final paid = await showDialog<double>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         scrollable: true,
         title: const Text('تسجيل دفعة الطالب'),
-        content: TextField(
-          controller: controller,
+        content: TextFormField(
+          initialValue: amountText,
           autofocus: true,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          onChanged: (value) => amountText = value,
           decoration: InputDecoration(
             labelText:
                 'المبلغ المدفوع من أصل ${registration['amountDue'] ?? 0}',
@@ -193,7 +201,7 @@ class _TripsScreenState extends State<TripsScreen> {
           ),
           FilledButton(
             onPressed: () {
-              final amount = double.tryParse(controller.text.trim());
+              final amount = double.tryParse(amountText.trim());
               if (amount != null) Navigator.pop(dialogContext, amount);
             },
             child: const Text('حفظ'),
@@ -201,7 +209,6 @@ class _TripsScreenState extends State<TripsScreen> {
         ],
       ),
     );
-    controller.dispose();
     if (paid == null) return;
     try {
       await ApiService.updateTripPayment(registration['_id'].toString(), paid);
