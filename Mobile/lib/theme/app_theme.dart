@@ -127,7 +127,7 @@ class AppTheme {
         elevation: 1.5,
         shadowColor: primaryBurgundy.withValues(alpha: 0.08),
         surfaceTintColor: Colors.transparent,
-        margin: EdgeInsets.zero,
+        margin: const EdgeInsets.symmetric(vertical: 4),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: borderColor),

@@ -41,6 +41,7 @@ const userSchema = new mongoose.Schema({
     notificationPreferences: {
         verseUpdates: { type: Boolean, default: true },
     },
+    pushTokens: { type: [String], default: [], select: false },
     rejectedAt: { type: Date, default: null },
     rejectedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     parentApprovedStudentIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],

@@ -12,6 +12,7 @@ const Quiz = require('../models/Quiz');
 const QuizAttempt = require('../models/QuizAttempt');
 const FeaturedVerse = require('../models/FeaturedVerse');
 const VerseUpdateEvent = require('../models/VerseUpdateEvent');
+const { sendFeaturedVerseUpdate } = require('../services/push_notifications');
 const PhotoAsset = require('../models/PhotoAsset');
 const TripRegistration = require('../models/TripRegistration');
 const MeetingGroup = require('../models/MeetingGroup');
@@ -832,6 +833,7 @@ router.put('/featured-verse', auth, adminOnly, async (req, res, next) => {
 
         const session = await mongoose.startSession();
         let savedVerse;
+        let verseChanged = false;
         try {
             await session.withTransaction(async () => {
                 const current = await FeaturedVerse.findOne({ key: 'global' }).session(session).lean();
@@ -853,6 +855,7 @@ router.put('/featured-verse', auth, adminOnly, async (req, res, next) => {
                     { $set: { text, reference, updatedBy: req.user._id } },
                     { upsert: true, returnDocument: 'after', runValidators: true, setDefaultsOnInsert: true, session },
                 ).select('text reference updatedAt').lean();
+                verseChanged = true;
                 await VerseUpdateEvent.create([{
                     requestId,
                     title: 'The featured ayah was updated',
@@ -877,6 +880,13 @@ router.put('/featured-verse', auth, adminOnly, async (req, res, next) => {
             throw error;
         } finally {
             await session.endSession();
+        }
+        if (verseChanged) {
+            try {
+                await sendFeaturedVerseUpdate(savedVerse);
+            } catch (pushError) {
+                console.error('Featured ayah push delivery failed:', pushError.message);
+            }
         }
         return res.json({ message: 'The featured verse was updated.', data: savedVerse });
     } catch (error) {
@@ -920,6 +930,33 @@ router.patch('/notification-preferences', auth, async (req, res, next) => {
             { returnDocument: 'after', runValidators: true },
         ).select('notificationPreferences').lean();
         return res.json({ data: { verseUpdates: user?.notificationPreferences?.verseUpdates !== false } });
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.post('/push-token', auth, async (req, res, next) => {
+    const token = typeof req.body?.token === 'string' ? req.body.token.trim() : '';
+    if (token.length < 20 || token.length > 4096) {
+        return res.status(422).json({ message: 'A valid phone notification token is required.' });
+    }
+    try {
+        await User.updateMany({ pushTokens: token }, { $pull: { pushTokens: token } });
+        await User.updateOne({ _id: req.user._id }, { $addToSet: { pushTokens: token } });
+        return res.json({ message: 'Phone notifications are enabled for this device.' });
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.delete('/push-token', auth, async (req, res, next) => {
+    const token = typeof req.body?.token === 'string' ? req.body.token.trim() : '';
+    if (!token || token.length > 4096) {
+        return res.status(422).json({ message: 'A valid phone notification token is required.' });
+    }
+    try {
+        await User.updateMany({ pushTokens: token }, { $pull: { pushTokens: token } });
+        return res.json({ message: 'Phone notifications were disabled for this device.' });
     } catch (error) {
         return next(error);
     }

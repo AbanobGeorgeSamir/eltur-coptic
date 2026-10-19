@@ -3,11 +3,16 @@ import 'package:flutter_localizations/flutter_localizations.dart'
     show GlobalWidgetsLocalizations;
 import 'package:flutter/services.dart';
 import 'screens/splash_screen.dart';
+import 'services/push_notification_service.dart';
 import 'theme/app_theme.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await PushNotificationService.initialize();
   runApp(const EltorCopticApp());
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    PushNotificationService.openPendingNotification();
+  });
 }
 
 class EltorCopticApp extends StatelessWidget {
@@ -16,6 +21,7 @@ class EltorCopticApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
       title: 'Eltur Coptic',
       debugShowCheckedModeBanner: false,
       builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(

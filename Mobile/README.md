@@ -22,3 +22,21 @@ Production API URLs must use HTTPS and the app rejects redirects so its bearer t
 For a signed Android release, create `Mobile/android/key.properties` locally with `storeFile`, `storePassword`, `keyAlias`, and `keyPassword`. Keep that file and its keystore out of source control. Without signing properties, Gradle does not reuse the debug key for a release.
 
 On Windows, Flutter may require Developer Mode (or another symlink-enabled setup) before `flutter pub get` can finish installing plugin packages. The API endpoint should be configured through `--dart-define=API_BASE_URL=...`; keep the MongoDB connection string exclusively in `backend\.env`.
+
+## Phone ayah notifications
+
+The app uses Firebase Cloud Messaging for alerts. Register the Android app in Firebase with application ID `com.example.project`. If you build for iOS, register the matching iOS bundle ID and enable Push Notifications and Background Modes (Remote notifications) in Xcode, then upload an APNs authentication key to the Firebase project.
+
+Pass the Firebase client settings from the Firebase project to Flutter as build-time defines. These are client app identifiers; keep the service account only on the backend:
+
+```powershell
+flutter build apk `
+  --dart-define=FIREBASE_API_KEY=<firebase-api-key> `
+  --dart-define=FIREBASE_MESSAGING_SENDER_ID=<sender-id> `
+  --dart-define=FIREBASE_PROJECT_ID=<project-id> `
+  --dart-define=FIREBASE_ANDROID_APP_ID=<android-app-id>
+```
+
+For iOS, pass `FIREBASE_IOS_APP_ID=<ios-app-id>` and set `FIREBASE_IOS_BUNDLE_ID` to the exact bundle ID registered in Firebase (currently `com.example.project`).
+
+For production, set `FIREBASE_PROJECT_ID` and the sensitive `FIREBASE_SERVICE_ACCOUNT_JSON` backend environment variable, then redeploy the API. The service account JSON must be stored on one line. In the app, open Notifications and enable phone notifications; Android 13 and newer and iOS will ask for notification permission. Tapping an alert opens the latest featured ayah. Phone push requires the Firebase client settings, a deployed backend with the service account configured, and permission from the user.

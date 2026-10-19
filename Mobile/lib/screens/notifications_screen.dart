@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import '../services/api_service.dart';
+import '../services/push_notification_service.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -11,6 +12,7 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   List<Map<String, dynamic>> _items = [];
   bool _enabled = true;
+  bool _phoneNotificationsEnabled = false;
   bool _loading = true;
   bool _savingPreference = false;
   String? _error;
@@ -31,10 +33,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ApiService.getNotifications(),
         ApiService.getVerseUpdatePreference(),
       ]);
+      final phoneNotificationsEnabled = results[1] == true
+          ? await PushNotificationService.syncIfPermissionGranted()
+          : false;
       if (!mounted) return;
       setState(() {
         _items = results[0] as List<Map<String, dynamic>>;
         _enabled = results[1] as bool;
+        _phoneNotificationsEnabled = phoneNotificationsEnabled;
         _loading = false;
       });
     } catch (error) {
@@ -56,7 +62,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final saved = await ApiService.setVerseUpdatePreference(value);
       if (!mounted) return;
       setState(() => _enabled = saved);
-      if (saved) await _load();
+      if (saved) {
+        final phoneNotificationsEnabled =
+            await PushNotificationService.requestPermissionAndRegister();
+        if (mounted) {
+          setState(
+            () => _phoneNotificationsEnabled = phoneNotificationsEnabled,
+          );
+          if (!phoneNotificationsEnabled) _showPhoneNotificationMessage();
+        }
+        await _load();
+      }
       if (!saved && mounted) setState(() => _items = []);
     } catch (error) {
       if (!mounted) return;
@@ -69,6 +85,36 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     } finally {
       if (mounted) setState(() => _savingPreference = false);
     }
+  }
+
+  Future<void> _enablePhoneNotifications() async {
+    if (!PushNotificationService.isAvailable) {
+      _showPhoneNotificationMessage();
+      return;
+    }
+    try {
+      final enabled =
+          await PushNotificationService.requestPermissionAndRegister();
+      if (!mounted) return;
+      setState(() => _phoneNotificationsEnabled = enabled);
+      if (!enabled) _showPhoneNotificationMessage();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
+      );
+    }
+  }
+
+  void _showPhoneNotificationMessage() {
+    final message = PushNotificationService.isAvailable
+        ? 'اسمح بالإشعارات من إعدادات هاتفك وتأكد من الاتصال بالإنترنت ثم حاول مجددًا.'
+        : 'إشعارات الهاتف تحتاج إلى إعداد Firebase لهذا الإصدار.';
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _openVerse() {
@@ -97,14 +143,23 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           children: [
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('تحديثات الآية للجميع'),
+              title: const Text('إشعارات الآية المميزة'),
               subtitle: const Text(
-                'استقبل إشعارًا داخل التطبيق عند تغيير الآية المشتركة.',
+                'استقبل إشعارًا على هاتفك عندما يغيّر المسؤول الآية المميزة.',
               ),
               value: _enabled,
               onChanged: _savingPreference ? null : _setPreference,
             ),
             const SizedBox(height: 12),
+            if (!_loading && _enabled && !_phoneNotificationsEnabled)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: OutlinedButton.icon(
+                  onPressed: _enablePhoneNotifications,
+                  icon: const Icon(Icons.notifications_active_outlined),
+                  label: const Text('تفعيل إشعارات الهاتف'),
+                ),
+              ),
             if (_loading)
               const Center(
                 child: Padding(

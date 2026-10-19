@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../services/push_notification_service.dart';
 import '../models/user_model.dart';
 import '../models/confession_model.dart';
 import '../models/attendance_model.dart';
@@ -60,6 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadDashboardData();
+    PushNotificationService.syncIfPermissionGranted();
   }
 
   Future<void> _loadDashboardData() async {
@@ -663,9 +665,9 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Semantics(
-                  label: 'Eltur Coptic',
+                  label: 'كنيسة موسي النبي ومارمرقس الرسول',
                   child: Text(
-                    'Eltur Coptic',
+                    'كنيسة موسي النبي ومارمرقس الرسول',
                     maxLines: 2,
                     style: const TextStyle(fontSize: 14, height: 1.15),
                   ),

@@ -64,9 +64,9 @@ class PublicHomeScreen extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Semantics(
-                  label: 'Eltur Coptic',
+                  label: 'كنيسة موسي النبي ومارمرقس الرسول',
                   child: Text(
-                    'Eltur Coptic',
+                    'كنيسة موسي النبي ومارمرقس الرسول',
                     maxLines: 2,
                     style: const TextStyle(fontSize: 14, height: 1.15),
                   ),

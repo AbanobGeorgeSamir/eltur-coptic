@@ -16,7 +16,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'سياسة الخصوصية واستخدام البيانات - كنيسة أبطال طور سيناء',
+                'سياسة الخصوصية واستخدام البيانات - كنيسة موسي النبي ومارمرقس الرسول',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -25,7 +25,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               const Text(
-                'نحن في كنيسة أبطال طور سيناء ونشاط إعدادي خدمة والخدمات الكنسية، نلتزم بالحفاظ على خصوصية وأمان كافة بيانات الخدام وأبناء الخدمة وأولياء الأمور وفقًا للتعليمات الكنسية والقوانين المنظمة.',
+                'نحن في كنيسة موسي النبي ومارمرقس الرسول، نلتزم بالحفاظ على خصوصية وأمان كافة بيانات الخدام وأبناء الخدمة وأولياء الأمور وفقًا للتعليمات الكنسية والقوانين المنظمة.',
                 style: TextStyle(fontSize: 15, height: 1.6),
               ),
               const SizedBox(height: 16),

@@ -52,6 +52,7 @@ class ApiService {
     'API_BASE_URL',
   );
   static const String _apiUrlKey = 'eltor_coptic_api_base_url';
+  static const String _pushTokenKey = 'eltor_coptic_push_token';
   static String? _runtimeBaseUrl;
   static String? _sessionBaseUrl;
 
@@ -310,12 +311,35 @@ class ApiService {
     return enabled;
   }
 
+  static Future<void> registerPushToken(String token) async {
+    await _request('POST', '/push-token', body: {'token': token});
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setString(_pushTokenKey, token);
+  }
+
+  static Future<void> unregisterPushToken(String token) async {
+    await _request('DELETE', '/push-token', body: {'token': token});
+    final preferences = await SharedPreferences.getInstance();
+    if (preferences.getString(_pushTokenKey) == token) {
+      await preferences.remove(_pushTokenKey);
+    }
+  }
+
   static Future<void> deleteAccount(String password) async {
     await _request('DELETE', '/users/me', body: {'password': password});
   }
 
   static Future<void> logout() async {
     try {
+      final preferences = await SharedPreferences.getInstance();
+      final pushToken = preferences.getString(_pushTokenKey);
+      if (pushToken != null && pushToken.isNotEmpty) {
+        try {
+          await unregisterPushToken(pushToken);
+        } catch (_) {
+          // Continue logout even when the notification API is unreachable.
+        }
+      }
       await _request('POST', '/auth/logout', body: {});
     } catch (_) {
       // Clear the local session even if the server cannot be reached.

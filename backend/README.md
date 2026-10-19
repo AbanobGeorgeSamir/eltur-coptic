@@ -37,7 +37,7 @@ All listed routes are under `/api`; protected routes accept a bearer token from 
 | MCQ quizzes | `GET /quizzes`, `POST /quizzes` (admin), `POST /quizzes/:id/submit` (student), `GET /quiz-attempts` (own student attempts), `GET /quizzes/:id/results` (owner admin) |
 | Parent view | `GET /parents/dashboard` (verified parent; linked by verified guardian phone) |
 | Contact/privacy/download | `GET /contact`, `GET /privacy-policy`, `GET /mobile-app/download` |
-| Ayah notifications | `GET /notifications`, `GET/PATCH /notification-preferences`; mobile inbox entries open the latest featured ayah |
+| Ayah notifications | `GET /notifications`, `GET/PATCH /notification-preferences`, `POST/DELETE /push-token`; mobile inbox and phone alerts open the latest featured ayah |
 
 The API applies grade and meeting-group filters and validates each write; web route visibility is not the security boundary. Student sessions only receive content and grade-group activity matching their registration scope. Parent accounts only see student records explicitly approved by an administrator. Older group posts, group tasks, and quizzes without an `audienceMode` are hidden from students until the public administrator reviews and saves an audience in the web management pages. Individual tasks remain visible only to their assigned student. MongoDB does not provide the row-level security model used by some SQL services; equivalent access checks are applied in server-side queries and write handlers.
 
@@ -50,9 +50,13 @@ MONGODB_URI=<your MongoDB Atlas connection string>
 DB_NAME=eltor_coptic
 JWT_SECRET=<random secret with at least 32 characters>
 CRON_SECRET=<random secret with at least 16 characters>
+FIREBASE_PROJECT_ID=<Firebase project ID>
+FIREBASE_SERVICE_ACCOUNT_JSON=<service account JSON on one line>
 FRONTEND_URL=https://eltur-coptic.vercel.app
 CLIENT_ORIGIN=https://eltur-coptic.vercel.app
 ```
+
+The Firebase service account must be allowed to send Firebase Cloud Messaging messages in the configured project. Store the JSON value as a sensitive backend environment variable; never put it in the Flutter app. The API registers signed-in devices at `POST/DELETE /api/push-token` and sends a push after a changed featured ayah is saved. Users who disabled ayah notifications are skipped. Without the Firebase variables, ayah updates and the in-app notification inbox continue to work, but no phone push is sent.
 
 Use an Atlas network access rule that allows only the required Vercel connections and a database user scoped to the `eltor_coptic` database. Production MongoDB connections must use TLS. Set `CRON_SECRET` as a sensitive Vercel environment variable; the scheduled maintenance route uses a timing-safe secret comparison and rejects requests if it is unset. The production frontend origin is also included in the backend's exact CORS allowlist. Production rate-limit buckets are stored in MongoDB with HMAC-obscured keys and TTL cleanup so limits are shared across serverless instances. Configure Vercel Firewall as an additional perimeter control.
 
@@ -60,7 +64,7 @@ There are no third-party webhook endpoints in this API. The scheduled maintenanc
 
 ## Data handling
 
-Student profile data includes personal identifiers and guardian contact information. Limit production administrator access, configure MongoDB backups and access controls, and use HTTPS. Uploaded images and PDFs are admin-only on upload, limited to 5 MB, identified by file signature, and stored with generated ObjectIds. Their media URLs are publicly readable because the current upload feature serves shared ministry posts; upload only files explicitly approved for public viewing. The app currently has no private-file workflow or private storage bucket. The mobile ayah notification inbox is durable and preference-aware, but background push requires configuring a provider such as Firebase Cloud Messaging and is not enabled here.
+Student profile data includes personal identifiers and guardian contact information. Limit production administrator access, configure MongoDB backups and access controls, and use HTTPS. Uploaded images and PDFs are admin-only on upload, limited to 5 MB, identified by file signature, and stored with generated ObjectIds. Their media URLs are publicly readable because the current upload feature serves shared ministry posts; upload only files explicitly approved for public viewing. The app currently has no private-file workflow or private storage bucket. Ayah push alerts are preference-aware and are sent through Firebase Cloud Messaging when the backend Firebase service account is configured.
 
 See [DATABASE_BACKUP.md](DATABASE_BACKUP.md) for the encrypted backup and isolated restore procedure. Production deployments should also enable Atlas automated backups or point-in-time recovery.
 
