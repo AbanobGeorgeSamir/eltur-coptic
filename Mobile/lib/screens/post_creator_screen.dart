@@ -64,9 +64,9 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
     try {
       final image = await ImagePicker().pickImage(
         source: ImageSource.gallery,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 84,
+        maxWidth: 1600,
+        maxHeight: 1600,
+        imageQuality: 78,
       );
       if (image == null || !mounted) return;
       final bytes = await image.readAsBytes();
@@ -74,6 +74,10 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
       setState(() {
         _pickedImage = image;
         _pickedImageBytes = bytes;
+        _pickedAttachment = null;
+        _pickedAttachmentName = null;
+        _mediaUrlController.clear();
+        _mediaKind = 'image';
       });
     } catch (error) {
       if (!mounted) return;
@@ -240,6 +244,8 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
       }
       if (!mounted) return;
       setState(() {
+        _pickedImage = null;
+        _pickedImageBytes = null;
         _pickedAttachment = file;
         _pickedAttachmentName = file.name;
         _mediaKind = file.extension?.toLowerCase() == 'pdf' ? 'pdf' : 'image';
@@ -421,9 +427,21 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
         if (_pickedImage == null || _pickedImageBytes == null) {
           throw Exception('اختر صورة من الجهاز أولاً.');
         }
+        postData['mediaKind'] = 'image';
         postData['mediaUrl'] = await ApiService.uploadImage(
           bytes: _pickedImageBytes!,
-          filename: _pickedImage!.name.replaceAll(RegExp(r'\.[^.]+$'), ''),
+          filename: _pickedImage!.name,
+        );
+      }
+      if (_isTrip && _pickedImage != null) {
+        final imageBytes = _pickedImageBytes;
+        if (imageBytes == null || imageBytes.isEmpty) {
+          throw Exception('تعذر قراءة صورة الرحلة. اختر الصورة مرة أخرى.');
+        }
+        postData['mediaKind'] = 'image';
+        postData['mediaUrl'] = await ApiService.uploadImage(
+          bytes: imageBytes,
+          filename: _pickedImage!.name,
         );
       }
       if (!_isGallery && _pickedAttachment != null) {
@@ -930,10 +948,12 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
                       if (_isGallery) {
                         setState(() {});
                       } else if (value.isNotEmpty &&
-                          _pickedAttachment != null) {
+                          (_pickedAttachment != null || _pickedImage != null)) {
                         setState(() {
                           _pickedAttachmentName = null;
                           _pickedAttachment = null;
+                          _pickedImage = null;
+                          _pickedImageBytes = null;
                         });
                       }
                     },

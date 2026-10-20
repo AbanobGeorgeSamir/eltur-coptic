@@ -48,6 +48,7 @@ function SectionTitle({ title, description, to, action = 'عرض الكل' }) {
 export default function Home() {
   const { user } = useAuth();
   const [posts, setPosts] = useState({ news: [], readings: [], liturgies: [] });
+  const [dailyReading, setDailyReading] = useState(null);
   const [taskCount, setTaskCount] = useState(null);
   const [attendanceSummary, setAttendanceSummary] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -55,7 +56,7 @@ export default function Home() {
   const [liturgyError, setLiturgyError] = useState('');
   const [loadErrors, setLoadErrors] = useState({});
   const links = isAdminRole(user?.role)
-    ? [...studentLinks.filter(([, path]) => path !== '/tasks'), ['الطلاب', '/admin-students', UserCheck], ['إدارة المعرض', '/admin-gallery', ImageIcon], ['إدارة القداسات', '/admin-liturgy', CalendarDays]]
+    ? [...studentLinks.filter(([, path]) => path !== '/tasks'), ['الطلاب', '/admin-students', UserCheck], ['إدارة المعرض', '/admin-gallery', ImageIcon], ['إدارة القداسات', '/admin-liturgy', CalendarDays], ...(user?.role === 'admin' ? [['القراءة اليومية', '/admin-daily-reading', BookOpen]] : [])]
     : studentLinks;
 
   useEffect(() => {
@@ -73,7 +74,8 @@ export default function Home() {
       loadSafely(api.upcomingLiturgies(2).then(selectUpcomingLiturgies), []),
       loadSafely(isAdminRole(user?.role) ? Promise.resolve([]) : api.tasks(), []),
       loadSafely(api.attendanceSummary(), null),
-    ]).then(([newsResult, readingsResult, liturgiesResult, tasksResult, attendanceResult]) => {
+      loadSafely(api.dailyReading(), null),
+    ]).then(([newsResult, readingsResult, liturgiesResult, tasksResult, attendanceResult, dailyReadingResult]) => {
       if (!active) return;
       setPosts({
         news: newsResult.data.slice(0, 3),
@@ -82,12 +84,14 @@ export default function Home() {
       });
       setTaskCount(tasksResult.failed ? null : tasksResult.data.filter((task) => !task.completedAt).length);
       setAttendanceSummary(attendanceResult.data);
+      setDailyReading(dailyReadingResult.data);
       setLoadErrors({
         news: newsResult.failed,
         readings: readingsResult.failed,
         liturgies: liturgiesResult.failed,
         tasks: tasksResult.failed,
         attendance: attendanceResult.failed,
+        dailyReading: dailyReadingResult.failed,
       });
     }).finally(() => {
       if (active) setLoading(false);
@@ -152,6 +156,17 @@ export default function Home() {
             <span className="text-sm font-bold text-white">{title}</span>
           </Link>)}
         </div>
+      </section>
+
+      <section className="space-y-3">
+        <SectionTitle title="القراءة اليومية" description="النص الذي نشره مسؤول الكنيسة للمستخدمين." to={user?.role === 'admin' ? '/admin-daily-reading' : undefined} action="إدارة القراءة" />
+        {loading && <div className="animate-pulse rounded-2xl bg-slate-900 p-5 text-sm text-slate-500">جارٍ تحميل القراءة اليومية...</div>}
+        {!loading && loadErrors.dailyReading && <p role="alert" className="rounded-2xl border border-rose-400/20 bg-rose-400/5 p-5 text-sm text-rose-200">تعذر تحميل القراءة اليومية.</p>}
+        {!loading && !loadErrors.dailyReading && !dailyReading && <p className="rounded-2xl border border-slate-800 bg-slate-900 p-5 text-sm text-slate-400">لم تُنشر قراءة يومية بعد.</p>}
+        {!loading && !loadErrors.dailyReading && dailyReading && <article className="rounded-2xl border border-[#e9dfcb] bg-[#fffaf0] p-5 sm:p-6" dir="rtl">
+          <h3 className="font-bold text-[#7d2038]">{dailyReading.reference}</h3>
+          <p className="mt-3 whitespace-pre-wrap font-serif text-xl leading-[1.9] text-black sm:text-2xl">{dailyReading.text}</p>
+        </article>}
       </section>
 
       <section className="space-y-3">

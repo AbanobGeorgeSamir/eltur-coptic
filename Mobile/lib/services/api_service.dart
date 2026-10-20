@@ -48,6 +48,7 @@ class ApiService {
   static http.Client _client = http.Client();
   static const String _productionBaseUrl =
       'https://eltur-coptic-api-server.vercel.app/api';
+  static const int _legacyMediaFallbackLimit = 5 * 1024 * 1024;
   static const String _configuredBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
   );
@@ -270,6 +271,39 @@ class ApiService {
     }
     return null;
   }
+
+  static Future<Map<String, dynamic>?> getDailyReading() async {
+    final response = await _request('GET', '/daily-reading');
+    if (response is Map && response['data'] is Map) {
+      return Map<String, dynamic>.from(response['data'] as Map);
+    }
+    return null;
+  }
+
+  static Future<Map<String, dynamic>> updateDailyReading({
+    required String bookId,
+    required String bookName,
+    required int chapter,
+    required int startVerse,
+    required int endVerse,
+    required String reference,
+    required String text,
+  }) async => Map<String, dynamic>.from(
+    await _request(
+          'PUT',
+          '/daily-reading',
+          body: {
+            'bookId': bookId,
+            'bookName': bookName,
+            'chapter': chapter,
+            'startVerse': startVerse,
+            'endVerse': endVerse,
+            'reference': reference,
+            'text': text,
+          },
+        )
+        as Map,
+  );
 
   static Future<Map<String, dynamic>> updateFeaturedVerse({
     required String text,
@@ -813,20 +847,14 @@ class ApiService {
     required List<int> bytes,
     required String filename,
   }) async {
-    if (bytes.isEmpty || bytes.length > 2 * 1024 * 1024) {
-      throw Exception('حجم الصورة بعد الضغط يجب ألا يتجاوز ٢ ميجابايت.');
+    if (bytes.isEmpty || bytes.length > _legacyMediaFallbackLimit) {
+      throw Exception('Images must be 5 MB or smaller.');
     }
-    final response = await _request(
-      'POST',
-      '/media',
-      body: {'data': base64Encode(bytes), 'filename': filename},
+    return uploadMediaStream(
+      bytes: Stream<List<int>>.value(bytes),
+      contentLength: bytes.length,
+      filename: filename,
     );
-    if (response is Map &&
-        response['data'] is Map &&
-        response['data']['id'] != null) {
-      return _uploadedMediaUrl(response['data']);
-    }
-    throw Exception('تعذر حفظ الصورة.');
   }
 
   static Future<String> uploadMedia({
@@ -834,20 +862,13 @@ class ApiService {
     required String filename,
   }) async {
     if (bytes.isEmpty || bytes.length > 5 * 1024 * 1024) {
-      throw Exception('File size must not exceed 5 MB.');
+      throw Exception('Files must be 5 MB or smaller.');
     }
-    final response = await _request(
-      'POST',
-      '/media',
-      body: {'data': base64Encode(bytes), 'filename': filename},
-      timeout: const Duration(seconds: 60),
+    return uploadMediaStream(
+      bytes: Stream<List<int>>.value(bytes),
+      contentLength: bytes.length,
+      filename: filename,
     );
-    if (response is Map &&
-        response['data'] is Map &&
-        response['data']['id'] != null) {
-      return _uploadedMediaUrl(response['data']);
-    }
-    throw Exception('Could not upload the selected file.');
   }
 
   static Future<String> uploadMediaStream({
@@ -873,12 +894,41 @@ class ApiService {
       throw Exception('Choose a JPEG, PNG, WebP, GIF, or PDF file.');
     }
 
-    final sessionResponse = await _request(
-      'POST',
-      '/media/upload-session',
-      body: {'filename': filename, 'contentType': contentType},
-      timeout: const Duration(seconds: 30),
-    );
+    dynamic sessionResponse;
+    try {
+      sessionResponse = await _request(
+        'POST',
+        '/media/upload-session',
+        body: {'filename': filename, 'contentType': contentType},
+        timeout: const Duration(seconds: 30),
+      );
+    } on ApiResponseException catch (error) {
+      final blobStoreNotConnected =
+          error.statusCode == 503 &&
+          error.message.toLowerCase().contains('connect a vercel blob store');
+      if (!blobStoreNotConnected) rethrow;
+      if (contentLength > _legacyMediaFallbackLimit) {
+        throw const ApiResponseException(
+          503,
+          'Connect Blob storage to upload files larger than 5 MB.',
+        );
+      }
+
+      final fileBytes = <int>[];
+      await for (final chunk in bytes) {
+        fileBytes.addAll(chunk);
+        if (fileBytes.length > _legacyMediaFallbackLimit) {
+          throw const ApiResponseException(
+            413,
+            'Files must be 5 MB or smaller until Blob storage is connected.',
+          );
+        }
+      }
+      if (fileBytes.length != contentLength) {
+        throw Exception('Could not read the selected file completely.');
+      }
+      return _uploadMediaToDatabase(fileBytes, filename);
+    }
     if (sessionResponse is! Map || sessionResponse['data'] is! Map) {
       throw Exception('Could not start the file upload.');
     }
@@ -938,6 +988,26 @@ class ApiService {
       );
     }
     throw Exception('Could not complete the file upload.');
+  }
+
+  static Future<String> _uploadMediaToDatabase(
+    List<int> bytes,
+    String filename,
+  ) async {
+    final response = await _request(
+      'POST',
+      '/media',
+      body: {'data': base64Encode(bytes), 'filename': filename},
+      timeout: const Duration(seconds: 60),
+    );
+    if (response is Map &&
+        response['data'] is Map &&
+        response['data']['id'] != null) {
+      return _uploadedMediaUrl(
+        Map<String, dynamic>.from(response['data'] as Map),
+      );
+    }
+    throw Exception('Could not upload the selected file.');
   }
 
   static String _uploadedMediaUrl(Map data) {

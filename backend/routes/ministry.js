@@ -13,6 +13,7 @@ const PrayerChecklist = require('../models/PrayerChecklist');
 const Quiz = require('../models/Quiz');
 const QuizAttempt = require('../models/QuizAttempt');
 const FeaturedVerse = require('../models/FeaturedVerse');
+const DailyReading = require('../models/DailyReading');
 const VerseUpdateEvent = require('../models/VerseUpdateEvent');
 const { sendFeaturedVerseUpdate } = require('../services/push_notifications');
 const PhotoAsset = require('../models/PhotoAsset');
@@ -1014,6 +1015,48 @@ router.get('/featured-verse', async (req, res, next) => {
             .select('text reference updatedAt')
             .lean();
         return res.json({ data: verse });
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.get('/daily-reading', auth, async (req, res, next) => {
+    try {
+        const reading = await DailyReading.findOne({ key: 'global' })
+            .select('bookId bookName chapter startVerse endVerse reference text updatedAt')
+            .lean();
+        return res.json({ data: reading });
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.put('/daily-reading', auth, adminOnly, async (req, res, next) => {
+    if (!isGlobalAdmin(req.user)) return res.status(403).json({ message: 'Only the public administrator can edit the shared daily reading.' });
+    try {
+        const bookId = typeof req.body?.bookId === 'string' ? req.body.bookId.trim() : '';
+        const bookName = typeof req.body?.bookName === 'string' ? req.body.bookName.trim() : '';
+        const chapter = Number(req.body?.chapter);
+        const startVerse = Number(req.body?.startVerse);
+        const endVerse = Number(req.body?.endVerse);
+        const reference = typeof req.body?.reference === 'string' ? req.body.reference.trim() : '';
+        const text = typeof req.body?.text === 'string' ? req.body.text.trim() : '';
+        if (!/^[A-Za-z0-9]{1,12}$/.test(bookId)
+            || !bookName || bookName.length > 100
+            || !Number.isInteger(chapter) || chapter < 1 || chapter > 200
+            || !Number.isInteger(startVerse) || startVerse < 1 || startVerse > 300
+            || !Number.isInteger(endVerse) || endVerse < startVerse || endVerse > 300
+            || !reference || reference.length > 200
+            || !text || text.length > 20000) {
+            return res.status(422).json({ message: 'تحقق من السفر والإصحاح ونطاق الآيات ونص القراءة.' });
+        }
+
+        const reading = await DailyReading.findOneAndUpdate(
+            { key: 'global' },
+            { $set: { bookId, bookName, chapter, startVerse, endVerse, reference, text, updatedBy: req.user._id } },
+            { upsert: true, returnDocument: 'after', runValidators: true, setDefaultsOnInsert: true },
+        ).select('bookId bookName chapter startVerse endVerse reference text updatedAt').lean();
+        return res.json({ message: 'تم تحديث القراءة اليومية.', data: reading });
     } catch (error) {
         return next(error);
     }

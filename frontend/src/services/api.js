@@ -74,6 +74,8 @@ export const api = {
     method: 'PUT',
     body: { ...payload, requestId: crypto.randomUUID() },
   }),
+  dailyReading: () => request('/daily-reading').then((res) => res.data || null),
+  saveDailyReading: (payload) => request('/daily-reading', { method: 'PUT', body: payload }),
   posts: (type, options = {}) => {
     const params = new URLSearchParams();
     if (type) params.set('type', type);

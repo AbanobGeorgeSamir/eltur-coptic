@@ -31,6 +31,7 @@ const AdminLiturgy = lazy(() => import('./pages/AdminLiturgy'));
 const AdminStudents = lazy(() => import('./pages/AdminStudents'));
 const AdminTasks = lazy(() => import('./pages/AdminTasks'));
 const AdminVerse = lazy(() => import('./pages/AdminVerse'));
+const AdminDailyReading = lazy(() => import('./pages/AdminDailyReading'));
 const AdminAccess = lazy(() => import('./pages/AdminAccess'));
 const FatherDashboard = lazy(() => import('./pages/FatherDashboard'));
 
@@ -147,6 +148,7 @@ export function AppRoutes({ showToast, serverPages = null }) {
           <Route path="/admin-students" element={adminOnly(<AdminStudents />)} />
           <Route path="/admin-tasks" element={adminOnly(<AdminTasks showToast={showToast} />)} />
           <Route path="/admin-verse" element={only('admin', <AdminVerse showToast={showToast} />)} />
+          <Route path="/admin-daily-reading" element={only('admin', <AdminDailyReading showToast={showToast} />)} />
           <Route path="/admin-access" element={adminOnly(<AdminAccess />)} />
           <Route path="/father-dashboard" element={only('parent', <FatherDashboard showToast={showToast} />)} />
         </Route>

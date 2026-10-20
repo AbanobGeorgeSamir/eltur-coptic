@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
@@ -28,6 +29,7 @@ import 'trips_screen.dart';
 import 'profile_screen.dart';
 import 'public_home_screen.dart';
 import 'featured_verse_screen.dart';
+import 'daily_reading_screen.dart';
 import 'student_management_screen.dart';
 import 'parent_dashboard_screen.dart';
 import 'admin_access_screen.dart';
@@ -51,6 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<MinistryPostModel> _upcomingLiturgies = [];
   int _openTaskCount = 0;
   Map<String, dynamic>? _featuredVerse;
+  Map<String, dynamic>? _dailyReading;
   bool _isLoading = true;
   bool _refreshingLiturgies = false;
   bool _notificationPopupShown = false;
@@ -97,6 +100,10 @@ class _HomeScreenState extends State<HomeScreen> {
           partialFailure = true;
           return null;
         }),
+        ApiService.getDailyReading().catchError((_) {
+          partialFailure = true;
+          return null;
+        }),
       ]);
       final readings = [
         ...(initialResults[0] as List<MinistryPostModel>),
@@ -107,6 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final tasks = initialResults[4] as List<TaskModel>;
       final attendanceSummary = initialResults[5] as Map<String, dynamic>;
       final featuredVerse = initialResults[6] as Map<String, dynamic>?;
+      final dailyReading = initialResults[7] as Map<String, dynamic>?;
       ConfessionModel? confession;
       List<AttendanceModel> attendances = [];
       UserModel? child;
@@ -177,6 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _children = children;
           _attendanceSummary = attendanceSummary;
           _featuredVerse = featuredVerse;
+          _dailyReading = dailyReading;
           _dashboardError = partialFailure
               ? 'تعذر تحديث بعض البيانات. اسحب الشاشة للأسفل لإعادة المحاولة.'
               : null;
@@ -845,6 +854,86 @@ class _HomeScreenState extends State<HomeScreen> {
                               const SizedBox(height: 16),
 
                               Card(
+                                color: const Color(0xFFFFFAF0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  side: const BorderSide(
+                                    color: Color(0xFFE9DFCB),
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.menu_book_rounded,
+                                            color: AppTheme.primaryBurgundy,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Expanded(
+                                            child: Text(
+                                              'قراءة اليوم',
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                color: AppTheme.primaryBurgundy,
+                                              ),
+                                            ),
+                                          ),
+                                          if (user?.role == 'admin')
+                                            IconButton(
+                                              tooltip: 'إدارة القراءة اليومية',
+                                              onPressed:
+                                                  _openDailyReadingEditor,
+                                              icon: const Icon(
+                                                Icons.edit_outlined,
+                                                color: AppTheme.primaryBurgundy,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      const Divider(color: Color(0xFFE9DFCB)),
+                                      if (_dailyReading == null)
+                                        Text(
+                                          _isLoading
+                                              ? 'جارٍ تحميل القراءة اليومية...'
+                                              : 'لم تُنشر قراءة يومية بعد.',
+                                          style: const TextStyle(
+                                            color: AppTheme.textMuted,
+                                          ),
+                                        )
+                                      else ...[
+                                        Text(
+                                          _dailyReading!['reference']
+                                                  ?.toString() ??
+                                              '',
+                                          style: const TextStyle(
+                                            color: AppTheme.primaryBurgundy,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          _dailyReading!['text']?.toString() ??
+                                              '',
+                                          style: GoogleFonts.amiri(
+                                            fontSize: 24,
+                                            height: 1.8,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+
+                              Card(
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   side: const BorderSide(
@@ -1127,6 +1216,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                       if (user?.role == 'admin')
                                         _buildServiceTile(
+                                          icon: Icons.menu_book_rounded,
+                                          title: 'إدارة القراءة اليومية',
+                                          color: AppTheme.primaryBurgundy,
+                                          onTap: _openDailyReadingEditor,
+                                        ),
+                                      if (user?.role == 'admin')
+                                        _buildServiceTile(
                                           icon: Icons.format_quote,
                                           title: 'الآية للجميع',
                                           color: AppTheme.primaryBurgundy,
@@ -1208,19 +1304,35 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _openDailyReadingEditor() async {
+    await Navigator.of(
+      context,
+    ).push<void>(MaterialPageRoute(builder: (_) => const DailyReadingScreen()));
+    if (mounted) await _loadDashboardData();
+  }
+
   void _openMoreServices() {
     final user = AuthService.currentUser;
     final isAdmin = isAdminRole(user?.role);
     final options =
         <({String title, IconData icon, Color color, VoidCallback onTap})>[];
 
-    void addPage(String title, IconData icon, Color color, Widget page) {
+    void addPage(
+      String title,
+      IconData icon,
+      Color color,
+      Widget page, {
+      VoidCallback? onTap,
+    }) {
       options.add((
         title: title,
         icon: icon,
         color: color,
-        onTap: () =>
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => page)),
+        onTap:
+            onTap ??
+            () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => page)),
       ));
     }
 
@@ -1308,6 +1420,13 @@ class _HomeScreenState extends State<HomeScreen> {
         const AttendanceScreen(),
       );
       if (user?.role == 'admin') {
+        addPage(
+          'إدارة القراءة اليومية',
+          Icons.menu_book_rounded,
+          AppTheme.primaryBurgundy,
+          const DailyReadingScreen(),
+          onTap: _openDailyReadingEditor,
+        );
         addPage(
           'الآية للجميع',
           Icons.format_quote_rounded,

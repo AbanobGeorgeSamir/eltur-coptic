@@ -47,6 +47,7 @@ const linksByRole = {
     ['/trips', 'الرحلات والتحصيل', Bus],
     ['/admin-gallery', 'إدارة المعرض', ImageIcon],
     ['/admin-liturgy', 'مواعيد القداسات', Calendar],
+    ['/admin-daily-reading', 'القراءة اليومية', BookOpen],
     ['/admin-verse', 'آية للجميع', Quote],
     ['/admin-access', 'إدارة المراحل والمسؤولين', ShieldCheck],
     ['/agpeya', 'الأجبية', BookOpen],
@@ -93,7 +94,7 @@ export default function Sidebar({ userRole }) {
   const dialogRef = useRef(null);
   const location = useLocation();
   const links = isGradeAdminRole(userRole)
-    ? linksByRole.admin.filter(([path]) => path !== '/admin-verse')
+    ? linksByRole.admin.filter(([path]) => !['/admin-verse', '/admin-daily-reading'].includes(path))
     : linksByRole[userRole] || linksByRole.student;
   const primaryPaths = (isGradeAdminRole(userRole) ? primaryByRole.grade_admin : primaryByRole[userRole]) || primaryByRole.student;
   const primaryLinks = primaryPaths.map((path) => links.find(([itemPath]) => itemPath === path)).filter(Boolean);
