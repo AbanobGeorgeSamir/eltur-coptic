@@ -32,7 +32,7 @@ export default function FathersSection({ className = 'space-y-3' }) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold text-white md:text-xl">آباؤنا الأحباء</h2>
-          <p className="mt-1 text-sm leading-6 text-slate-400">صلوات قداسة البابا المعظم الأنبا تواضروس الثاني وشريكه في الخدمة الرسولية نيافة الحبر الجليل الأنبا أبوللو أسقف سيناء الجنوبية ورئيس دير موسى النبي</p>
+          <p className="mt-1 text-sm leading-6 text-slate-400">بصلوات قداسة البابا المعظم الأنبا تواضروس الثاني وشريكه في الخدمة الرسولية نيافة الحبر الجليل الأنبا أبوللو أسقف سيناء الجنوبية ورئيس دير موسى النبي</p>
         </div>
       </div>
       <div className="mx-auto grid max-w-4xl grid-cols-2 gap-3 sm:gap-4">
