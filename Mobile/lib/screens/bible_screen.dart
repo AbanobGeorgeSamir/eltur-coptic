@@ -81,6 +81,11 @@ String _latinizeDigits(String value) => value.replaceAllMapped(
   (match) => '٠١٢٣٤٥٦٧٨٩'.indexOf(match.group(0)!).toString(),
 );
 
+String _arabicizeDigits(Object? value) => value.toString().replaceAllMapped(
+  RegExp(r'\d'),
+  (match) => '٠١٢٣٤٥٦٧٨٩'[int.parse(match.group(0)!)],
+);
+
 String _normalizeArabic(String value) => _latinizeDigits(value)
     .replaceAll(RegExp(r'[\u064B-\u065F\u0670\u06D6-\u06ED]'), '')
     .replaceAll(RegExp('[أإآ]'), 'ا')
@@ -429,7 +434,7 @@ class _BibleScreenState extends State<BibleScreen> {
                         child: Text('لا توجد آيات مطابقة.'),
                       ),
                     )
-                  else
+                  else if (_searchController.text.trim().isNotEmpty)
                     ..._visibleVerses.map((verse) {
                       final chapter = verse['chapter'] ?? _chapterNumber;
                       final number = verse['number'] ?? '';
@@ -458,7 +463,113 @@ class _BibleScreenState extends State<BibleScreen> {
                           ),
                         ),
                       );
-                    }),
+                    })
+                  else
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(20, 22, 20, 26),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFFAF0),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: const Color(0xFFE9DFCB)),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x12000000),
+                            blurRadius: 14,
+                            offset: Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 54,
+                                height: 54,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: const Color(0xFF7D2038).withValues(alpha: 0.06),
+                                  border: Border.all(
+                                    color: const Color(0xFF7D2038).withValues(alpha: 0.20),
+                                  ),
+                                ),
+                                child: Text(
+                                  _arabicizeDigits(_chapterNumber),
+                                  style: const TextStyle(
+                                    fontSize: 23,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF7D2038),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'الكتاب المقدس',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF7D2038),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      book.name,
+                                      style: const TextStyle(
+                                        fontSize: 19,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF342C27),
+                                      ),
+                                    ),
+                                    Text(
+                                      'الإصحاح ${_arabicizeDigits(_chapterNumber)}',
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: Color(0xFF786B60),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 18),
+                            child: Divider(height: 1, color: Color(0xFFE9DFCB)),
+                          ),
+                          SelectableText.rich(
+                            TextSpan(
+                              style: const TextStyle(
+                                fontSize: 20,
+                                height: 2.2,
+                                color: Color(0xFF342C27),
+                              ),
+                              children: _visibleVerses.expand((verse) {
+                                final number = verse['number'] ?? '';
+                                return [
+                                  TextSpan(
+                                    text: '${_arabicizeDigits(number)} ',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF7D2038),
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '${verse['text']?.toString() ?? ''} ',
+                                  ),
+                                ];
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
       ),

@@ -92,11 +92,14 @@ export const api = {
     };
   },
   upcomingLiturgies: (limit = 2) => request(`/ministry/posts?type=liturgy&upcoming=1&limit=${limit}`).then((res) => res.data || []),
-  uploadMedia: (file, filename = file?.name || 'church-file') => {
-    const formData = new FormData();
-    formData.append('file', file, filename);
-    return request('/media', { method: 'POST', body: formData, timeoutMs: 60000 }).then((res) => res.data);
-  },
+  createMediaUploadSession: (filename, contentType) => request('/media/upload-session', {
+    method: 'POST',
+    body: { filename, contentType },
+  }).then((res) => res.data),
+  completeMediaUpload: (id, blobUrl) => request(`/media/${encodeURIComponent(id)}/complete`, {
+    method: 'POST',
+    body: { blobUrl },
+  }).then((res) => res.data),
   createPost: (payload) => request('/ministry/posts', { method: 'POST', body: payload }),
   updatePost: (id, payload) => request(`/ministry/posts/${encodeURIComponent(id)}`, { method: 'PATCH', body: payload }),
   deletePost: (id) => request(`/ministry/posts/${encodeURIComponent(id)}`, { method: 'DELETE' }),

@@ -850,6 +850,96 @@ class ApiService {
     throw Exception('Could not upload the selected file.');
   }
 
+  static Future<String> uploadMediaStream({
+    required Stream<List<int>> bytes,
+    required int contentLength,
+    required String filename,
+  }) async {
+    if (contentLength <= 0) {
+      throw Exception('Choose a non-empty file.');
+    }
+
+    final extension = filename.split('.').last.toLowerCase();
+    const contentTypes = <String, String>{
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'webp': 'image/webp',
+      'gif': 'image/gif',
+      'pdf': 'application/pdf',
+    };
+    final contentType = contentTypes[extension];
+    if (contentType == null) {
+      throw Exception('Choose a JPEG, PNG, WebP, GIF, or PDF file.');
+    }
+
+    final sessionResponse = await _request(
+      'POST',
+      '/media/upload-session',
+      body: {'filename': filename, 'contentType': contentType},
+      timeout: const Duration(seconds: 30),
+    );
+    if (sessionResponse is! Map || sessionResponse['data'] is! Map) {
+      throw Exception('Could not start the file upload.');
+    }
+    final session = Map<String, dynamic>.from(sessionResponse['data'] as Map);
+    final sessionId = session['id']?.toString() ?? '';
+    final uploadUri = Uri.tryParse(session['uploadUrl']?.toString() ?? '');
+    if (sessionId.isEmpty ||
+        uploadUri == null ||
+        uploadUri.scheme != 'https' ||
+        uploadUri.host.isEmpty ||
+        uploadUri.userInfo.isNotEmpty) {
+      throw Exception('The file upload address is invalid.');
+    }
+
+    final uploadRequest = http.StreamedRequest('PUT', uploadUri)
+      ..followRedirects = false
+      ..contentLength = contentLength
+      ..headers['Content-Type'] = contentType;
+    final uploadResponseFuture = _client
+        .send(uploadRequest)
+        .timeout(const Duration(minutes: 10));
+    try {
+      await uploadRequest.sink.addStream(bytes);
+    } finally {
+      await uploadRequest.sink.close();
+    }
+    final uploadResponse = await http.Response.fromStream(
+      await uploadResponseFuture,
+    ).timeout(const Duration(minutes: 10));
+    if (uploadResponse.statusCode < 200 || uploadResponse.statusCode >= 300) {
+      throw ApiResponseException(
+        uploadResponse.statusCode,
+        'The file upload failed. Please try again.',
+      );
+    }
+
+    dynamic uploaded;
+    try {
+      uploaded = jsonDecode(uploadResponse.body);
+    } on FormatException {
+      throw Exception('The uploaded file could not be verified.');
+    }
+    final blobUrl = uploaded is Map ? uploaded['url']?.toString() ?? '' : '';
+    if (blobUrl.isEmpty) {
+      throw Exception('The uploaded file could not be verified.');
+    }
+
+    final completedResponse = await _request(
+      'POST',
+      '/media/${Uri.encodeComponent(sessionId)}/complete',
+      body: {'blobUrl': blobUrl},
+      timeout: const Duration(seconds: 60),
+    );
+    if (completedResponse is Map && completedResponse['data'] is Map) {
+      return _uploadedMediaUrl(
+        Map<String, dynamic>.from(completedResponse['data'] as Map),
+      );
+    }
+    throw Exception('Could not complete the file upload.');
+  }
+
   static String _uploadedMediaUrl(Map data) {
     final storedUrl = data['url']?.toString().trim() ?? '';
     if (storedUrl.isNotEmpty) {

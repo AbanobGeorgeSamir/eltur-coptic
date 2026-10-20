@@ -38,6 +38,7 @@ const books = [
 ].map(([id, name, testament]) => ({ id, name, testament, url: bookFiles[`../data/bible/${id}.json`] }));
 
 const latinizeDigits = (value) => value.replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
+const arabicizeDigits = (value) => String(value).replace(/[0-9]/g, (digit) => '٠١٢٣٤٥٦٧٨٩'[Number(digit)]);
 const normalizeArabic = (value) => latinizeDigits(value)
   .normalize('NFD')
   .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '')
@@ -161,13 +162,31 @@ export default function Bible() {
           {searchResults && <p className="text-xs text-slate-400">{searchResults.length} نتيجة في {currentBook.name}</p>}
           {visibleVerses.length === 0
             ? <p className="rounded-2xl bg-slate-950 p-5 text-sm text-slate-400">لا توجد آيات مطابقة لهذا البحث.</p>
-            : <div className="grid gap-2 sm:grid-cols-2">
-              {visibleVerses.map((verse) => <article key={`${verse.chapter}:${verse.number}`} className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                {searchResults && <p className="mb-2 text-xs font-bold text-amber-300">{currentBook.name} {verse.chapter}:{verse.number}</p>}
-                <p className="text-base leading-8 text-white">{verse.text}</p>
-                {!searchResults && <span className="mt-2 inline-flex rounded-lg bg-amber-400/10 px-2 py-1 text-xs font-bold text-amber-300">عدد {verse.number}</span>}
-              </article>)}
-            </div>}
+            : searchResults
+              ? <div className="grid gap-2 sm:grid-cols-2">
+                {visibleVerses.map((verse) => <article key={`${verse.chapter}:${verse.number}`} className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+                  <p className="mb-2 text-xs font-bold text-amber-300">{currentBook.name} {verse.chapter}:{verse.number}</p>
+                  <p className="text-base leading-8 text-white">{verse.text}</p>
+                </article>)}
+              </div>
+              : <article className="rounded-3xl border border-[#e9dfcb] bg-[#fffaf0] p-5 text-[#342c27] shadow-sm md:p-8">
+                <header className="mb-6 flex items-center gap-4 border-b border-[#e9dfcb] pb-5">
+                  <span aria-hidden="true" className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[#8c1d40]/20 bg-[#8c1d40]/5 font-serif text-2xl font-bold text-[#8c1d40]">
+                    {arabicizeDigits(chapterNumber)}
+                  </span>
+                  <div>
+                    <p className="text-xs font-semibold text-[#8c1d40]">الكتاب المقدس</p>
+                    <h3 className="mt-1 text-lg font-bold md:text-xl">{currentBook.name}</h3>
+                    <p className="mt-1 text-sm text-[#786b60]">الإصحاح {arabicizeDigits(chapterNumber)}</p>
+                  </div>
+                </header>
+                <p className="font-serif text-lg leading-[2.45] text-[#342c27] md:text-xl md:leading-[2.5]">
+                  {visibleVerses.map((verse) => <span key={`${verse.chapter}:${verse.number}`}>
+                    <sup className="mx-1 text-xs font-bold text-[#8c1d40]">{arabicizeDigits(verse.number)}</sup>
+                    {verse.text}{' '}
+                  </span>)}
+                </p>
+              </article>}
         </>}
       </section>
 

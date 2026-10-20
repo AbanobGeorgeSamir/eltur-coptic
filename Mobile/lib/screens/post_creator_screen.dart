@@ -34,8 +34,8 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
   String _imageSource = 'link';
   XFile? _pickedImage;
   Uint8List? _pickedImageBytes;
+  PlatformFile? _pickedAttachment;
   String? _pickedAttachmentName;
-  Uint8List? _pickedAttachmentBytes;
   DateTime? _eventAt;
   String _liturgyType = 'permanent';
   String _liturgyDay = 'saturday';
@@ -71,16 +71,6 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
       if (image == null || !mounted) return;
       final bytes = await image.readAsBytes();
       if (!mounted) return;
-      if (bytes.length > 2 * 1024 * 1024) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'الصورة كبيرة بعد الضغط. اختر صورة أصغر من ٢ ميجابايت.',
-            ),
-          ),
-        );
-        return;
-      }
       setState(() {
         _pickedImage = image;
         _pickedImageBytes = bytes;
@@ -244,14 +234,14 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
       // Read the selected file bytes directly. On Flutter Web `uri` may be a
       // browser-local blob URL; that URL is only a picker handle and is never
       // sent or saved as the post's media URL.
-      final bytes = await file.readAsBytes();
-      if (bytes.isEmpty || bytes.length > 5 * 1024 * 1024) {
-        throw Exception('Choose a file smaller than 5 MB.');
+      final fileLength = await file.length();
+      if (fileLength == null || fileLength <= 0) {
+        throw Exception('Choose a non-empty file.');
       }
       if (!mounted) return;
       setState(() {
+        _pickedAttachment = file;
         _pickedAttachmentName = file.name;
-        _pickedAttachmentBytes = bytes;
         _mediaKind = file.extension?.toLowerCase() == 'pdf' ? 'pdf' : 'image';
         _mediaUrlController.clear();
       });
@@ -436,10 +426,16 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
           filename: _pickedImage!.name.replaceAll(RegExp(r'\.[^.]+$'), ''),
         );
       }
-      if (!_isGallery && _pickedAttachmentBytes != null) {
-        postData['mediaUrl'] = await ApiService.uploadMedia(
-          bytes: _pickedAttachmentBytes!,
-          filename: _pickedAttachmentName ?? 'attachment',
+      if (!_isGallery && _pickedAttachment != null) {
+        final attachment = _pickedAttachment!;
+        final attachmentLength = await attachment.length();
+        if (attachmentLength == null || attachmentLength <= 0) {
+          throw Exception('Choose a non-empty file.');
+        }
+        postData['mediaUrl'] = await ApiService.uploadMediaStream(
+          bytes: attachment.readAsByteStream(),
+          contentLength: attachmentLength,
+          filename: _pickedAttachmentName ?? attachment.name,
         );
       }
       final success = _isEditing
@@ -921,7 +917,7 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
                         child: TextButton.icon(
                           onPressed: () => setState(() {
                             _pickedAttachmentName = null;
-                            _pickedAttachmentBytes = null;
+                            _pickedAttachment = null;
                           }),
                           icon: const Icon(Icons.close, size: 16),
                           label: const Text('إزالة الملف المختار'),
@@ -934,10 +930,10 @@ class _PostCreatorScreenState extends State<PostCreatorScreen> {
                       if (_isGallery) {
                         setState(() {});
                       } else if (value.isNotEmpty &&
-                          _pickedAttachmentBytes != null) {
+                          _pickedAttachment != null) {
                         setState(() {
                           _pickedAttachmentName = null;
-                          _pickedAttachmentBytes = null;
+                          _pickedAttachment = null;
                         });
                       }
                     },

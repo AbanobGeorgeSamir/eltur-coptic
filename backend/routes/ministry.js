@@ -2,6 +2,8 @@ const express = require('express');
 const crypto = require('node:crypto');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const { del: deleteBlob, head: headBlob, issueSignedToken, presignUrl } = require('@vercel/blob');
+const { handleUploadPresigned } = require('@vercel/blob/client');
 const User = require('../models/User');
 const Attendance = require('../models/Attendance');
 const Confession = require('../models/Confession');
@@ -709,6 +711,64 @@ const supportedMediaFromBuffer = (buffer) => {
     return null;
 };
 
+const mediaExtensions = new Map([
+    ['image/jpeg', 'jpg'],
+    ['image/png', 'png'],
+    ['image/webp', 'webp'],
+    ['image/gif', 'gif'],
+    ['application/pdf', 'pdf'],
+]);
+const sanitizeMediaFilename = (value, contentType) => {
+    const extension = mediaExtensions.get(contentType);
+    const input = String(value || 'church-file').split(/[\\/]/).pop();
+    const stem = input.replace(/\.[a-z\d]{1,8}$/i, '')
+        .replace(/[^a-z\d_.-]+/gi, '-')
+        .replace(/^\.+|\.+$/g, '')
+        .slice(0, 100) || 'church-file';
+    return `${stem}.${extension}`;
+};
+const validBlobUrlForAsset = (value, asset) => {
+    try {
+        const parsed = new URL(value);
+        return parsed.protocol === 'https:'
+            && !parsed.username
+            && !parsed.password
+            && !parsed.port
+            && parsed.hostname.endsWith('.public.blob.vercel-storage.com')
+            && parsed.pathname === `/${asset.blobPath}`
+            && !parsed.search
+            && !parsed.hash;
+    } catch {
+        return false;
+    }
+};
+const readBlobSignature = async (url) => {
+    const response = await fetch(url, {
+        headers: { Range: 'bytes=0-31' },
+        redirect: 'error',
+    });
+    if (response.status !== 206 || !/^bytes 0-\d+\/\d+$/i.test(response.headers.get('content-range') || '')) {
+        await response.body?.cancel();
+        return null;
+    }
+    const reader = response.body?.getReader();
+    if (!reader) return null;
+    const chunks = [];
+    let size = 0;
+    try {
+        while (size < 32) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = Buffer.from(value).subarray(0, 32 - size);
+            chunks.push(chunk);
+            size += chunk.length;
+        }
+    } finally {
+        await reader.cancel().catch(() => {});
+    }
+    return supportedMediaFromBuffer(Buffer.concat(chunks));
+};
+
 const dateKeyFor = (date) => cairoDay(date);
 const dateFromKey = (key) => new Date(`${key}T00:00:00.000Z`);
 
@@ -726,11 +786,158 @@ const validMediaUrl = async (value, req) => {
         if (parsed.protocol === 'https:' && parsed.origin !== origin) return true;
         if (parsed.origin !== origin) return false;
         const assetId = parsed.pathname.match(/(?:^|\/)media\/([a-f\d]{24})\/?$/i)?.[1] || null;
-        return Boolean(assetId && await PhotoAsset.exists({ _id: assetId, owner: req.user._id }));
+        return Boolean(assetId && await PhotoAsset.exists({ _id: assetId, owner: req.user._id, pending: { $ne: true } }));
     } catch {
         return false;
     }
 };
+
+router.post('/media/upload-session', auth, adminOnly, mediaUploadRateLimit, async (req, res, next) => {
+    const contentType = String(req.body?.contentType || '').trim().toLowerCase();
+    if (!mediaExtensions.has(contentType)) {
+        return res.status(422).json({ message: 'Choose a JPEG, PNG, WebP, GIF, or PDF file.' });
+    }
+
+    const validUntil = Date.now() + 10 * 60_000;
+    const id = new mongoose.Types.ObjectId();
+    const filename = sanitizeMediaFilename(req.body?.filename, contentType);
+    const blobPath = `ministry/${id}/${filename}`;
+    const asset = new PhotoAsset({
+        _id: id,
+        filename,
+        contentType,
+        owner: req.user._id,
+        blobPath,
+        pending: true,
+        uploadExpiresAt: new Date(validUntil),
+    });
+
+    try {
+        const token = await issueSignedToken({
+            pathname: blobPath,
+            operations: ['put'],
+            allowedContentTypes: [contentType],
+            validUntil,
+        });
+        const { presignedUrl } = await presignUrl(token, {
+            operation: 'put',
+            pathname: blobPath,
+            access: 'public',
+            allowedContentTypes: [contentType],
+            validUntil,
+            addRandomSuffix: false,
+            allowOverwrite: false,
+            cacheControlMaxAge: 2_592_000,
+        });
+        await asset.save();
+        return res.status(201).json({
+            data: {
+                id: String(asset._id),
+                pathname: blobPath,
+                uploadUrl: presignedUrl,
+                contentType,
+                filename,
+                validUntil: new Date(validUntil).toISOString(),
+            },
+        });
+    } catch (error) {
+        await PhotoAsset.deleteOne({ _id: id, owner: req.user._id }).catch(() => {});
+        if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.VERCEL_OIDC_TOKEN) {
+            return res.status(503).json({ message: 'Connect a Vercel Blob store to enable file uploads.' });
+        }
+        return next(error);
+    }
+});
+
+router.post('/media/:id/presigned', auth, adminOnly, async (req, res, next) => {
+    try {
+        if (!objectId(req.params.id)) return res.status(404).json({ message: 'Upload session not found.' });
+        const asset = await PhotoAsset.findOne({
+            _id: req.params.id,
+            owner: req.user._id,
+            pending: true,
+            uploadExpiresAt: { $gt: new Date() },
+        });
+        if (!asset) return res.status(404).json({ message: 'Upload session expired. Choose the file again.' });
+
+        const response = await handleUploadPresigned({
+            body: req.body,
+            request: req,
+            getSignedToken: async (pathname, clientPayload) => {
+                if (pathname !== asset.blobPath || clientPayload !== String(asset._id)) {
+                    throw new Error('Upload session does not match this file.');
+                }
+                const validUntil = asset.uploadExpiresAt.getTime();
+                const token = await issueSignedToken({
+                    pathname: asset.blobPath,
+                    operations: ['put'],
+                    allowedContentTypes: [asset.contentType],
+                    validUntil,
+                });
+                return {
+                    token,
+                    urlOptions: {
+                        allowedContentTypes: [asset.contentType],
+                        validUntil,
+                        addRandomSuffix: false,
+                        allowOverwrite: false,
+                        cacheControlMaxAge: 2_592_000,
+                    },
+                };
+            },
+        });
+        return res.json(response);
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.post('/media/:id/complete', auth, adminOnly, async (req, res, next) => {
+    try {
+        if (!objectId(req.params.id)) return res.status(404).json({ message: 'Upload session not found.' });
+        const asset = await PhotoAsset.findOne({ _id: req.params.id, owner: req.user._id, pending: true });
+        if (!asset) return res.status(404).json({ message: 'Upload session not found or already completed.' });
+        if (!asset.uploadExpiresAt || asset.uploadExpiresAt <= new Date()) {
+            return res.status(410).json({ message: 'Upload session expired. Choose the file again.' });
+        }
+
+        const blobUrl = typeof req.body?.blobUrl === 'string' ? req.body.blobUrl.trim() : '';
+        if (!validBlobUrlForAsset(blobUrl, asset)) {
+            return res.status(422).json({ message: 'The uploaded file could not be verified.' });
+        }
+
+        const blob = await headBlob(blobUrl);
+        if (!blob.size || blob.contentType !== asset.contentType || blob.pathname !== asset.blobPath) {
+            await deleteBlob(blobUrl).catch(() => {});
+            return res.status(422).json({ message: 'The uploaded file type could not be verified.' });
+        }
+        const signatureType = await readBlobSignature(blobUrl);
+        if (signatureType !== asset.contentType) {
+            await deleteBlob(blobUrl).catch(() => {});
+            return res.status(422).json({ message: 'The uploaded file is not a valid supported image or PDF.' });
+        }
+
+        asset.blobUrl = blobUrl;
+        asset.byteSize = blob.size;
+        asset.pending = false;
+        asset.uploadExpiresAt = undefined;
+        await asset.save();
+
+        const url = mediaAssetUrl(req, String(asset._id));
+        if (!url) return res.status(400).json({ message: 'The upload URL could not be created securely.' });
+        return res.status(201).json({
+            data: {
+                id: String(asset._id),
+                url,
+                contentType: asset.contentType,
+                filename: asset.filename,
+                size: blob.size,
+            },
+        });
+    } catch (error) {
+        return next(error);
+    }
+});
 
 router.post('/media', auth, adminOnly, mediaUploadRateLimit, (req, res, next) => receiveMediaUpload(req, res, (error) => {
     if (!error) return next();
@@ -778,6 +985,14 @@ router.get('/media/:id', async (req, res, next) => {
     try {
         if (!objectId(req.params.id)) return res.status(404).json({ message: 'الصورة غير موجودة.' });
         const asset = await PhotoAsset.findById(req.params.id).select('+data');
+        if (!asset || asset.pending) return res.status(404).json({ message: 'Media not found.' });
+        if (asset.blobUrl) {
+            const target = new URL(asset.blobUrl);
+            if (req.query.download === '1') target.searchParams.set('download', '1');
+            res.set('Cache-Control', 'public, max-age=31536000, immutable');
+            return res.redirect(302, target.toString());
+        }
+        if (!asset.data) return res.status(404).json({ message: 'Media not found.' });
         if (!asset) return res.status(404).json({ message: 'الصورة غير موجودة.' });
         const extension = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif', 'application/pdf': 'pdf' }[asset.contentType] || 'bin';
         const safeFilename = /\.[a-z\d]{1,8}$/i.test(asset.filename) ? asset.filename : `${asset.filename}.${extension}`;
