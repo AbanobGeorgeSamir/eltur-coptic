@@ -12,6 +12,7 @@ import '../models/task_model.dart';
 import '../theme/app_theme.dart';
 import '../utils/roles.dart';
 import '../utils/liturgy_schedule.dart';
+import '../utils/daily_reading_title.dart';
 import '../widgets/church_date_card.dart';
 import '../widgets/fathers_section.dart';
 import 'agpeya_screen.dart';
@@ -908,9 +909,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         )
                                       else ...[
                                         Text(
-                                          _dailyReading!['reference']
-                                                  ?.toString() ??
-                                              '',
+                                          dailyReadingTitle(_dailyReading!),
                                           style: const TextStyle(
                                             color: AppTheme.primaryBurgundy,
                                             fontWeight: FontWeight.bold,

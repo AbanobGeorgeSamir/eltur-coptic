@@ -11,7 +11,7 @@ flutter pub get
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000/api
 ```
 
-`10.0.2.2` is only for Android emulators. For a physical phone on this computer's Wi-Fi, run `./run_on_phone.ps1`; it checks the local API and uses the computer's active LAN address. The app defaults to the deployed API at `https://eltur-coptic-api-server.vercel.app/api`, so production builds connect without extra setup. Override that address at build time when needed:
+`10.0.2.2` is only for Android emulators. For a physical phone, run `./run_on_phone.ps1`; it uses the deployed API at `https://eltur-coptic-api-server.vercel.app/api` by default. To use a local backend, pass its LAN address, for example `./run_on_phone.ps1 -ApiBaseUrl http://192.168.1.7:8000/api`. Production builds also default to the deployed API; override the address at build time when needed:
 
 ```powershell
 flutter build apk --dart-define=API_BASE_URL=https://eltur-coptic-api-server.vercel.app/api

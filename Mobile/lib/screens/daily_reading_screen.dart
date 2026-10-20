@@ -7,6 +7,7 @@ import '../data/bible_books.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/daily_reading_title.dart';
 
 class DailyReadingScreen extends StatefulWidget {
   const DailyReadingScreen({super.key});
@@ -209,8 +210,13 @@ class _DailyReadingScreenState extends State<DailyReadingScreen> {
     });
   }
 
-  String get _reference =>
-      '${_book.name} $_chapterNumber:$_startVerse${_endVerse == _startVerse ? '' : '–$_endVerse'}';
+  String get _reference => formatDailyReadingTitle(
+    bookId: _book.id,
+    bookName: _book.name,
+    chapter: _chapterNumber,
+    startVerse: _startVerse,
+    endVerse: _endVerse,
+  );
 
   Future<void> _save() async {
     if (_textController.text.trim().isEmpty) {
