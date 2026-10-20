@@ -54,40 +54,31 @@ class SaintCard extends StatelessWidget {
           color: Colors.white,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
-                height: 50,
-                child: Center(
-                  child: Text(
-                    name,
-                    textAlign: TextAlign.center,
-                    maxLines: 3,
-                    overflow: TextOverflow.clip,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      height: 1.12,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.darkBurgundy,
-                    ),
-                  ),
+              Text(
+                name,
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.clip,
+                style: const TextStyle(
+                  fontSize: 14,
+                  height: 1.12,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.darkBurgundy,
                 ),
               ),
               if (subtitle != null && subtitle!.isNotEmpty) ...[
-                const SizedBox(height: 3),
-                SizedBox(
-                  height: 44,
-                  child: Center(
-                    child: Text(
-                      subtitle!,
-                      textAlign: TextAlign.center,
-                      maxLines: 3,
-                      overflow: TextOverflow.clip,
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        height: 1.15,
-                        color: AppTheme.darkBurgundy,
-                      ),
-                    ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle!,
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                  overflow: TextOverflow.clip,
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    height: 1.15,
+                    color: AppTheme.darkBurgundy,
                   ),
                 ),
               ],
