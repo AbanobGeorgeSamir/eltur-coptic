@@ -9,7 +9,7 @@ import 'services/push_notification_service.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized()
   runApp(const EltorCopticApp());
   WidgetsBinding.instance.addPostFrameCallback((_) {
     unawaited(

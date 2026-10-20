@@ -37,9 +37,7 @@ try {
         $flutterArguments += @('-d', $DeviceId)
     }
 
-    $flutterCommand = Get-Command flutter -CommandType Application -ErrorAction Stop |
-        Select-Object -First 1
-    $flutterSdkRoot = 'C:\Flutter'
+    $flutterSdkRoot = 'C:\Program Files\Flutter'
     $env:PATH = "$(Join-Path $flutterSdkRoot 'bin');$env:PATH"
 
     & (Join-Path $flutterSdkRoot 'bin\flutter.bat') @flutterArguments

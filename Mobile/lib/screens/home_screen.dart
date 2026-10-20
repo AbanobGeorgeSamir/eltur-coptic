@@ -855,29 +855,30 @@ class _HomeScreenState extends State<HomeScreen> {
                               const SizedBox(height: 16),
 
                               Card(
-                                color: const Color(0xFFFFFAF0),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   side: const BorderSide(
-                                    color: Color(0xFFE9DFCB),
+                                    color: AppTheme.accentGold,
+                                    width: 2,
                                   ),
                                 ),
                                 child: Padding(
-                                  padding: const EdgeInsets.all(16),
+                                  padding: const EdgeInsets.all(16.0),
                                   child: Column(
                                     crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
                                           const Icon(
-                                            Icons.menu_book_rounded,
+                                            Icons.menu_book,
                                             color: AppTheme.primaryBurgundy,
+                                            size: 28,
                                           ),
                                           const SizedBox(width: 8),
                                           const Expanded(
                                             child: Text(
-                                              'قراءة اليوم',
+                                              'القراءات اليومية (الإنجيل والمزمور)',
                                               style: TextStyle(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.bold,
@@ -897,7 +898,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                         ],
                                       ),
-                                      const Divider(color: Color(0xFFE9DFCB)),
+                                      const Divider(height: 20),
+                                      const Text(
+                                        'قراءة اليوم',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.darkBurgundy,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
                                       if (_dailyReading == null)
                                         Text(
                                           _isLoading
@@ -926,46 +935,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         ),
                                       ],
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-
-                              Card(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  side: const BorderSide(
-                                    color: AppTheme.accentGold,
-                                    width: 2,
-                                  ),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const Row(
-                                        children: [
-                                          Icon(
-                                            Icons.menu_book,
-                                            color: AppTheme.primaryBurgundy,
-                                            size: 28,
-                                          ),
-                                          SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              'القراءات اليومية (الإنجيل والمزمور)',
-                                              style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: AppTheme.primaryBurgundy,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
                                       const Divider(height: 20),
                                       if (_dailyReadings.isEmpty)
                                         const Text(

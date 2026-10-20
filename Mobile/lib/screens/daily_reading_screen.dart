@@ -392,8 +392,9 @@ class _DailyReadingScreenState extends State<DailyReadingScreen> {
                             onChanged: _saving
                                 ? null
                                 : (value) {
-                                    if (value != null)
+                                    if (value != null) {
                                       _selectRange(startVerse: value);
+                                    }
                                   },
                           ),
                         ),
@@ -419,8 +420,9 @@ class _DailyReadingScreenState extends State<DailyReadingScreen> {
                             onChanged: _saving
                                 ? null
                                 : (value) {
-                                    if (value != null)
+                                    if (value != null) {
                                       _selectRange(endVerse: value);
+                                    }
                                   },
                           ),
                         ),
