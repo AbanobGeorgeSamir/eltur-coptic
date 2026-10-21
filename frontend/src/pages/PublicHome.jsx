@@ -2,6 +2,7 @@ import { ArrowLeft, BookOpen, CalendarDays, CheckSquare, Heart, Sparkles, Users 
 import { Link } from 'react-router-dom';
 import churchIcon from '../images/kenesa-icon.png';
 import ChurchDate from '../components/ChurchDate';
+import UpcomingSynaxarium from '../components/UpcomingSynaxarium';
 import FathersSection from '../components/FathersSection';
 
 const features = [
@@ -87,6 +88,10 @@ export default function PublicHome() {
             <p className="relative mt-5 border-t border-white/[0.08] pt-4 text-xs leading-6 text-slate-400">كل ما تحتاجه للخدمة الكنسية، بتجربة سهلة على الهاتف والكمبيوتر.</p>
           </div>
         </aside>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-14 lg:px-8">
+        <UpcomingSynaxarium />
       </section>
 
       <section id="sections" tabIndex="-1" aria-labelledby="features-heading" className="scroll-mt-20 border-y border-white/[0.06] bg-white/[0.018] py-14 sm:py-16">

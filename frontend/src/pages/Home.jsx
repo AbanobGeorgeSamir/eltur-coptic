@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/useAuth';
 import PostMedia from '../components/PostMedia';
 import FeaturedVerseCard from '../components/FeaturedVerseCard';
 import ChurchDate from '../components/ChurchDate';
+import UpcomingSynaxarium from '../components/UpcomingSynaxarium';
 import FathersSection from '../components/FathersSection';
 import { formatAttendanceCount, formatAttendancePercentage } from '../services/attendance';
 import { cairoWeekdayLabels, compareUpcomingLiturgies, isPermanentLiturgy } from '../utils/liturgySchedule';
@@ -127,6 +128,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <UpcomingSynaxarium />
 
       <section aria-label="ملخص الخدمة" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {!isAdminRole(user?.role) && <article className="rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-5">
