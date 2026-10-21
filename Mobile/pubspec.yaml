@@ -83,6 +83,8 @@ flutter:
   uses-material-design: true
 
   assets:
+    # Bundled copy of the web calendar source in ../assets/.
+    - resources/synaxarium_coptic_calendar.json
     - resources/images/kenesa.jpeg
     - resources/images/kenesa-icon.png
     - resources/images/Mina and Arsanius.jpg

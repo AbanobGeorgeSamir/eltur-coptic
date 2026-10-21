@@ -13,8 +13,8 @@ import '../theme/app_theme.dart';
 import '../utils/roles.dart';
 import '../utils/liturgy_schedule.dart';
 import '../utils/daily_reading_title.dart';
-import '../widgets/church_date_card.dart';
 import '../widgets/fathers_section.dart';
+import '../widgets/upcoming_synaxarium_card.dart';
 import 'agpeya_screen.dart';
 import 'bible_screen.dart';
 import 'prayer_checklist_screen.dart';
@@ -844,7 +844,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              const ChurchDateCard(),
+                              const UpcomingSynaxariumCard(),
                               const SizedBox(height: 12),
                               _buildAttendanceOverview(user),
                               const SizedBox(height: 16),

@@ -3,8 +3,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/church_date_card.dart';
 import '../widgets/fathers_section.dart';
+import '../widgets/upcoming_synaxarium_card.dart';
 import 'login_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'register_screen.dart';
@@ -164,7 +164,7 @@ class PublicHomeScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const ChurchDateCard(),
+                  const UpcomingSynaxariumCard(),
                   const SizedBox(height: 24),
                   const _SectionHeading(
                     eyebrow: 'كل ما يهمك في مكان واحد',

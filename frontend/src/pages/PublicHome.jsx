@@ -1,7 +1,6 @@
-import { ArrowLeft, BookOpen, CalendarDays, CheckSquare, Heart, Sparkles, Users } from 'lucide-react';
+import { ArrowLeft, BookOpen, CalendarDays, CheckSquare, Heart, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import churchIcon from '../images/kenesa-icon.png';
-import ChurchDate from '../components/ChurchDate';
 import UpcomingSynaxarium from '../components/UpcomingSynaxarium';
 import FathersSection from '../components/FathersSection';
 
@@ -37,10 +36,9 @@ export default function PublicHome() {
         <div aria-hidden="true" className="pointer-events-none absolute -right-36 top-4 -z-10 h-80 w-80 rounded-full bg-amber-400/10 blur-[100px]" />
         <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 left-0 -z-10 h-96 w-96 rounded-full bg-blue-500/10 blur-[110px]" />
         <div className="max-w-2xl">
-          <p className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/[0.07] px-3.5 py-2 text-xs font-bold text-amber-200 sm:text-sm">
-            <Sparkles aria-hidden="true" className="h-4 w-4" /> بوابة أبناء وخدام طور سيناء
+          <p className="inline-flex items-center rounded-full border border-amber-300/20 bg-amber-300/[0.07] px-3.5 py-2 text-xs font-bold text-amber-200 sm:text-sm">
+            بوابة أبناء وخدام طور سيناء
           </p>
-          <ChurchDate className="mt-4" />
           <h1 className="mt-6 max-w-2xl text-4xl font-black leading-[1.3] tracking-tight text-white sm:text-5xl lg:text-6xl">
             حياة الكنيسة، <span className="text-amber-300">أقرب إليك.</span>
           </h1>

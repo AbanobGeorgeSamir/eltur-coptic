@@ -5,7 +5,6 @@ import { api } from '../services/api';
 import { useAuth } from '../contexts/useAuth';
 import PostMedia from '../components/PostMedia';
 import FeaturedVerseCard from '../components/FeaturedVerseCard';
-import ChurchDate from '../components/ChurchDate';
 import UpcomingSynaxarium from '../components/UpcomingSynaxarium';
 import FathersSection from '../components/FathersSection';
 import { formatAttendanceCount, formatAttendancePercentage } from '../services/attendance';
@@ -121,7 +120,6 @@ export default function Home() {
         <div aria-hidden="true" className="pointer-events-none absolute -left-16 -top-24 h-64 w-64 rounded-full bg-amber-400/10 blur-3xl" />
         <div className="relative max-w-3xl">
           <span className="inline-flex rounded-full border border-amber-400/25 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300">الخدمات الكنسية</span>
-          <ChurchDate className="mt-3" />
           <h1 className="mt-4 text-2xl font-extrabold leading-tight text-white sm:text-3xl md:text-4xl">أهلاً بك، {user?.name}</h1>
           <div className="mt-5 flex flex-wrap gap-2">
             {!isAdminRole(user?.role) && <Link to="/tasks" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-600 bg-slate-950/30 px-4 py-3 text-sm font-semibold text-white transition hover:border-amber-300"><CheckSquare className="h-4 w-4" />تابع مهامك</Link>}

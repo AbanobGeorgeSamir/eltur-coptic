@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, CalendarDays, ChevronDown, Sparkles } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ChevronDown } from 'lucide-react';
 import { getCairoDateLabels, getUpcomingSynaxariumObservances, loadSynaxarium } from '../utils/synaxarium';
 
 export default function UpcomingSynaxarium() {
@@ -30,7 +30,7 @@ export default function UpcomingSynaxarium() {
         <header className="flex flex-col justify-between gap-5 border-b border-[#ded7ca] pb-5 lg:border-b-0 lg:border-l lg:pb-0 lg:pl-7">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-[#7d2038]/15 bg-[#7d2038]/[0.06] px-3 py-1.5 text-xs font-bold text-[#7d2038]">
-              <Sparkles aria-hidden="true" className="h-3.5 w-3.5" /> السنكسار القبطي
+              السنكسار القبطي
             </span>
             <h2 id="upcoming-synaxarium-title" className="mt-3 text-2xl font-extrabold text-[#20243b] sm:text-3xl">الأعياد القادمة</h2>
             <p className="mt-1 text-sm leading-6 text-slate-600">تذكارات الكنيسة في الأيام المقبلة</p>
