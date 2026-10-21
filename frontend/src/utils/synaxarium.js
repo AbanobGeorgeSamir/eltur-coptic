@@ -57,7 +57,7 @@ export function getCairoDateLabels(now = new Date()) {
 }
 
 export function loadSynaxarium() {
-  return import('../../../assets/synaxarium_coptic_calendar.json').then((module) => module.default);
+  return import('../data/synaxarium_coptic_calendar.json').then((module) => module.default);
 }
 
 export function getUpcomingSynaxariumObservances(now = new Date(), data, lookAheadDays = 45) {

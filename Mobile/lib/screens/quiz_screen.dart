@@ -188,7 +188,7 @@ class _QuizScreenState extends State<QuizScreen> {
                             margin: const EdgeInsets.only(bottom: 8),
                             child: ListTile(
                               leading: const Icon(
-                                Icons.stars,
+                                Icons.fact_check_outlined,
                                 color: AppTheme.accentGold,
                                 size: 32,
                               ),

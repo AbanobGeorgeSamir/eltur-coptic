@@ -121,24 +121,13 @@ class _UpcomingSynaxariumCardState extends State<UpcomingSynaxariumCard> {
               color: const Color(0xFF7D2038).withValues(alpha: 0.13),
             ),
           ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.auto_awesome_rounded,
-                size: 15,
-                color: Color(0xFF7D2038),
-              ),
-              SizedBox(width: 6),
-              Text(
-                'السنكسار القبطي',
-                style: TextStyle(
-                  color: Color(0xFF7D2038),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-            ],
+          child: const Text(
+            'السنكسار القبطي',
+            style: TextStyle(
+              color: Color(0xFF7D2038),
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
           ),
         ),
         const SizedBox(height: 12),

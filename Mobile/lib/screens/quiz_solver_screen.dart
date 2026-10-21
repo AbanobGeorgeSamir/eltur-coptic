@@ -55,7 +55,11 @@ class _QuizSolverScreenState extends State<QuizSolverScreen> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.stars, size: 64, color: AppTheme.accentGold),
+                const Icon(
+                  Icons.check_circle_rounded,
+                  size: 64,
+                  color: AppTheme.accentGold,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   'حصلت على: $score من $total',
