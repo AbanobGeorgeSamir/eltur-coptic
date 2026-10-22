@@ -39,10 +39,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _privacyPolicyAccepted = false;
   bool _isLoading = false;
   String _grade = '';
-  String _meetingGroup = '';
-  List<Map<String, dynamic>> _meetingGroups = [];
-  bool _groupsLoading = false;
-  String? _groupsError;
 
   static const _grades = <Map<String, String>>[
     {
@@ -60,29 +56,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     {'id': 'university', 'label': 'المرحلة الجامعية'},
     {'id': 'expatriates', 'label': 'مرحلة المغتربين'},
   ];
-  Future<void> _loadMeetingGroups(String grade) async {
-    setState(() {
-      _grade = grade;
-      _meetingGroup = '';
-      _meetingGroups = [];
-      _groupsLoading = true;
-      _groupsError = null;
-    });
-    try {
-      final groups = await ApiService.getMeetingGroups(grade);
-      if (!mounted || _grade != grade) return;
-      setState(() => _meetingGroups = groups);
-    } catch (_) {
-      if (!mounted || _grade != grade) return;
-      setState(
-        () => _groupsError =
-            'تعذر تحميل الاجتماعات. تحقق من اتصالك ثم أعد اختيار المرحلة.',
-      );
-    } finally {
-      if (mounted && _grade == grade) setState(() => _groupsLoading = false);
-    }
-  }
-
   Future<void> _selectBirthDate() async {
     final today = DateTime.now();
     final existingDate = DateTime.tryParse(_birthDateController.text);
@@ -165,13 +138,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       return;
     }
-    if (_grade.isEmpty ||
-        _groupsLoading ||
-        _groupsError != null ||
-        (_meetingGroups.isNotEmpty && _meetingGroup.isEmpty)) {
+    if (_grade.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('اختر مرحلتك واجتماعك قبل إكمال التسجيل.'),
+          content: Text('اختر مرحلتك قبل إكمال التسجيل.'),
         ),
       );
       return;
@@ -198,7 +168,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       'whatsappNumber': _whatsapp.isNotEmpty ? _whatsapp : _phone,
       'privacyAccepted': _privacyPolicyAccepted,
       'grade': _grade,
-      'meetingGroup': _meetingGroup,
     };
 
     var routeReplaced = false;
@@ -341,11 +310,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       )
                       .toList(),
-                  onChanged: _groupsLoading
-                      ? null
-                      : (value) {
-                          if (value != null) _loadMeetingGroups(value);
-                        },
+                  onChanged: (value) {
+                    if (value != null) setState(() => _grade = value);
+                  },
                   validator: (value) => value == null || value.isEmpty
                       ? 'يرجى اختيار المرحلة الدراسية'
                       : null,
@@ -354,52 +321,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: Text(
-                    'ستُحفظ المرحلة في حسابك لعرض محتوى مجموعتك فقط.',
+                    'سيُراجع الأدمن طلبك ويضيفك إلى الاجتماع المناسب من إدارة الطلاب.',
                     style: TextStyle(fontSize: 12, color: Colors.black54),
                   ),
                 ),
-                if (_grade.isNotEmpty && _groupsLoading) ...[
-                  const SizedBox(height: 8),
-                  const LinearProgressIndicator(),
-                ],
-                if (_groupsError != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    _groupsError!,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ],
-                if (_meetingGroups.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: _meetingGroup.isEmpty ? null : _meetingGroup,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      labelText: 'الاجتماع الفرعي *',
-                      prefixIcon: Icon(
-                        Icons.groups_outlined,
-                        color: AppTheme.primaryBurgundy,
-                      ),
-                    ),
-                    items: _meetingGroups
-                        .map(
-                          (group) => DropdownMenuItem(
-                            value: group['id'].toString(),
-                            child: Text(
-                              group['name'].toString(),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) =>
-                        setState(() => _meetingGroup = value ?? ''),
-                    validator: (value) => value == null || value.isEmpty
-                        ? 'يرجى اختيار الاجتماع التابع لمرحلتك'
-                        : null,
-                  ),
-                ],
                 const SizedBox(height: 12),
 
                 TextFormField(

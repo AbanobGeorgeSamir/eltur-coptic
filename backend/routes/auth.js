@@ -46,7 +46,6 @@ const normalizeRegistration = (body = {}) => ({
     address: String(body.address || '').trim(),
     interests: String(body.interests || '').trim(),
     grade: String(body.grade || '').trim(),
-    meetingGroup: String(body.meetingGroup || '').trim(),
     birthDate: body.birthDate,
     gender: body.gender,
     nationalId: String(body.nationalId || '').trim(),
