@@ -66,12 +66,6 @@ async function sendFeaturedVerseUpdate(verse) {
             { pushTokens: { $exists: true, $ne: [] } },
             { pushFids: { $exists: true, $ne: [] } },
         ],
-        $and: [{
-            $or: [
-                { role: { $ne: 'student' } },
-                { role: 'student', meetingGroup: { $exists: true, $ne: null } },
-            ],
-        }],
     }).select('+pushTokens +pushFids').lean();
     const tokens = [...new Set(subscribedUsers.flatMap((user) => user.pushTokens || []))];
     const fids = [...new Set(subscribedUsers.flatMap((user) => user.pushFids || []))];
