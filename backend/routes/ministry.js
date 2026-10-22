@@ -134,20 +134,15 @@ const moveMeetingGroupReferences = async (sourceId, targetId, session) => {
 const audienceForStudents = (students) => {
     const scopes = [{ audienceMode: 'shared' }];
     for (const student of students) {
-        if (!gradeIds.has(student.grade) || !student.meetingGroup) continue;
+        if (!gradeIds.has(student.grade)) continue;
         scopes.push({
             audienceMode: 'grade',
             grade: student.grade,
-            meetingGroup: { $in: [null, student.meetingGroup] },
+            meetingGroup: { $in: [null, ...(student.meetingGroup ? [student.meetingGroup] : [])] },
         });
     }
     return { $or: scopes };
 };
-const audienceVisibleToStudent = (content, student) => content?.audienceMode === 'shared'
-    || Boolean(student?.meetingGroup
-        && content?.audienceMode === 'grade'
-        && content.grade === student.grade
-        && (!content.meetingGroup || String(content.meetingGroup) === String(student.meetingGroup)));
 
 const studentScope = (user) => isGlobalAdmin(user) ? { role: 'student', isActive: { $ne: false } } : {
     role: 'student',
@@ -1797,7 +1792,11 @@ router.post('/trips/:id/register', auth, async (req, res, next) => {
         }
         if (!objectId(req.params.id)) return res.status(404).json({ message: 'Trip not found.' });
         const trip = await MinistryPost.findOne({ _id: req.params.id, type: 'trip', published: true }).lean();
-        const gradeVisible = Boolean(trip && audienceVisibleToStudent(trip, req.user));
+        const gradeVisible = Boolean(trip && (
+            trip.audienceMode === 'shared'
+            || (trip.audienceMode === 'grade' && trip.grade === req.user.grade
+                && (!trip.meetingGroup || String(trip.meetingGroup) === String(req.user.meetingGroup || '')))
+        ));
         const canSeeTrip = Boolean(trip && (
             (trip.assignToGroup !== false && gradeVisible)
             || (trip.assignedStudents || []).some((studentId) => String(studentId) === String(req.user._id))
@@ -2341,7 +2340,9 @@ router.patch('/tasks/:id/complete', auth, async (req, res, next) => {
         if (!task) return res.status(404).json({ message: 'Task not found.' });
         const completionNote = typeof req.body?.completionNote === 'string' ? req.body.completionNote.slice(0, 2000) : '';
         if (task.assignToGroup) {
-            const groupVisible = audienceVisibleToStudent(task, req.user);
+            const groupVisible = task.audienceMode === 'shared'
+                || (task.audienceMode === 'grade' && task.grade === req.user.grade
+                    && (!task.meetingGroup || String(task.meetingGroup) === String(req.user.meetingGroup || '')));
             if (!groupVisible) return res.status(404).json({ message: 'Task not found.' });
             const completion = task.completions.find((item) => String(item.student) === String(req.user._id));
             if (completion) {
@@ -2441,7 +2442,9 @@ router.post('/quizzes/:id/submit', auth, async (req, res, next) => {
             published: true,
         });
         if (!quiz) return res.status(404).json({ message: 'Quiz not found.' });
-        const audienceVisible = audienceVisibleToStudent(quiz, req.user);
+        const audienceVisible = quiz.audienceMode === 'shared'
+            || (quiz.audienceMode === 'grade' && quiz.grade === req.user.grade
+                && (!quiz.meetingGroup || String(quiz.meetingGroup) === String(req.user.meetingGroup || '')));
         if (!audienceVisible) {
             return res.status(404).json({ message: 'Quiz not found.' });
         }
