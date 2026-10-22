@@ -69,7 +69,37 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadDashboardData() async {
-    final currentUser = AuthService.currentUser;
+    var currentUser = AuthService.currentUser;
+    if (currentUser?.role == 'student') {
+      try {
+        final refreshedUser = UserModel.fromJson(
+          await ApiService.getCurrentUser(),
+        );
+        if (refreshedUser.id == currentUser!.id) {
+          currentUser = refreshedUser;
+          await AuthService.updateUser(refreshedUser);
+        }
+      } catch (_) {
+        // Keep the cached session if a profile refresh is temporarily unavailable.
+      }
+    }
+    if (currentUser?.role == 'student' && currentUser!.meetingGroup.isEmpty) {
+      if (!mounted) return;
+      setState(() {
+        _lastConfession = null;
+        _attendanceHistory = [];
+        _attendanceSummary = {};
+        _dailyReadings = [];
+        _newsPosts = [];
+        _upcomingLiturgies = [];
+        _openTaskCount = 0;
+        _featuredVerse = null;
+        _dailyReading = null;
+        _dashboardError = null;
+        _isLoading = false;
+      });
+      return;
+    }
     var partialFailure = false;
     try {
       final initialResults = await Future.wait([
@@ -632,6 +662,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openPrimaryDestination(int index) {
+    final currentUser = AuthService.currentUser;
+    if (currentUser?.role == 'student' &&
+        currentUser!.meetingGroup.isEmpty &&
+        index > 2) {
+      return;
+    }
     Widget? destination;
     switch (index) {
       case 1:
@@ -655,6 +691,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
+    final isUngroupedStudent =
+        user?.role == 'student' && (user?.meetingGroup.isEmpty ?? true);
     final isWideLayout = MediaQuery.sizeOf(context).width >= 840;
 
     return Directionality(
@@ -711,7 +749,7 @@ class _HomeScreenState extends State<HomeScreen> {
             : NavigationBar(
                 selectedIndex: 0,
                 onDestinationSelected: _openPrimaryDestination,
-                destinations: const [
+                destinations: [
                   NavigationDestination(
                     icon: Icon(Icons.home_outlined),
                     selectedIcon: Icon(Icons.home_rounded),
@@ -727,12 +765,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     selectedIcon: Icon(Icons.auto_stories_rounded),
                     label: 'الأجبية',
                   ),
-                  NavigationDestination(
+                  if (!isUngroupedStudent)
+                    NavigationDestination(
                     icon: Icon(Icons.checklist_rounded),
                     selectedIcon: Icon(Icons.checklist_rounded),
                     label: 'المهام',
                   ),
-                  NavigationDestination(
+                  if (!isUngroupedStudent)
+                    NavigationDestination(
                     icon: Icon(Icons.grid_view_rounded),
                     selectedIcon: Icon(Icons.grid_view_rounded),
                     label: 'المزيد',
@@ -843,6 +883,50 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                               ),
+                              if (isUngroupedStudent) ...[
+                                const SizedBox(height: 12),
+                                const Card(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: Text(
+                                      'حسابك في انتظار إضافتك إلى مجموعة. يمكنك استخدام الأجبية والإنجيل الآن. ستظهر الإعلانات والدروس والمهام والاختبارات بعد إضافتك إلى مجموعتك من مسؤول المرحلة أو المسؤول العام.',
+                                      style: TextStyle(height: 1.5),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                GridView.count(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 10,
+                                  mainAxisSpacing: 10,
+                                  childAspectRatio: 1.15,
+                                  children: [
+                                    _buildServiceTile(
+                                      icon: Icons.auto_stories,
+                                      title: 'الأجبية',
+                                      color: AppTheme.primaryBurgundy,
+                                      onTap: () => Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => const AgpeyaScreen(),
+                                        ),
+                                      ),
+                                    ),
+                                    _buildServiceTile(
+                                      icon: Icons.menu_book,
+                                      title: 'الإنجيل',
+                                      color: AppTheme.darkBurgundy,
+                                      onTap: () => Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => const BibleScreen(),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                              if (!isUngroupedStudent) ...[
                               const SizedBox(height: 12),
                               const UpcomingSynaxariumCard(),
                               const SizedBox(height: 12),
@@ -1218,6 +1302,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 // Servant / Admin Panel (Requirement 1 & 3)
                                 _buildServantAdminPanel(),
                               ],
+                              ],
                             ],
                           ),
                         ),
@@ -1234,7 +1319,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   labelType: NavigationRailLabelType.all,
                   backgroundColor: Theme.of(context).colorScheme.surface,
                   onDestinationSelected: _openPrimaryDestination,
-                  destinations: const [
+                  destinations: [
                     NavigationRailDestination(
                       icon: Icon(Icons.home_outlined),
                       selectedIcon: Icon(Icons.home_rounded),
@@ -1250,12 +1335,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       selectedIcon: Icon(Icons.auto_stories_rounded),
                       label: Text('الأجبية'),
                     ),
-                    NavigationRailDestination(
+                    if (!isUngroupedStudent)
+                      NavigationRailDestination(
                       icon: Icon(Icons.checklist_rounded),
                       selectedIcon: Icon(Icons.checklist_rounded),
                       label: Text('المهام'),
                     ),
-                    NavigationRailDestination(
+                    if (!isUngroupedStudent)
+                      NavigationRailDestination(
                       icon: Icon(Icons.grid_view_rounded),
                       selectedIcon: Icon(Icons.grid_view_rounded),
                       label: Text('المزيد'),

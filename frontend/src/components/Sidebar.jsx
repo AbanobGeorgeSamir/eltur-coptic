@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { isGradeAdminRole } from '../data/grades';
+import { useAuth } from '../contexts/useAuth';
 
 const linksByRole = {
   student: [
@@ -88,15 +89,21 @@ function LinkItem({ item, onNavigate, compact = false }) {
 }
 
 export default function Sidebar({ userRole }) {
+  const { user } = useAuth();
   const [moreOpen, setMoreOpen] = useState(false);
   const moreTriggerRef = useRef(null);
   const closeButtonRef = useRef(null);
   const dialogRef = useRef(null);
   const location = useLocation();
-  const links = isGradeAdminRole(userRole)
+  const isUngroupedStudent = userRole === 'student' && !user?.meetingGroup;
+  const links = isUngroupedStudent
+    ? linksByRole.student.filter(([path]) => ['/', '/bible', '/agpeya', '/profile'].includes(path))
+    : isGradeAdminRole(userRole)
     ? linksByRole.admin.filter(([path]) => !['/admin-verse', '/admin-daily-reading'].includes(path))
     : linksByRole[userRole] || linksByRole.student;
-  const primaryPaths = (isGradeAdminRole(userRole) ? primaryByRole.grade_admin : primaryByRole[userRole]) || primaryByRole.student;
+  const primaryPaths = isUngroupedStudent
+    ? ['/', '/bible', '/agpeya']
+    : (isGradeAdminRole(userRole) ? primaryByRole.grade_admin : primaryByRole[userRole]) || primaryByRole.student;
   const primaryLinks = primaryPaths.map((path) => links.find(([itemPath]) => itemPath === path)).filter(Boolean);
   const secondaryLinks = links.filter(([path]) => !primaryPaths.includes(path));
   const sectionLabel = userRole === 'admin' || isGradeAdminRole(userRole)

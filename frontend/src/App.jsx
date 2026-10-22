@@ -120,6 +120,7 @@ export function AppRoutes({ showToast, serverPages = null }) {
   const RegisterPage = serverPages?.register || Register;
   const only = (role, element) => user?.role === role ? element : <Navigate to="/" replace />;
   const adminOnly = (element) => isAdminRole(user?.role) ? element : <Navigate to="/" replace />;
+  const groupedStudentOnly = (element) => user?.role === 'student' && !user?.meetingGroup ? <Navigate to="/" replace /> : element;
   return (
     <>
       <FloatingWhatsApp />
@@ -132,15 +133,15 @@ export function AppRoutes({ showToast, serverPages = null }) {
         <Route element={<ProtectedLayout showToast={showToast} />}>
           <Route path="/agpeya" element={<Agpeya />} />
           <Route path="/bible" element={<Bible />} />
-          <Route path="/prayers" element={<PrayerChecklist showToast={showToast} />} />
-          <Route path="/sunday-school" element={<SundaySchool />} />
-          <Route path="/quizzes" element={<Quizzes />} />
-          <Route path="/tasks" element={<Tasks showToast={showToast} />} />
-          <Route path="/trips" element={<Trips showToast={showToast} />} />
-          <Route path="/liturgy" element={<Liturgy />} />
-          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/prayers" element={groupedStudentOnly(<PrayerChecklist showToast={showToast} />)} />
+          <Route path="/sunday-school" element={groupedStudentOnly(<SundaySchool />)} />
+          <Route path="/quizzes" element={groupedStudentOnly(<Quizzes />)} />
+          <Route path="/tasks" element={groupedStudentOnly(<Tasks showToast={showToast} />)} />
+          <Route path="/trips" element={groupedStudentOnly(<Trips showToast={showToast} />)} />
+          <Route path="/liturgy" element={groupedStudentOnly(<Liturgy />)} />
+          <Route path="/gallery" element={groupedStudentOnly(<Gallery />)} />
           <Route path="/profile" element={<Profile showToast={showToast} />} />
-          <Route path="/confession" element={<Confession showToast={showToast} />} />
+          <Route path="/confession" element={groupedStudentOnly(<Confession showToast={showToast} />)} />
           <Route path="/admin-attendance" element={adminOnly(<AdminAttendance showToast={showToast} />)} />
           <Route path="/admin-newsletter" element={adminOnly(<AdminNewsletter showToast={showToast} />)} />
           <Route path="/admin-gallery" element={adminOnly(<AdminGallery showToast={showToast} />)} />

@@ -131,10 +131,12 @@ const moveMeetingGroupReferences = async (sourceId, targetId, session) => {
     return moved;
 };
 
+const isUngroupedStudent = (user) => user?.role === 'student' && !user?.meetingGroup;
 const audienceForStudents = (students) => {
+    const groupedStudents = students.filter((student) => gradeIds.has(student.grade) && student.meetingGroup);
+    if (!groupedStudents.length) return { _id: { $in: [] } };
     const scopes = [{ audienceMode: 'shared' }];
-    for (const student of students) {
-        if (!gradeIds.has(student.grade) || !student.meetingGroup) continue;
+    for (const student of groupedStudents) {
         scopes.push({
             audienceMode: 'grade',
             grade: student.grade,
@@ -143,11 +145,12 @@ const audienceForStudents = (students) => {
     }
     return { $or: scopes };
 };
-const audienceVisibleToStudent = (content, student) => content?.audienceMode === 'shared'
-    || Boolean(student?.meetingGroup
-        && content?.audienceMode === 'grade'
+const audienceVisibleToStudent = (content, student) => Boolean(student?.meetingGroup && (
+    content?.audienceMode === 'shared'
+    || (content?.audienceMode === 'grade'
         && content.grade === student.grade
-        && (!content.meetingGroup || String(content.meetingGroup) === String(student.meetingGroup)));
+        && (!content.meetingGroup || String(content.meetingGroup) === String(student.meetingGroup)))
+));
 
 const studentScope = (user) => isGlobalAdmin(user) ? { role: 'student', isActive: { $ne: false } } : {
     role: 'student',
@@ -1014,8 +1017,9 @@ router.get('/media/:id', async (req, res, next) => {
     }
 });
 
-router.get('/featured-verse', async (req, res, next) => {
+router.get('/featured-verse', auth, async (req, res, next) => {
     try {
+        if (isUngroupedStudent(req.user)) return res.json({ data: null });
         const verse = await FeaturedVerse.findOne({ key: 'global' })
             .select('text reference updatedAt')
             .lean();
@@ -1027,6 +1031,7 @@ router.get('/featured-verse', async (req, res, next) => {
 
 router.get('/daily-reading', auth, async (req, res, next) => {
     try {
+        if (isUngroupedStudent(req.user)) return res.json({ data: null });
         const reading = await DailyReading.findOne({ key: 'global' })
             .select('bookId bookName chapter startVerse endVerse reference text updatedAt')
             .lean();
@@ -1159,6 +1164,7 @@ router.put('/featured-verse', auth, adminOnly, async (req, res, next) => {
 
 router.get('/notifications', auth, async (req, res, next) => {
     try {
+        if (isUngroupedStudent(req.user)) return res.json({ data: [] });
         const user = await User.findById(req.user._id).select('notificationPreferences').lean();
         if (user?.notificationPreferences?.verseUpdates === false) return res.json({ data: [] });
         const events = await VerseUpdateEvent.find()
@@ -1528,6 +1534,12 @@ router.get('/ministry/posts', auth, async (req, res, next) => {
             || !Number.isInteger(limit) || limit < 1 || limit > 30)) {
             return res.status(422).json({ message: 'Page must be 1–1000 and limit must be 1–30.' });
         }
+        if (isUngroupedStudent(req.user)) {
+            return res.json({
+                data: [],
+                ...(paginationRequested ? { pagination: { page, limit, hasMore: false } } : {}),
+            });
+        }
         const filter = { published: true };
         if (type) filter.type = type;
         if (upcomingOnly) {
@@ -1795,6 +1807,7 @@ router.post('/trips/:id/register', auth, async (req, res, next) => {
         if (req.user.role !== 'student') {
             return res.status(403).json({ message: 'Only student accounts can register for trips.' });
         }
+        if (isUngroupedStudent(req.user)) return res.status(404).json({ message: 'Trip not found.' });
         if (!objectId(req.params.id)) return res.status(404).json({ message: 'Trip not found.' });
         const trip = await MinistryPost.findOne({ _id: req.params.id, type: 'trip', published: true }).lean();
         const gradeVisible = Boolean(trip && audienceVisibleToStudent(trip, req.user));
@@ -1826,6 +1839,7 @@ router.post('/trips/:id/register', auth, async (req, res, next) => {
 
 router.get('/trip-registrations', auth, async (req, res, next) => {
     try {
+        if (isUngroupedStudent(req.user)) return res.json({ data: [] });
         let filter;
         if (isAdmin(req.user)) {
             const tripIds = await MinistryPost.find({ type: 'trip', ...adminScope(req.user) }).distinct('_id');
@@ -1897,6 +1911,7 @@ router.delete('/trip-registrations/:id', auth, adminOnly, async (req, res, next)
 
 router.get('/attendance', auth, async (req, res, next) => {
     try {
+        if (isUngroupedStudent(req.user)) return res.json({ data: [] });
         const studentIds = await getAccessibleStudentIds(req.user);
         const filter = { student: { $in: studentIds } };
         const records = await Attendance.find(filter)
@@ -1912,6 +1927,9 @@ router.get('/attendance', auth, async (req, res, next) => {
 
 router.get('/attendance/summary', auth, async (req, res, next) => {
     try {
+        if (isUngroupedStudent(req.user)) {
+            return res.json({ data: { overall: { attended: 0, total: 0, percentage: null }, students: [] } });
+        }
         const studentIds = await getAccessibleStudentIds(req.user);
         const filter = { student: { $in: studentIds } };
         const studentSummaries = await Attendance.aggregate([
@@ -2005,6 +2023,7 @@ router.post('/attendance', auth, adminOnly, bulkWriteRateLimit, async (req, res,
 
 router.get('/prayer-checklists', auth, async (req, res, next) => {
     try {
+        if (isUngroupedStudent(req.user)) return res.json({ data: [] });
         const date = req.query.date || cairoDay(new Date());
         if (!validPrayerDate(date)) return res.status(422).json({ message: 'A valid prayer checklist date is required.' });
         const studentIds = await getAccessibleStudentIds(req.user);
@@ -2033,6 +2052,7 @@ router.get('/prayer-checklists', auth, async (req, res, next) => {
 router.post('/prayer-checklists', auth, async (req, res, next) => {
     try {
         if (req.user.role !== 'student') return res.status(403).json({ message: 'Only a student can submit their own prayer checklist.' });
+        if (isUngroupedStudent(req.user)) return res.status(403).json({ message: 'Your meeting group must be assigned first.' });
         const date = req.body?.date || cairoDay(new Date());
         const checks = parsePrayerChecks(req.body?.checks);
         if (!validPrayerDate(date) || date > cairoDay(new Date()) || !checks) return res.status(422).json({ message: 'A valid date up to today and all prayer checkboxes are required.' });
@@ -2071,6 +2091,7 @@ router.patch('/prayer-checklists/:studentId', auth, adminOnly, async (req, res, 
 
 router.get('/confessions', auth, async (req, res, next) => {
     try {
+        if (isUngroupedStudent(req.user)) return res.json({ data: [] });
         const studentIds = await getAccessibleStudentIds(req.user);
         const filter = { student: { $in: studentIds } };
         const records = await Confession.find(filter).populate('student', 'name username').sort({ date: -1, createdAt: -1 }).limit(500).lean();
@@ -2088,6 +2109,7 @@ router.get('/confessions', auth, async (req, res, next) => {
 
 router.post('/confessions', auth, async (req, res, next) => {
     try {
+        if (isUngroupedStudent(req.user)) return res.status(403).json({ message: 'Your meeting group must be assigned first.' });
         const { date, note } = req.body || {};
         const studentId = req.user.role === 'student'
             ? String(req.body?.studentId || req.user._id)
@@ -2152,6 +2174,7 @@ router.post('/confessions', auth, async (req, res, next) => {
 
 router.patch('/confessions/:id', auth, async (req, res, next) => {
     try {
+        if (isUngroupedStudent(req.user)) return res.status(404).json({ message: 'Confession record not found.' });
         if (!objectId(req.params.id)) return res.status(404).json({ message: 'Confession record not found.' });
         if (!['admin', ...gradeAdminRoles, 'student'].includes(req.user.role)) {
             return res.status(403).json({ message: 'Only a student or administrator can edit a confession record.' });
@@ -2207,6 +2230,7 @@ router.patch('/confessions/:id', auth, async (req, res, next) => {
 
 router.get('/tasks', auth, async (req, res, next) => {
     try {
+        if (isUngroupedStudent(req.user)) return res.json({ data: [] });
         const studentIds = await getAccessibleStudentIds(req.user);
         let filter;
         if (isAdmin(req.user)) {
@@ -2335,6 +2359,7 @@ router.patch('/tasks/:id/audience', auth, adminOnly, async (req, res, next) => {
 
 router.patch('/tasks/:id/complete', auth, async (req, res, next) => {
     try {
+        if (isUngroupedStudent(req.user)) return res.status(404).json({ message: 'Task not found.' });
         if (!objectId(req.params.id)) return res.status(404).json({ message: 'Task not found.' });
         if (req.user.role !== 'student') return res.status(403).json({ message: 'Only the assigned student can complete this task.' });
         const task = await Task.findById(req.params.id);
@@ -2474,6 +2499,7 @@ router.get('/quiz-attempts', auth, async (req, res, next) => {
         if (req.user.role !== 'student') {
             return res.status(403).json({ message: 'Student account required.' });
         }
+        if (isUngroupedStudent(req.user)) return res.json({ data: [] });
         const attempts = await QuizAttempt.find({ student: req.user._id })
             .populate('quiz', 'title')
             .sort({ submittedAt: -1 })
