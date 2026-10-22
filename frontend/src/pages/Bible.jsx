@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, Search, ExternalLink, X } from 'lucide-react';
 import gospelBookUrl from '../books/gospel-book.pdf?url';
 import FeaturedVerseCard from '../components/FeaturedVerseCard';
-import MinistryPosts from '../components/MinistryPosts';
 import { bibleBooks as books, loadBibleBook } from '../data/bibleBooks';
 
 const latinizeDigits = (value) => value.replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)));
@@ -155,7 +154,6 @@ export default function Bible() {
         </>}
       </section>
 
-      <MinistryPosts types={['bible']} title="القراءات الإنجيلية" description="القراءات المنشورة من إدارة الكنيسة." />
       <FeaturedVerseCard />
     </div>
   );

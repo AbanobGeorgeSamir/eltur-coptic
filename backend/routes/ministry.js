@@ -1020,7 +1020,7 @@ router.get('/featured-verse', async (req, res, next) => {
     }
 });
 
-router.get('/daily-reading', auth, async (req, res, next) => {
+router.get('/daily-reading', async (req, res, next) => {
     try {
         const reading = await DailyReading.findOne({ key: 'global' })
             .select('bookId bookName chapter startVerse endVerse reference text updatedAt')

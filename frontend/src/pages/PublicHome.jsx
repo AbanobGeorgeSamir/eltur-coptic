@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { ArrowLeft, BookOpen, CalendarDays, CheckSquare, Heart, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import churchIcon from '../images/kenesa-icon.png';
+import { api } from '../services/api';
 import UpcomingSynaxarium from '../components/UpcomingSynaxarium';
 import FathersSection from '../components/FathersSection';
 
@@ -12,6 +14,17 @@ const features = [
 ];
 
 export default function PublicHome() {
+  const [dailyReading, setDailyReading] = useState(null);
+  const [dailyReadingError, setDailyReadingError] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    api.dailyReading()
+      .then((reading) => { if (active) setDailyReading(reading); })
+      .catch(() => { if (active) setDailyReadingError(true); });
+    return () => { active = false; };
+  }, []);
+
   return (
     <main className="min-h-dvh overflow-hidden text-slate-100" dir="rtl">
       <a href="#sections" className="skip-link">انتقل إلى المحتوى</a>
@@ -91,6 +104,21 @@ export default function PublicHome() {
       <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-14 lg:px-8">
         <UpcomingSynaxarium />
       </section>
+
+      {dailyReadingError && <p role="alert" className="mx-auto mb-12 max-w-7xl px-4 text-sm text-rose-200 sm:px-6 lg:px-8">تعذر تحميل القراءة اليومية.</p>}
+      {dailyReading && <section aria-labelledby="public-daily-reading-heading" className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-14 lg:px-8" dir="rtl">
+        <div className="mb-4 flex items-center gap-3">
+          <span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-xl bg-amber-300/10 text-amber-200"><BookOpen className="h-5 w-5" /></span>
+          <div>
+            <p className="text-xs font-bold text-amber-300">قراءة اليوم</p>
+            <h2 id="public-daily-reading-heading" className="text-xl font-extrabold text-white sm:text-2xl">القراءات اليومية</h2>
+          </div>
+        </div>
+        <article className="rounded-3xl border border-[#e9dfcb] bg-[#fffaf0] p-5 shadow-xl shadow-black/10 sm:p-7">
+          <h3 className="font-bold text-[#7d2038]">{dailyReading.reference}</h3>
+          <p className="mt-3 whitespace-pre-wrap font-serif text-xl leading-[1.9] text-black sm:text-2xl">{dailyReading.text}</p>
+        </article>
+      </section>}
 
       <section id="sections" tabIndex="-1" aria-labelledby="features-heading" className="scroll-mt-20 border-y border-white/[0.06] bg-white/[0.018] py-14 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

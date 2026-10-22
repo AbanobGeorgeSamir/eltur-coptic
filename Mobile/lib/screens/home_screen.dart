@@ -935,12 +935,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         ),
                                       ],
-                                      const Divider(height: 20),
-                                      if (_dailyReadings.isEmpty)
-                                        const Text(
-                                          'لا توجد قراءات منشورة حالياً.',
-                                        )
-                                      else
+                                      if (_dailyReadings.isNotEmpty) ...[
+                                        const Divider(height: 20),
                                         ..._dailyReadings.map(
                                           (reading) => Padding(
                                             padding: const EdgeInsets.only(
@@ -977,6 +973,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                           ),
                                         ),
+                                      ],
                                     ],
                                   ),
                                 ),

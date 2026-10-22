@@ -47,7 +47,7 @@ function SectionTitle({ title, description, to, action = 'عرض الكل' }) {
 
 export default function Home() {
   const { user } = useAuth();
-  const [posts, setPosts] = useState({ news: [], readings: [], liturgies: [] });
+  const [posts, setPosts] = useState({ news: [], liturgies: [] });
   const [dailyReading, setDailyReading] = useState(null);
   const [taskCount, setTaskCount] = useState(null);
   const [attendanceSummary, setAttendanceSummary] = useState(null);
@@ -70,16 +70,14 @@ export default function Home() {
     };
     Promise.all([
       loadSafely(api.postsPage('newsletter', 1, 3).then((result) => result.data || []), []),
-      loadSafely(api.postsPage('bible', 1, 3).then((result) => result.data || []), []),
       loadSafely(api.upcomingLiturgies(2).then(selectUpcomingLiturgies), []),
       loadSafely(isAdminRole(user?.role) ? Promise.resolve([]) : api.tasks(), []),
       loadSafely(api.attendanceSummary(), null),
       loadSafely(api.dailyReading(), null),
-    ]).then(([newsResult, readingsResult, liturgiesResult, tasksResult, attendanceResult, dailyReadingResult]) => {
+    ]).then(([newsResult, liturgiesResult, tasksResult, attendanceResult, dailyReadingResult]) => {
       if (!active) return;
       setPosts({
         news: newsResult.data.slice(0, 3),
-        readings: readingsResult.data.slice(0, 3),
         liturgies: liturgiesResult.data,
       });
       setTaskCount(tasksResult.failed ? null : tasksResult.data.filter((task) => !task.completedAt).length);
@@ -87,7 +85,6 @@ export default function Home() {
       setDailyReading(dailyReadingResult.data);
       setLoadErrors({
         news: newsResult.failed,
-        readings: readingsResult.failed,
         liturgies: liturgiesResult.failed,
         tasks: tasksResult.failed,
         attendance: attendanceResult.failed,
@@ -170,19 +167,6 @@ export default function Home() {
         </article>}
       </section>
 
-      <section className="space-y-3">
-        <SectionTitle title="القراءات الإنجيلية" description="أحدث القراءات التي نشرتها الكنيسة." to="/bible" />
-        {loading && <div className="animate-pulse rounded-2xl bg-slate-900 p-5 text-sm text-slate-500">جارٍ تحميل القراءات...</div>}
-        {!loading && loadErrors.readings && <p role="alert" className="rounded-2xl border border-rose-400/20 bg-rose-400/5 p-5 text-sm text-rose-200">تعذر تحميل القراءات. استخدم زر التحديث بالأعلى للمحاولة مرة أخرى.</p>}
-        {!loading && !loadErrors.readings && posts.readings.length === 0 && <p className="rounded-2xl border border-slate-800 bg-slate-900 p-5 text-sm text-slate-400">لا توجد قراءات منشورة حالياً.</p>}
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {posts.readings.map((post) => <article key={post._id} className="rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:p-5">
-            <h3 className="font-bold text-amber-300">{post.title}</h3>
-            {post.body && <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-300">{post.body}</p>}
-            <PostMedia mediaUrl={post.mediaUrl} mediaKind={post.mediaKind} title={post.title} />
-          </article>)}
-        </div>
-      </section>
       <FeaturedVerseCard />
 
       <section className="space-y-3">
