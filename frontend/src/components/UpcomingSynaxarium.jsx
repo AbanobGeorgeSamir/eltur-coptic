@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, CalendarDays, ChevronDown } from 'lucide-react';
-import { getCairoDateLabels, getUpcomingSynaxariumObservances, loadSynaxarium } from '../utils/synaxarium';
+import { getCairoDateLabels, getUpcomingSynaxariumObservances, getVisibleSynaxariumObservances, loadSynaxarium } from '../utils/synaxarium';
 
 export default function UpcomingSynaxarium() {
   const [now, setNow] = useState(() => new Date());
@@ -21,7 +21,7 @@ export default function UpcomingSynaxarium() {
 
   const dateLabels = useMemo(() => getCairoDateLabels(now), [now]);
   const observances = useMemo(() => getUpcomingSynaxariumObservances(now, calendar), [now, calendar]);
-  const visibleObservances = expanded ? observances.slice(0, 10) : observances.slice(0, 3);
+  const visibleObservances = getVisibleSynaxariumObservances(observances, expanded);
 
   return (
     <section aria-busy={calendar === undefined} aria-labelledby="upcoming-synaxarium-title" className="relative isolate overflow-hidden rounded-3xl border border-[#eadfca] bg-[#fffaf0] text-slate-900 shadow-xl shadow-black/10" dir="rtl">

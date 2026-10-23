@@ -73,8 +73,10 @@ class SynaxariumService {
     'الأحد',
   ];
   static const _arabicDigits = '٠١٢٣٤٥٦٧٨٩';
-  static const _monthlyMichaelCommemoration =
-      'التذكار الشهري لرئيس الملائكة ميخائيل';
+  static List<SynaxariumObservance> visibleObservances(
+    List<SynaxariumObservance> observances, {
+    required bool expanded,
+  }) => expanded ? observances : observances.take(3).toList(growable: false);
 
   static final Future<Map<String, dynamic>> _calendar = rootBundle
       .loadString(_assetPath)
@@ -112,10 +114,6 @@ class SynaxariumService {
           .map((record) => (record as Map)['name_ar']?.toString().trim() ?? '')
           .where((name) => name.isNotEmpty)
           .toList();
-      if (coptic.day == 12 && !names.any((name) => name.contains('ميخائيل'))) {
-        names.add(_monthlyMichaelCommemoration);
-      }
-
       for (var index = 0; index < names.length; index++) {
         upcoming.add(
           SynaxariumObservance(

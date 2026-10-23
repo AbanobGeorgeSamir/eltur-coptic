@@ -227,7 +227,10 @@ class _UpcomingSynaxariumCardState extends State<UpcomingSynaxariumCard> {
     if (observances.isEmpty) {
       return _message('لا توجد تذكارات مسجلة خلال الأيام المقبلة.');
     }
-    final visible = observances.take(_expanded ? 10 : 3).toList();
+    final visible = SynaxariumService.visibleObservances(
+      observances,
+      expanded: _expanded,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

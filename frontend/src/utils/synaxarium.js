@@ -17,8 +17,6 @@ const cairoDateFormatter = new Intl.DateTimeFormat('en-u-ca-gregory-nu-latn', {
   year: 'numeric',
 });
 
-const monthlyMichaelCommemoration = 'التذكار الشهري لرئيس الملائكة ميخائيل';
-
 const numericParts = (formatter, date) => Object.fromEntries(
   formatter.formatToParts(date)
     .filter((part) => part.type !== 'literal' && part.type !== 'era')
@@ -60,6 +58,10 @@ export function loadSynaxarium() {
   return import('../data/synaxarium_coptic_calendar.json').then((module) => module.default);
 }
 
+export function getVisibleSynaxariumObservances(observances, expanded) {
+  return expanded ? observances : observances.slice(0, 3);
+}
+
 export function getUpcomingSynaxariumObservances(now = new Date(), data, lookAheadDays = 45) {
   if (!data?.days) return [];
 
@@ -75,11 +77,7 @@ export function getUpcomingSynaxariumObservances(now = new Date(), data, lookAhe
 
     const names = dayRecord.observances
       .map((observance) => observance.name_ar.trim())
-      .filter((name) => name.length >= 12);
-
-    if (coptic.day === 12 && !names.some((name) => name.includes('ميخائيل'))) {
-      names.push(monthlyMichaelCommemoration);
-    }
+      .filter((name) => name.length > 0);
 
     const gregorianDate = new Intl.DateTimeFormat('ar-EG', {
       timeZone: 'UTC',
