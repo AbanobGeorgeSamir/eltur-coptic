@@ -131,7 +131,7 @@ export default function PublicHome() {
         </aside>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-14 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 pb-6 sm:px-6 sm:pb-8 lg:px-8">
         <UpcomingSynaxarium />
       </section>
 
@@ -150,7 +150,7 @@ export default function PublicHome() {
         </article>
       </section>}
 
-      <section ref={featuresRef} id="sections" tabIndex="-1" aria-labelledby="features-heading" className="scroll-mt-20 border-y border-white/[0.06] bg-white/[0.018] py-14 sm:py-16">
+      <section ref={featuresRef} id="sections" tabIndex="-1" aria-labelledby="features-heading" className="scroll-mt-20 border-y border-white/[0.06] bg-white/[0.018] pt-8 pb-14 sm:pt-10 sm:pb-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className={`mx-auto max-w-2xl text-center transition-all duration-700 ease-out ${featuresVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
             <p className="text-xs font-extrabold tracking-[0.18em] text-amber-300">كل ما يهمك في مكان واحد</p>
