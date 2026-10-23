@@ -41,6 +41,7 @@
     min-height: 100dvh;
     margin: 0;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
     background:
       radial-gradient(ellipse at 88% -12%, rgb(180 83 9 / 0.13), transparent 38rem),
       radial-gradient(ellipse at 0% 40%, rgb(30 64 175 / 0.09), transparent 34rem),
@@ -108,6 +109,65 @@
   textarea {
     max-width: 100%;
   }
+
+  /* Refined scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgb(148 163 184 / 0.3);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(148 163 184 / 0.5);
+  }
+}
+
+/* ── Keyframe Animations ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideOutUp {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-100%); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.75; }
+}
+
+@keyframes spinnerRotate {
+  to { transform: rotate(360deg); }
 }
 
 @layer components {
@@ -136,6 +196,79 @@
 
   .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+
+  /* ── Page transition utilities ── */
+  .animate-fade-in {
+    animation: fadeIn 0.45s ease-out both;
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.5s ease-out both;
+  }
+
+  .animate-slide-in-down {
+    animation: slideInDown 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-slide-out-up {
+    animation: slideOutUp 0.3s ease-in both;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.35s ease-out both;
+  }
+
+  /* Loading skeleton shimmer */
+  .skeleton {
+    background: linear-gradient(90deg, rgb(148 163 184 / 0.08) 25%, rgb(148 163 184 / 0.16) 50%, rgb(148 163 184 / 0.08) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.8s infinite ease-in-out;
+    border-radius: 0.75rem;
+  }
+
+  .skeleton-pulse {
+    animation: skeletonPulse 1.6s infinite ease-in-out;
+  }
+
+  /* GPU-accelerated transform hint for animated elements */
+  .gpu-accelerated {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+
+  /* Smooth element transitions */
+  .smooth-transition {
+    transition: all 0.2s ease-out;
+  }
+
+  /* Toast animation */
+  .toast-enter {
+    animation: slideInDown 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .toast-exit {
+    animation: slideOutUp 0.3s ease-in both;
+  }
+
+  /* Active link glow */
+  .active-link-glow {
+    box-shadow: 0 0 12px rgb(251 191 36 / 0.2), 0 2px 8px rgb(251 191 36 / 0.1);
+  }
+
+  /* Glassmorphic header */
+  .glass-header {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+
+  /* Scroll snap for public home sections */
+  .scroll-snap-container {
+    scroll-snap-type: y proximity;
+  }
+
+  .scroll-snap-section {
+    scroll-snap-align: start;
   }
 }
 

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -46,6 +47,33 @@ class AppTheme {
       scaffoldBackgroundColor: warmBackground,
       visualDensity: VisualDensity.adaptivePlatformDensity,
       textTheme: textTheme,
+      // Smooth page transitions for navigation
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
+      // Scrollbar styling for smoother scroll indicators
+      scrollbarTheme: ScrollbarThemeData(
+        thumbColor: WidgetStateProperty.all(
+          primaryBurgundy.withValues(alpha: 0.3),
+        ),
+        radius: const Radius.circular(10),
+        thickness: WidgetStateProperty.all(4.0),
+        thumbVisibility: WidgetStateProperty.all(false),
+        interactive: true,
+      ),
+      // Smooth text selection theme
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: primaryBurgundy,
+        selectionColor: accentGold.withValues(alpha: 0.35),
+        selectionHandleColor: primaryBurgundy,
+      ),
+      // Splash / ripple effect customization for better touch feedback
+      splashFactory: InkSparkle.splashFactory,
+      splashColor: primaryBurgundy.withValues(alpha: 0.08),
+      highlightColor: primaryBurgundy.withValues(alpha: 0.04),
       appBarTheme: const AppBarTheme(
         backgroundColor: primaryBurgundy,
         foregroundColor: Colors.white,
@@ -67,8 +95,8 @@ class AppTheme {
           foregroundColor: Colors.white,
           disabledBackgroundColor: const Color(0xFFD7DCE4),
           disabledForegroundColor: const Color(0xFF7B8493),
-          elevation: 1,
-          shadowColor: primaryBurgundy.withValues(alpha: 0.18),
+          elevation: 0,
+          shadowColor: primaryBurgundy.withValues(alpha: 0.12),
           minimumSize: const Size(48, 48),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
           shape: RoundedRectangleBorder(
@@ -124,8 +152,8 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: cardSurface,
-        elevation: 1.5,
-        shadowColor: primaryBurgundy.withValues(alpha: 0.08),
+        elevation: 0,
+        shadowColor: primaryBurgundy.withValues(alpha: 0.06),
         surfaceTintColor: Colors.transparent,
         margin: const EdgeInsets.symmetric(vertical: 4),
         shape: RoundedRectangleBorder(
@@ -138,7 +166,8 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         indicatorColor: accentGold.withValues(alpha: 0.2),
         height: 70,
-        elevation: 8,
+        elevation: 0,
+        shadowColor: Colors.transparent,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return TextStyle(
@@ -157,12 +186,15 @@ class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
+        elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         showDragHandle: true,
+        elevation: 0,
+        shadowColor: Colors.transparent,
       ),
       dividerTheme: const DividerThemeData(
         color: borderColor,

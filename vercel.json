@@ -23,8 +23,7 @@
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "https://eltur-coptic.vercel.app" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://eltur-coptic-api-server.vercel.app; object-src 'none'; frame-ancestors 'self'; base-uri 'none'; form-action 'self'; frame-src 'self'; upgrade-insecure-requests" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://eltur-coptic-api-server.vercel.app https://*.blob.vercel-storage.com; object-src 'none'; frame-ancestors 'self'; base-uri 'none'; form-action 'self'; frame-src 'self'; upgrade-insecure-requests" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-Frame-Options", "value": "SAMEORIGIN" },

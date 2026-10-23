@@ -18,6 +18,7 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fadeAnimation;
+  late final Animation<double> _scaleAnimation;
 
   @override
   void initState() {
@@ -27,6 +28,7 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 1500),
     );
     _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+    _scaleAnimation = Tween<double>(begin: 0.88, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _controller.forward();
 
     _checkAuthAndNavigate();
@@ -115,22 +117,25 @@ class _SplashScreenState extends State<SplashScreen>
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(
-                              width: logoSize,
-                              height: logoSize,
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white.withValues(alpha: 0.08),
-                                border: Border.all(
-                                  color: AppTheme.accentGold,
-                                  width: 3,
+                            ScaleTransition(
+                              scale: _scaleAnimation,
+                              child: Container(
+                                width: logoSize,
+                                height: logoSize,
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white.withValues(alpha: 0.08),
+                                  border: Border.all(
+                                    color: AppTheme.accentGold,
+                                    width: 3,
+                                  ),
                                 ),
-                              ),
-                              child: ClipOval(
-                                child: Image.asset(
-                                  'resources/images/kenesa.jpeg',
-                                  fit: BoxFit.cover,
+                                child: ClipOval(
+                                  child: Image.asset(
+                                    'resources/images/kenesa.jpeg',
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                               ),
                             ),

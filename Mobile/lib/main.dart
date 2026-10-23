@@ -29,9 +29,17 @@ class EltorCopticApp extends StatelessWidget {
       navigatorKey: appNavigatorKey,
       title: 'Eltur Coptic',
       debugShowCheckedModeBanner: false,
-      builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
-        value: AppTheme.systemUiOverlayStyle,
-        child: child ?? const SizedBox.shrink(),
+      builder: (context, child) => ScrollConfiguration(
+        behavior: const ScrollBehavior().copyWith(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          scrollbars: true,
+        ),
+        child: AnnotatedRegion<SystemUiOverlayStyle>(
+          value: AppTheme.systemUiOverlayStyle,
+          child: child ?? const SizedBox.shrink(),
+        ),
       ),
       locale: const Locale('ar', 'EG'),
       supportedLocales: const [Locale('ar', 'EG'), Locale('en', 'US')],

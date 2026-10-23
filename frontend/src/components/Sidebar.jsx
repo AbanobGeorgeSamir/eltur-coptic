@@ -79,9 +79,9 @@ function LinkItem({ item, onNavigate, compact = false }) {
       to={path}
       end={path === '/'}
       onClick={onNavigate}
-      className={({ isActive }) => `group flex min-h-11 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 ${isActive ? 'bg-amber-400 text-slate-950 shadow-sm shadow-amber-950/20' : 'text-slate-300 hover:bg-white/5 hover:text-white'} ${compact ? 'shrink-0 whitespace-nowrap' : ''}`}
+      className={({ isActive }) => `group flex min-h-11 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 ${isActive ? 'bg-amber-400 text-slate-950 shadow-sm shadow-amber-950/20 active-link-glow scale-[1.02]' : 'text-slate-300 hover:bg-white/5 hover:text-white hover:translate-x-1'} ${compact ? 'shrink-0 whitespace-nowrap' : ''}`}
     >
-      <Icon aria-hidden="true" className="h-[18px] w-[18px] shrink-0" />
+      <Icon aria-hidden="true" className="h-[18px] w-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110" />
       <span>{label}</span>
     </NavLink>
   );
@@ -148,9 +148,9 @@ export default function Sidebar({ userRole }) {
       <aside className="sticky top-[68px] hidden h-[calc(100dvh-68px)] w-64 shrink-0 flex-col border-l border-white/[0.07] bg-slate-950/70 p-4 lg:flex">
         <div className="mb-4 px-3 pt-2">
           <p className="text-[10px] font-bold text-amber-300/70">كنيسة موسي النبي ومارمرقس الرسول</p>
-          <h2 className="mt-1 text-sm font-bold text-white">{sectionLabel}</h2>
+          <h2 className="mt-1 text-sm font-bold text-white">{ sectionLabel}</h2>
         </div>
-        <nav aria-label="التنقل الرئيسي" className="flex flex-1 flex-col gap-1 overflow-y-auto">
+        <nav aria-label="التنقل الرئيسي" className="flex flex-1 flex-col gap-1 overflow-y-auto scrollbar-none">
           {links.map((item) => <LinkItem key={item[0]} item={item} />)}
         </nav>
         <p className="mt-4 rounded-xl border border-white/[0.06] bg-white/[0.025] px-3 py-2.5 text-xs leading-5 text-slate-500">
@@ -162,7 +162,7 @@ export default function Sidebar({ userRole }) {
         <span className="ml-2 shrink-0 text-[11px] font-bold text-amber-300/75">{sectionLabel}</span>
         {primaryLinks.map((item) => <LinkItem key={item[0]} item={item} compact />)}
         {secondaryLinks.length > 0 && (
-          <button type="button" onClick={openMore} className="mr-auto inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-white/10 px-3 text-xs font-bold text-slate-200 transition hover:border-amber-400/40 hover:text-amber-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300">
+          <button type="button" onClick={openMore} className="mr-auto inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-white/10 px-3 text-xs font-bold text-slate-200 transition-all duration-200 ease-out hover:border-amber-400/40 hover:text-amber-200 hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300">
             <Menu aria-hidden="true" className="h-4 w-4" /> كل الأقسام
           </button>
         )}
@@ -175,13 +175,13 @@ export default function Sidebar({ userRole }) {
               key={path}
               to={path}
               end={path === '/'}
-              className={({ isActive }) => `flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-bold transition-colors ${isActive ? 'bg-amber-400/12 text-amber-300' : 'text-slate-400 hover:text-white'}`}
+              className={({ isActive }) => `flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-bold transition-all duration-200 ease-out ${isActive ? 'bg-amber-400/12 text-amber-300 scale-105' : 'text-slate-400 hover:text-white'}`}
             >
               <Icon aria-hidden="true" className="h-5 w-5" />
               <span className="max-w-full truncate px-1">{label}</span>
             </NavLink>
           ))}
-          <button type="button" aria-haspopup="dialog" aria-expanded={moreOpen} onClick={openMore} className={`flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-bold transition-colors ${moreOpen ? 'bg-amber-400/12 text-amber-300' : 'text-slate-400 hover:text-white'}`}>
+          <button type="button" aria-haspopup="dialog" aria-expanded={moreOpen} onClick={openMore} className={`flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-bold transition-all duration-200 ease-out ${moreOpen ? 'bg-amber-400/12 text-amber-300' : 'text-slate-400 hover:text-white'}`}>
             <Menu aria-hidden="true" className="h-5 w-5" />
             <span>المزيد</span>
           </button>
@@ -189,18 +189,18 @@ export default function Sidebar({ userRole }) {
       </nav>
 
       {moreOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/70 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-sm sm:items-center sm:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) setMoreOpen(false); }}>
-          <section ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="more-menu-title" className="w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/70 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-sm sm:items-center sm:p-6 animate-fade-in" onMouseDown={(event) => { if (event.target === event.currentTarget) setMoreOpen(false); }}>
+          <section ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="more-menu-title" className="w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50 animate-scale-in">
             <header className="flex items-center justify-between gap-4 border-b border-white/[0.08] px-5 py-4 sm:px-6">
               <div>
                 <p className="text-[11px] font-bold text-amber-300">{sectionLabel}</p>
                 <h2 id="more-menu-title" className="mt-1 text-lg font-bold text-white">كل أقسام البوابة</h2>
               </div>
-              <button ref={closeButtonRef} type="button" aria-label="إغلاق القائمة" onClick={() => setMoreOpen(false)} className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 text-slate-300 transition hover:bg-white/5 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300">
+              <button ref={closeButtonRef} type="button" aria-label="إغلاق القائمة" onClick={() => setMoreOpen(false)} className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 text-slate-300 transition-all duration-200 ease-out hover:bg-white/5 hover:text-white hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300">
                 <X aria-hidden="true" className="h-5 w-5" />
               </button>
             </header>
-            <nav aria-label="جميع الأقسام" className="grid max-h-[65dvh] grid-cols-2 gap-2 overflow-y-auto p-4 sm:grid-cols-3 sm:p-5">
+            <nav aria-label="جميع الأقسام" className="grid max-h-[65dvh] grid-cols-2 gap-2 overflow-y-auto scrollbar-none p-4 sm:grid-cols-3 sm:p-5">
               {links.map((item) => <LinkItem key={item[0]} item={item} onNavigate={() => setMoreOpen(false)} />)}
             </nav>
           </section>

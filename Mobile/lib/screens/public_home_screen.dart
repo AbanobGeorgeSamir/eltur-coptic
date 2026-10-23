@@ -76,6 +76,7 @@ class PublicHomeScreen extends StatelessWidget {
           ),
         ),
         body: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           child: Center(
             child: ConstrainedBox(

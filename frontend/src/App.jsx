@@ -38,7 +38,7 @@ const FatherDashboard = lazy(() => import('./pages/FatherDashboard'));
 function LoadingPage() {
   return (
     <main className="grid min-h-dvh place-items-center px-4" dir="rtl" aria-busy="true">
-      <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/90 px-5 py-4 text-amber-200 shadow-xl" role="status" aria-live="polite">
+      <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-900/90 px-5 py-4 text-amber-200 shadow-xl animate-fade-in" role="status" aria-live="polite">
         <span aria-hidden="true" className="h-5 w-5 animate-spin rounded-full border-2 border-amber-300 border-t-transparent" />
         <span>جارٍ تحميل الصفحة...</span>
       </div>
@@ -81,7 +81,7 @@ function AppFrame({ userRole, showToast, children }) {
       <div className="flex min-h-[calc(100dvh-68px)] flex-col lg:flex-row">
         <Sidebar userRole={userRole} />
         <main id="main-content" tabIndex="-1" className="min-w-0 flex-1 overflow-x-clip px-3 py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:px-5 sm:py-6 sm:pb-8 lg:px-8 lg:py-8">
-          <div key={contentVersion} className="mx-auto w-full max-w-[1440px]">{children}</div>
+          <div key={contentVersion} className="mx-auto w-full max-w-[1440px] animate-fade-in">{children}</div>
         </main>
       </div>
     </div>
@@ -161,18 +161,42 @@ export function AppRoutes({ showToast, serverPages = null }) {
 
 export default function App() {
   const [toastMessage, setToastMessage] = useState('');
+  const [toastExiting, setToastExiting] = useState(false);
   const toastTimer = useRef(null);
+  const exitTimer = useRef(null);
+
   const showToast = (message) => {
+    setToastExiting(false);
     setToastMessage(message);
     window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToastMessage(''), 3500);
+    window.clearTimeout(exitTimer.current);
+    toastTimer.current = window.setTimeout(() => {
+      setToastExiting(true);
+      exitTimer.current = window.setTimeout(() => {
+        setToastMessage('');
+        setToastExiting(false);
+      }, 300);
+    }, 3200);
   };
-  useEffect(() => () => window.clearTimeout(toastTimer.current), []);
+
+  useEffect(() => () => {
+    window.clearTimeout(toastTimer.current);
+    window.clearTimeout(exitTimer.current);
+  }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>
         <AppErrorBoundary>
-          {toastMessage && <div role="status" aria-live="polite" className="fixed inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))] z-[60] mx-auto max-w-md rounded-2xl border border-amber-200/50 bg-amber-300 px-5 py-3 text-sm font-bold text-slate-950 shadow-2xl shadow-black/30 sm:inset-x-auto sm:right-5 sm:mx-0">{toastMessage}</div>}
+          {toastMessage && (
+            <div
+              role="status"
+              aria-live="polite"
+              className={`fixed inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))] z-[60] mx-auto max-w-md rounded-2xl border border-amber-200/50 bg-amber-300 px-5 py-3 text-sm font-bold text-slate-950 shadow-2xl shadow-black/30 sm:inset-x-auto sm:right-5 sm:mx-0 ${toastExiting ? 'animate-slide-out-up' : 'animate-slide-in-down'}`}
+            >
+              {toastMessage}
+            </div>
+          )}
           <AppRoutes showToast={showToast} />
         </AppErrorBoundary>
       </AuthProvider>

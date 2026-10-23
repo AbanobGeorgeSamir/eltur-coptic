@@ -1,3 +1,5 @@
+process.env.NODE_ENV = 'test';
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-that-is-long-enough-for-local-validation';
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { loginRateLimit } = require('../middleware/rateLimit');

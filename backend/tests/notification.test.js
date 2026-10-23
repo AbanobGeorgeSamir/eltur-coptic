@@ -4,6 +4,7 @@ const http = require('node:http');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 
+process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-secret-that-is-long-enough-for-local-validation';
 const User = require('../models/User');
 const FeaturedVerse = require('../models/FeaturedVerse');
