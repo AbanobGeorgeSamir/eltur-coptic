@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>Agpeya PDF viewer</title>
+  </head>
+  <body>
+    <main id="agpeya-reader" class="reader-shell" aria-label="Agpeya PDF reader">
+      <div class="reader-toolbar" role="toolbar" aria-label="PDF controls">
+        <button id="zoomOut" type="button" aria-label="تصغير" title="تصغير">−</button>
+        <button id="zoomIn" type="button" aria-label="تكبير" title="تكبير">+</button>
+        <button id="fitWidth" type="button" aria-label="ملاءمة العرض" title="ملاءمة العرض">↔</button>
+        <span class="page-control">
+          <input id="pageNumber" type="number" min="1" value="1" aria-label="رقم الصفحة" />
+          <span id="pageCount" aria-live="polite">/ …</span>
+        </span>
+        <a class="reader-download" href="/agpeya.pdf" download="agpeya.pdf" aria-label="تنزيل كتاب الأجبية">تنزيل</a>
+      </div>
+      <div id="viewerContainer" class="viewer-container">
+        <div id="loadingStatus" class="reader-status" role="status">جارٍ تحميل الكتاب…</div>
+        <div id="errorStatus" class="reader-status reader-error" role="alert" hidden>تعذر عرض الكتاب. استخدم زر التنزيل.</div>
+        <div id="viewer" class="pdfViewer"></div>
+      </div>
+    </main>
+    <script type="module" src="/src/agpeya-reader.jsx"></script>
+  </body>
+</html>

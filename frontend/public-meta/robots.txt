@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /profile
+Disallow: /confession
+Disallow: /admin-
+Disallow: /father-dashboard
+Disallow: /agpeya
+Disallow: /bible
+Disallow: /prayers
+Disallow: /sunday-school
+Disallow: /quizzes
+Disallow: /tasks
+Disallow: /trips
+Disallow: /liturgy
+Disallow: /gallery

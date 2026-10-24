@@ -1,0 +1,27 @@
+{
+  "id": "/",
+  "name": "كنيسة موسي النبي ومارمرقس الرسول",
+  "short_name": "كنيسة موسي النبي ومارمرقس الرسول",
+  "description": "بوابة كنيسة موسي النبي ومارمرقس الرسول للقراءات والصلوات وخدمات الكنيسة.",
+  "lang": "ar-EG",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "icons": [
+    {
+      "src": "/icons/Icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/Icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
