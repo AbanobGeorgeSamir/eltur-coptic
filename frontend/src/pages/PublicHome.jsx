@@ -135,6 +135,31 @@ export default function PublicHome() {
         <UpcomingSynaxarium />
       </section>
 
+      <section ref={featuresRef} id="sections" tabIndex="-1" aria-labelledby="features-heading" className="scroll-mt-20 border-y border-white/[0.06] bg-white/[0.018] pt-4 pb-14 sm:pb-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className={`mx-auto max-w-2xl text-center transition-opacity duration-700 ease-out ${featuresVisible ? 'opacity-100' : 'opacity-0'}`}>
+            <p className="text-xs font-extrabold tracking-[0.18em] text-amber-300">كل ما يهمك في مكان واحد</p>
+            <h2 id="features-heading" className="mt-3 text-2xl font-extrabold text-white sm:text-3xl">مساحة مصممة لحياة الخدمة</h2>
+            <p className="mt-3 text-sm leading-7 text-slate-400 sm:text-base">أدوات بسيطة تساعدك أن تبقى قريباً من الكلمة والصلاة ومجتمع الكنيسة.</p>
+          </div>
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:mt-10 lg:grid-cols-4 lg:gap-4">
+            {features.map(({ icon: Icon, title, text }, index) => (
+              <article
+                key={title}
+                className={`group rounded-3xl border border-white/[0.08] bg-slate-900/75 p-5 transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-amber-300/25 hover:bg-slate-900 hover:shadow-xl hover:shadow-amber-400/5 sm:p-6 ${featuresVisible ? 'opacity-100' : 'opacity-0'}`}
+                style={{ transitionDelay: featuresVisible ? `${index * 100 + 150}ms` : '0ms' }}
+              >
+                <span className={`grid h-12 w-12 place-items-center rounded-2xl transition-transform duration-200 group-hover:scale-110 ${index === 1 ? 'bg-sky-300/10 text-sky-200' : index === 2 ? 'bg-violet-300/10 text-violet-200' : index === 3 ? 'bg-rose-300/10 text-rose-200' : 'bg-amber-300/10 text-amber-200'}`}>
+                  <Icon aria-hidden="true" className="h-5 w-5" />
+                </span>
+                <h3 className="mt-5 font-extrabold text-white">{title}</h3>
+                <p className="mt-2 text-sm leading-7 text-slate-400">{text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {dailyReadingError && <p role="alert" className="mx-auto mb-2 max-w-7xl px-4 text-sm text-rose-200 sm:px-6 lg:px-8">تعذر تحميل القراءة اليومية.</p>}
       {dailyReading && <section ref={readingRef} aria-labelledby="public-daily-reading-heading" className={`mx-auto max-w-7xl px-4 pb-2 sm:px-6 lg:px-8 transition-all duration-700 ease-out ${readingVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`} dir="rtl">
         <div className="mb-4 flex items-center gap-3">
@@ -149,31 +174,6 @@ export default function PublicHome() {
           <p className="mt-3 whitespace-pre-wrap font-serif text-xl leading-[1.9] text-black sm:text-2xl">{dailyReading.text}</p>
         </article>
       </section>}
-
-      <section ref={featuresRef} id="sections" tabIndex="-1" aria-labelledby="features-heading" className="scroll-mt-20 border-y border-white/[0.06] bg-white/[0.018] pt-4 pb-14 sm:pb-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className={`mx-auto max-w-2xl text-center transition-all duration-700 ease-out ${featuresVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-            <p className="text-xs font-extrabold tracking-[0.18em] text-amber-300">كل ما يهمك في مكان واحد</p>
-            <h2 id="features-heading" className="mt-3 text-2xl font-extrabold text-white sm:text-3xl">مساحة مصممة لحياة الخدمة</h2>
-            <p className="mt-3 text-sm leading-7 text-slate-400 sm:text-base">أدوات بسيطة تساعدك أن تبقى قريباً من الكلمة والصلاة ومجتمع الكنيسة.</p>
-          </div>
-          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:mt-10 lg:grid-cols-4 lg:gap-4">
-            {features.map(({ icon: Icon, title, text }, index) => (
-              <article
-                key={title}
-                className={`group rounded-3xl border border-white/[0.08] bg-slate-900/75 p-5 transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-amber-300/25 hover:bg-slate-900 hover:shadow-xl hover:shadow-amber-400/5 sm:p-6 ${featuresVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
-                style={{ transitionDelay: featuresVisible ? `${index * 100 + 150}ms` : '0ms' }}
-              >
-                <span className={`grid h-12 w-12 place-items-center rounded-2xl transition-transform duration-200 group-hover:scale-110 ${index === 1 ? 'bg-sky-300/10 text-sky-200' : index === 2 ? 'bg-violet-300/10 text-violet-200' : index === 3 ? 'bg-rose-300/10 text-rose-200' : 'bg-amber-300/10 text-amber-200'}`}>
-                  <Icon aria-hidden="true" className="h-5 w-5" />
-                </span>
-                <h3 className="mt-5 font-extrabold text-white">{title}</h3>
-                <p className="mt-2 text-sm leading-7 text-slate-400">{text}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
 
       <FathersSection className="mx-auto max-w-7xl space-y-3 px-4 py-14 sm:px-6 sm:py-16 lg:px-8" />
 
