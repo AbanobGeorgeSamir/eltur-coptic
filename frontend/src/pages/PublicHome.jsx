@@ -135,7 +135,7 @@ export default function PublicHome() {
         <UpcomingSynaxarium />
       </section>
 
-      <section ref={featuresRef} id="sections" tabIndex="-1" aria-labelledby="features-heading" className="scroll-mt-20 border-y border-white/[0.06] bg-white/[0.018] pt-4 pb-14 sm:pb-16">
+      <section ref={featuresRef} id="sections" tabIndex="-1" aria-labelledby="features-heading" className="scroll-mt-20 border-y border-white/[0.06] bg-white/[0.018] pt-4 pb-4">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className={`mx-auto max-w-2xl text-center transition-opacity duration-700 ease-out ${featuresVisible ? 'opacity-100' : 'opacity-0'}`}>
             <p className="text-xs font-extrabold tracking-[0.18em] text-amber-300">كل ما يهمك في مكان واحد</p>
@@ -175,9 +175,9 @@ export default function PublicHome() {
         </article>
       </section>}
 
-      <FathersSection className="mx-auto max-w-7xl space-y-3 px-4 py-14 sm:px-6 sm:py-16 lg:px-8" />
+      <FathersSection className="mx-auto max-w-7xl space-y-3 px-4 pt-4 pb-4 sm:px-6 lg:px-8" />
 
-      <section ref={ctaRef} className="px-4 pb-14 sm:px-6 sm:pb-16 lg:px-8">
+      <section ref={ctaRef} className="px-4 pt-4 pb-8 sm:px-6 lg:px-8">
         <div className={`relative mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 overflow-hidden rounded-[2rem] border border-amber-200/15 bg-gradient-to-br from-amber-400/10 via-slate-900 to-blue-950/60 p-6 sm:flex-row sm:items-center sm:p-9 transition-all duration-700 ease-out ${ctaVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
           <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-20 h-64 w-64 rounded-full bg-amber-300/10 blur-3xl" />
           <div className="relative">
