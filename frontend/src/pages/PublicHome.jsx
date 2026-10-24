@@ -160,6 +160,8 @@ export default function PublicHome() {
         </div>
       </section>
 
+      <FathersSection className="mx-auto max-w-7xl space-y-3 px-4 pt-4 pb-4 sm:px-6 lg:px-8" />
+
       {dailyReadingError && <p role="alert" className="mx-auto mb-2 max-w-7xl px-4 text-sm text-rose-200 sm:px-6 lg:px-8">تعذر تحميل القراءة اليومية.</p>}
       {dailyReading && <section ref={readingRef} aria-labelledby="public-daily-reading-heading" className={`mx-auto max-w-7xl px-4 pb-2 sm:px-6 lg:px-8 transition-all duration-700 ease-out ${readingVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`} dir="rtl">
         <div className="mb-4 flex items-center gap-3">
@@ -174,8 +176,6 @@ export default function PublicHome() {
           <p className="mt-3 whitespace-pre-wrap font-serif text-xl leading-[1.9] text-black sm:text-2xl">{dailyReading.text}</p>
         </article>
       </section>}
-
-      <FathersSection className="mx-auto max-w-7xl space-y-3 px-4 pt-4 pb-4 sm:px-6 lg:px-8" />
 
       <section ref={ctaRef} className="px-4 pt-4 pb-8 sm:px-6 lg:px-8">
         <div className={`relative mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 overflow-hidden rounded-[2rem] border border-amber-200/15 bg-gradient-to-br from-amber-400/10 via-slate-900 to-blue-950/60 p-6 sm:flex-row sm:items-center sm:p-9 transition-all duration-700 ease-out ${ctaVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
