@@ -21,6 +21,7 @@ body {
 }
 
 .reader-shell {
+  position: relative;
   display: flex;
   width: 100%;
   height: 100vh;
@@ -81,8 +82,8 @@ body {
 }
 
 .viewer-container {
-  position: relative;
-  flex: 1;
+  position: absolute;
+  inset: 48px 0 0;
   overflow: auto;
   direction: ltr;
   background: #475569;

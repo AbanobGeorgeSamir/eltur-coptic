@@ -10,6 +10,17 @@ const pageCountLabel = document.querySelector('#pageCount');
 const loadingStatus = document.querySelector('#loadingStatus');
 const errorStatus = document.querySelector('#errorStatus');
 const viewerContainer = document.querySelector('#viewerContainer');
+
+function reportViewerError(error) {
+  loadingStatus.hidden = true;
+  errorStatus.textContent = 'تعذر عرض الكتاب. يمكنك تنزيل ملف الأجبية من الزر أعلى الصفحة.';
+  errorStatus.hidden = false;
+  console.error('Agpeya PDF viewer error:', error);
+}
+
+window.addEventListener('error', (event) => reportViewerError(event.error || event.message));
+window.addEventListener('unhandledrejection', (event) => reportViewerError(event.reason));
+
 const eventBus = new EventBus();
 const linkService = new PDFLinkService({ eventBus });
 const pdfViewer = new PDFViewer({
@@ -61,9 +72,6 @@ loadingTask.promise.then((pdfDocument) => {
   pdfViewer.setDocument(pdfDocument);
   pageCountLabel.textContent = `/ ${pdfDocument.numPages}`;
   loadingStatus.hidden = true;
-}).catch(() => {
-  loadingStatus.hidden = true;
-  errorStatus.hidden = false;
-});
+}).catch(reportViewerError);
 
 window.addEventListener('pagehide', () => loadingTask.destroy(), { once: true });
