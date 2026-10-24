@@ -160,10 +160,10 @@ export default function PublicHome() {
         </div>
       </section>
 
-      <FathersSection className="mx-auto max-w-7xl space-y-3 px-4 pt-4 pb-4 sm:px-6 lg:px-8" />
+      <FathersSection className="mx-auto max-w-7xl space-y-3 px-4 pt-4 pb-2 sm:px-6 lg:px-8" />
 
       {dailyReadingError && <p role="alert" className="mx-auto mb-2 max-w-7xl px-4 text-sm text-rose-200 sm:px-6 lg:px-8">تعذر تحميل القراءة اليومية.</p>}
-      {dailyReading && <section ref={readingRef} aria-labelledby="public-daily-reading-heading" className={`mx-auto max-w-7xl px-4 pb-2 sm:px-6 lg:px-8 transition-all duration-700 ease-out ${readingVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`} dir="rtl">
+      {dailyReading && <section ref={readingRef} aria-labelledby="public-daily-reading-heading" className={`mx-auto max-w-7xl px-4 pt-0 pb-2 sm:px-6 lg:px-8 transition-opacity duration-700 ease-out ${readingVisible ? 'opacity-100' : 'opacity-0'}`} dir="rtl">
         <div className="mb-4 flex items-center gap-3">
           <span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-xl bg-amber-300/10 text-amber-200"><BookOpen className="h-5 w-5" /></span>
           <div>
@@ -177,8 +177,8 @@ export default function PublicHome() {
         </article>
       </section>}
 
-      <section ref={ctaRef} className="px-4 pt-4 pb-8 sm:px-6 lg:px-8">
-        <div className={`relative mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 overflow-hidden rounded-[2rem] border border-amber-200/15 bg-gradient-to-br from-amber-400/10 via-slate-900 to-blue-950/60 p-6 sm:flex-row sm:items-center sm:p-9 transition-all duration-700 ease-out ${ctaVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+      <section ref={ctaRef} className="px-4 pt-2 pb-8 sm:px-6 lg:px-8">
+        <div className={`relative mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 overflow-hidden rounded-[2rem] border border-amber-200/15 bg-gradient-to-br from-amber-400/10 via-slate-900 to-blue-950/60 p-6 sm:flex-row sm:items-center sm:p-9 transition-opacity duration-700 ease-out ${ctaVisible ? 'opacity-100' : 'opacity-0'}`}>
           <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-20 h-64 w-64 rounded-full bg-amber-300/10 blur-3xl" />
           <div className="relative">
             <h2 className="text-xl font-extrabold text-white sm:text-2xl">أهلاً بك في بيتك.</h2>
