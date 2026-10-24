@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, BookOpen, CalendarDays, CheckSquare, Heart, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import churchIcon from '../images/kenesa-icon.png';
@@ -12,22 +12,6 @@ const features = [
   { icon: CalendarDays, title: 'الحياة الكنسية', text: 'اعرف مواعيد القداسات والأنشطة والدروس القادمة.' },
   { icon: Users, title: 'خدمة مترابطة', text: 'مساحة آمنة للطلاب والأسر والخدام لمتابعة الخدمة.' },
 ];
-
-function useIntersectionReveal() {
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.unobserve(el); } },
-      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-  return [ref, visible];
-}
 
 function useParallax() {
   const [offset, setOffset] = useState(0);
@@ -43,9 +27,6 @@ export default function PublicHome() {
   const [dailyReading, setDailyReading] = useState(null);
   const [dailyReadingError, setDailyReadingError] = useState(false);
   const parallaxOffset = useParallax();
-  const [featuresRef, featuresVisible] = useIntersectionReveal();
-  const [ctaRef, ctaVisible] = useIntersectionReveal();
-  const [readingRef, readingVisible] = useIntersectionReveal();
 
   useEffect(() => {
     let active = true;
@@ -135,9 +116,9 @@ export default function PublicHome() {
         <UpcomingSynaxarium />
       </section>
 
-      <section ref={featuresRef} id="sections" tabIndex="-1" aria-labelledby="features-heading" className="scroll-mt-20 border-y border-white/[0.06] bg-white/[0.018] pt-4 pb-4">
+      <section id="sections" tabIndex="-1" aria-labelledby="features-heading" className="scroll-mt-20 border-y border-white/[0.06] bg-white/[0.018] pt-4 pb-4">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className={`mx-auto max-w-2xl text-center transition-opacity duration-700 ease-out ${featuresVisible ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="mx-auto max-w-2xl text-center">
             <p className="text-xs font-extrabold tracking-[0.18em] text-amber-300">كل ما يهمك في مكان واحد</p>
             <h2 id="features-heading" className="mt-3 text-2xl font-extrabold text-white sm:text-3xl">مساحة مصممة لحياة الخدمة</h2>
             <p className="mt-3 text-sm leading-7 text-slate-400 sm:text-base">أدوات بسيطة تساعدك أن تبقى قريباً من الكلمة والصلاة ومجتمع الكنيسة.</p>
@@ -146,8 +127,7 @@ export default function PublicHome() {
             {features.map(({ icon: Icon, title, text }, index) => (
               <article
                 key={title}
-                className={`group rounded-3xl border border-white/[0.08] bg-slate-900/75 p-5 transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-amber-300/25 hover:bg-slate-900 hover:shadow-xl hover:shadow-amber-400/5 sm:p-6 ${featuresVisible ? 'opacity-100' : 'opacity-0'}`}
-                style={{ transitionDelay: featuresVisible ? `${index * 100 + 150}ms` : '0ms' }}
+                className="group rounded-3xl border border-white/[0.08] bg-slate-900/75 p-5 transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-amber-300/25 hover:bg-slate-900 hover:shadow-xl hover:shadow-amber-400/5 sm:p-6"
               >
                 <span className={`grid h-12 w-12 place-items-center rounded-2xl transition-transform duration-200 group-hover:scale-110 ${index === 1 ? 'bg-sky-300/10 text-sky-200' : index === 2 ? 'bg-violet-300/10 text-violet-200' : index === 3 ? 'bg-rose-300/10 text-rose-200' : 'bg-amber-300/10 text-amber-200'}`}>
                   <Icon aria-hidden="true" className="h-5 w-5" />
@@ -163,7 +143,7 @@ export default function PublicHome() {
       <FathersSection className="mx-auto max-w-7xl space-y-3 px-4 pt-4 pb-2 sm:px-6 lg:px-8" />
 
       {dailyReadingError && <p role="alert" className="mx-auto mb-2 max-w-7xl px-4 text-sm text-rose-200 sm:px-6 lg:px-8">تعذر تحميل القراءة اليومية.</p>}
-      {dailyReading && <section ref={readingRef} aria-labelledby="public-daily-reading-heading" className={`mx-auto max-w-7xl px-4 pt-0 pb-2 sm:px-6 lg:px-8 transition-opacity duration-700 ease-out ${readingVisible ? 'opacity-100' : 'opacity-0'}`} dir="rtl">
+      {dailyReading && <section aria-labelledby="public-daily-reading-heading" className="mx-auto max-w-7xl px-4 pt-0 pb-2 sm:px-6 lg:px-8" dir="rtl">
         <div className="mb-4 flex items-center gap-3">
           <span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-xl bg-amber-300/10 text-amber-200"><BookOpen className="h-5 w-5" /></span>
           <div>
@@ -177,8 +157,8 @@ export default function PublicHome() {
         </article>
       </section>}
 
-      <section ref={ctaRef} className="px-4 pt-2 pb-8 sm:px-6 lg:px-8">
-        <div className={`relative mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 overflow-hidden rounded-[2rem] border border-amber-200/15 bg-gradient-to-br from-amber-400/10 via-slate-900 to-blue-950/60 p-6 sm:flex-row sm:items-center sm:p-9 transition-opacity duration-700 ease-out ${ctaVisible ? 'opacity-100' : 'opacity-0'}`}>
+      <section className="px-4 pt-2 pb-8 sm:px-6 lg:px-8">
+        <div className="relative mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 overflow-hidden rounded-[2rem] border border-amber-200/15 bg-gradient-to-br from-amber-400/10 via-slate-900 to-blue-950/60 p-6 sm:flex-row sm:items-center sm:p-9">
           <div aria-hidden="true" className="pointer-events-none absolute -left-12 -top-20 h-64 w-64 rounded-full bg-amber-300/10 blur-3xl" />
           <div className="relative">
             <h2 className="text-xl font-extrabold text-white sm:text-2xl">أهلاً بك في بيتك.</h2>
