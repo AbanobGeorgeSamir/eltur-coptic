@@ -135,8 +135,8 @@ export default function PublicHome() {
         <UpcomingSynaxarium />
       </section>
 
-      {dailyReadingError && <p role="alert" className="mx-auto mb-12 max-w-7xl px-4 text-sm text-rose-200 sm:px-6 lg:px-8">تعذر تحميل القراءة اليومية.</p>}
-      {dailyReading && <section ref={readingRef} aria-labelledby="public-daily-reading-heading" className={`mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-14 lg:px-8 transition-all duration-700 ease-out ${readingVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`} dir="rtl">
+      {dailyReadingError && <p role="alert" className="mx-auto mb-2 max-w-7xl px-4 text-sm text-rose-200 sm:px-6 lg:px-8">تعذر تحميل القراءة اليومية.</p>}
+      {dailyReading && <section ref={readingRef} aria-labelledby="public-daily-reading-heading" className={`mx-auto max-w-7xl px-4 pb-2 sm:px-6 lg:px-8 transition-all duration-700 ease-out ${readingVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`} dir="rtl">
         <div className="mb-4 flex items-center gap-3">
           <span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-xl bg-amber-300/10 text-amber-200"><BookOpen className="h-5 w-5" /></span>
           <div>
