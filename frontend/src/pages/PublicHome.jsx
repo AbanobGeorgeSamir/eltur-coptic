@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, BookOpen, CalendarDays, CheckSquare, Heart, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import churchIcon from '../images/kenesa-icon.png';
-import { api } from '../services/api';
 import UpcomingSynaxarium from '../components/UpcomingSynaxarium';
 import FathersSection from '../components/FathersSection';
 
@@ -24,17 +23,7 @@ function useParallax() {
 }
 
 export default function PublicHome() {
-  const [dailyReading, setDailyReading] = useState(null);
-  const [dailyReadingError, setDailyReadingError] = useState(false);
   const parallaxOffset = useParallax();
-
-  useEffect(() => {
-    let active = true;
-    api.dailyReading()
-      .then((reading) => { if (active) setDailyReading(reading); })
-      .catch(() => { if (active) setDailyReadingError(true); });
-    return () => { active = false; };
-  }, []);
 
   return (
     <main className="min-h-dvh overflow-hidden text-slate-100" dir="rtl">
@@ -141,21 +130,6 @@ export default function PublicHome() {
       </section>
 
       <FathersSection className="mx-auto max-w-7xl space-y-3 px-4 pt-4 pb-2 sm:px-6 lg:px-8" />
-
-      {dailyReadingError && <p role="alert" className="mx-auto mb-2 max-w-7xl px-4 text-sm text-rose-200 sm:px-6 lg:px-8">تعذر تحميل القراءة اليومية.</p>}
-      {dailyReading && <section aria-labelledby="public-daily-reading-heading" className="mx-auto max-w-7xl px-4 pt-0 pb-2 sm:px-6 lg:px-8" dir="rtl">
-        <div className="mb-4 flex items-center gap-3">
-          <span aria-hidden="true" className="grid h-11 w-11 place-items-center rounded-xl bg-amber-300/10 text-amber-200"><BookOpen className="h-5 w-5" /></span>
-          <div>
-            <p className="text-xs font-bold text-amber-300">قراءة اليوم</p>
-            <h2 id="public-daily-reading-heading" className="text-xl font-extrabold text-white sm:text-2xl">القراءات اليومية</h2>
-          </div>
-        </div>
-        <article className="rounded-3xl border border-[#e9dfcb] bg-[#fffaf0] p-5 shadow-xl shadow-black/10 sm:p-7">
-          <h3 className="font-bold text-[#7d2038]">{dailyReading.reference}</h3>
-          <p className="mt-3 whitespace-pre-wrap font-serif text-xl leading-[1.9] text-black sm:text-2xl">{dailyReading.text}</p>
-        </article>
-      </section>}
 
       <section className="px-4 pt-2 pb-8 sm:px-6 lg:px-8">
         <div className="relative mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 overflow-hidden rounded-[2rem] border border-amber-200/15 bg-gradient-to-br from-amber-400/10 via-slate-900 to-blue-950/60 p-6 sm:flex-row sm:items-center sm:p-9">
