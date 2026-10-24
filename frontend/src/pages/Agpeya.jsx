@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { BookOpen, Clock3, Download, ExternalLink, Moon, Sun } from 'lucide-react';
+import { BookOpen, Clock3, Download, Moon, Sun } from 'lucide-react';
 import MinistryPosts from '../components/MinistryPosts';
 
 const agpeyaPdfUrl = '/agpeya.pdf';
+const agpeyaReaderUrl = '/agpeya-reader.html';
 
 const prayers = [
   { id: 'morning', name: 'صلاة باكر', time: 'الصلاة الأولى', page: 16, Icon: Sun },
@@ -18,7 +19,7 @@ const prayers = [
 export default function Agpeya() {
   const [selectedPrayer, setSelectedPrayer] = useState(null);
   const selected = prayers.find((prayer) => prayer.id === selectedPrayer);
-  const prayerPdfUrl = selected ? `${agpeyaPdfUrl}#page=${selected.page}` : agpeyaPdfUrl;
+  const prayerPdfUrl = selected ? `${agpeyaReaderUrl}#page=${selected.page}` : agpeyaReaderUrl;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6" dir="rtl">
@@ -29,10 +30,7 @@ export default function Agpeya() {
             <h1 className="mt-4 text-2xl font-extrabold text-white md:text-3xl">Agpeya</h1>
             <p className="mt-2 text-sm leading-7 text-slate-300">اختر الصلاة حسب وقتها لفتح موضعها مباشرةً في ملف الأجبية.</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <a href={prayerPdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-amber-400/40 px-4 py-3 text-sm font-bold text-amber-200 hover:bg-amber-400/10"><ExternalLink className="h-4 w-4" /> فتح العرض</a>
-            <a href={agpeyaPdfUrl} download="agpeya.pdf" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-amber-400"><Download className="h-4 w-4" /> تنزيل كتاب الأجبية</a>
-          </div>
+          <a href={agpeyaPdfUrl} download="agpeya.pdf" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-amber-500 px-4 py-3 text-sm font-bold text-slate-950 hover:bg-amber-400"><Download className="h-4 w-4" /> تنزيل كتاب الأجبية</a>
         </div>
       </header>
 
