@@ -30,13 +30,14 @@ export default function PublicHome() {
     <main className="min-h-dvh overflow-hidden text-slate-100" dir="rtl">
       <a href="#sections" className="skip-link">انتقل إلى المحتوى</a>
       <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-slate-950/85 glass-header">
-        <nav aria-label="التنقل الرئيسي" className="mx-auto flex min-h-[68px] max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-          <a href="#home" className="flex min-w-0 items-center gap-2.5 text-white sm:gap-3">
+        <nav aria-label="التنقل الرئيسي" className="mx-auto flex min-h-[68px] max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8">
+          <a href="#home" className="flex min-w-0 flex-1 basis-[220px] items-center gap-2.5 text-white sm:gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-2xl border border-amber-300/30 bg-amber-200 shadow-lg shadow-amber-950/20 sm:h-11 sm:w-11">
               <img src={churchIcon} alt="" width="44" height="44" loading="eager" fetchPriority="high" decoding="async" className="h-full w-full object-cover" />
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-sm font-extrabold sm:text-base">كنيسة موسي النبي ومارمرقس الرسول - طور سيناء</span>
+              <span className="block max-w-[150px] truncate text-xs font-extrabold sm:max-w-none sm:text-base">كنيسة موسى النبي ومارمرقس الرسول</span>
+              <span className="block whitespace-nowrap text-[10px] font-bold text-amber-300 sm:text-xs">- طور سيناء</span>
             </span>
           </a>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">

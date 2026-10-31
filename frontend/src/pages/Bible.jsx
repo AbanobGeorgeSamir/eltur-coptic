@@ -75,7 +75,7 @@ export default function Bible() {
       <header className="overflow-hidden rounded-3xl border border-amber-500/25 bg-gradient-to-br from-amber-950/50 via-slate-900 to-slate-900 p-5 md:p-7">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300"><BookOpen className="h-4 w-4" /> مكتبة الكتاب المقدس</span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-3 py-1.5 text-xs font-bold text-amber-300"><BookOpen className="h-4 w-4" /> الإنجيل</span>
             <h1 className="mt-4 text-2xl font-extrabold text-white md:text-3xl">ابحث عن آية بسهولة</h1>
             <p className="mt-2 text-sm leading-7 text-slate-300">اختر العهد والسفر والإصحاح والعدد، أو ابحث بكلمة من الآية. تُحمّل بيانات السفر عند اختياره وتظل متاحة دون اتصال لاحقاً.</p>
           </div>

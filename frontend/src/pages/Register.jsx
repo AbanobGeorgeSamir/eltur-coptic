@@ -4,9 +4,10 @@ import { api } from '../services/api';
 import { useAuth } from '../contexts/useAuth';
 import PhoneField from '../components/PhoneField';
 import ThemeToggle from '../components/ThemeToggle';
+import StudentStudyDetailsFields from '../components/StudentStudyDetailsFields';
 import { isValidComEmail, normalizeEmail } from '../utils/email';
 import { grades } from '../data/grades';
-import { academicYears, collegeGroups } from '../data/colleges';
+import { isHigherEducationGrade, EGYPT_COUNTRY_NAME } from '../data/residenceOptions';
 import { getBirthDateFromNationalId } from '../utils/egyptianNationalId';
 
 const fields = [
@@ -35,6 +36,9 @@ export default function Register() {
     grade: '',
     academicYear: '',
     college: '',
+    collegeChoice: '',
+    country: '',
+    governorate: '',
     privacyAccepted: false,
   });
   const [error, setError] = useState('');
@@ -49,10 +53,14 @@ export default function Register() {
     if (key === 'username') usernameManuallyEdited.current = true;
     setForm((current) => {
       const next = { ...current, [key]: value };
-      if (key === 'grade' && value !== 'expatriates') {
+      if (key === 'grade' && !isHigherEducationGrade(value)) {
         next.academicYear = '';
         next.college = '';
+        next.collegeChoice = '';
+        next.country = '';
+        next.governorate = '';
       }
+      if (key === 'country' && value !== EGYPT_COUNTRY_NAME) next.governorate = '';
       if (key === 'nationalId') {
         const birthDate = getBirthDateFromNationalId(value);
         if (birthDate) next.birthDate = birthDate;
@@ -90,13 +98,21 @@ export default function Register() {
       setError('يرجى اختيار المرحلة الدراسية أو الاجتماع.');
       return;
     }
-    if (form.grade === 'expatriates') {
+    if (isHigherEducationGrade(form.grade)) {
       if (!form.academicYear) {
         setError('يرجى اختيار الفرقة الدراسية لمرحلة المغتربين.');
         return;
       }
-      if (!form.college) {
+      if (!form.college.trim()) {
         setError('يرجى اختيار الكلية لمرحلة المغتربين.');
+        return;
+      }
+      if (!form.country) {
+        setError('يرجى اختيار بلد الإقامة.');
+        return;
+      }
+      if (form.country === EGYPT_COUNTRY_NAME && !form.governorate) {
+        setError('يرجى اختيار المحافظة داخل مصر.');
         return;
       }
     }
@@ -112,9 +128,12 @@ export default function Register() {
         username: form.username.trim().toLowerCase(),
         email: normalizeEmail(form.email),
         interests: form.interests.trim(),
-        academicYear: form.grade === 'expatriates' ? form.academicYear : undefined,
-        college: form.grade === 'expatriates' ? form.college : undefined,
+        academicYear: isHigherEducationGrade(form.grade) ? form.academicYear : undefined,
+        college: isHigherEducationGrade(form.grade) ? form.college.trim() : undefined,
+        country: isHigherEducationGrade(form.grade) ? form.country : undefined,
+        governorate: isHigherEducationGrade(form.grade) && form.country === EGYPT_COUNTRY_NAME ? form.governorate : undefined,
       };
+      delete registration.collegeChoice;
       const session = await api.register(registration);
       saveSession(session);
       navigate('/', { replace: true });
@@ -152,44 +171,9 @@ export default function Register() {
             <span className="mt-1 block text-xs leading-5 text-slate-500">سيظهر طلب التسجيل للأدمن لاختيار المجموعة أو رفض الطلب.</span>
           </label>
 
-          {form.grade === 'expatriates' && (
-            <div className="grid animate-fade-in gap-4 rounded-2xl border border-amber-400/25 bg-amber-400/[0.06] p-4 sm:col-span-2 sm:grid-cols-2">
-              <p className="text-xs font-bold text-amber-300 sm:col-span-2">بيانات مرحلة المغتربين</p>
-              <label className="text-sm font-bold text-amber-300">
-                الفرقة *
-                <select
-                  required
-                  value={form.academicYear}
-                  onChange={(e) => setForm((old) => ({ ...old, academicYear: e.target.value }))}
-                  className="mt-1.5 min-h-12 w-full rounded-xl border border-amber-400/40 bg-slate-950 px-3 py-3 text-white focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20"
-                >
-                  <option value="">اختر</option>
-                  {academicYears.map((year) => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-                <span className="mt-1 block text-xs font-medium text-amber-200/70">حدد الفرقة الجامعية أو سنة الدراسة</span>
-              </label>
-
-              <label className="text-sm font-bold text-amber-300">
-                الكلية *
-                <select
-                  required
-                  value={form.college}
-                  onChange={(e) => setForm((old) => ({ ...old, college: e.target.value }))}
-                  className="mt-1.5 min-h-12 w-full rounded-xl border border-amber-400/40 bg-slate-950 px-3 py-3 text-white focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20"
-                >
-                  <option value="">اختر</option>
-                  {collegeGroups.map((group) => (
-                    <optgroup key={group.label} label={group.label}>
-                      {group.colleges.map((college) => (
-                        <option key={college} value={college}>{college}</option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-                <span className="mt-1 block text-xs font-medium text-amber-200/70">اختر كليتك أو تخصصك الدراسي</span>
-              </label>
+          {isHigherEducationGrade(form.grade) && (
+            <div className="sm:col-span-2">
+              <StudentStudyDetailsFields value={form} onChange={updateField} />
             </div>
           )}
 

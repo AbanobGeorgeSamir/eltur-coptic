@@ -25,6 +25,8 @@ const userSchema = new mongoose.Schema({
     grade: { type: String, enum: [...gradeIds], default: null, index: true },
     academicYear: { type: String, trim: true, maxlength: 80, default: null },
     college: { type: String, trim: true, maxlength: 160, default: null, index: true },
+    country: { type: String, trim: true, maxlength: 100, default: null, index: true },
+    governorate: { type: String, trim: true, maxlength: 100, default: null },
     meetingGroup: { type: mongoose.Schema.Types.ObjectId, ref: 'MeetingGroup', default: null, index: true },
     fatherName: { type: String, trim: true, maxlength: 120 },
     confessionFather: { type: String, trim: true, maxlength: 160 },

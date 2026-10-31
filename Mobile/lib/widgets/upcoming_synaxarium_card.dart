@@ -22,12 +22,15 @@ class _UpcomingSynaxariumCardState extends State<UpcomingSynaxariumCard> {
   void initState() {
     super.initState();
     _now = DateTime.now();
-    _snapshot = SynaxariumService.loadUpcoming(now: _now);
+    _snapshot = SynaxariumService.loadUpcoming(now: _now, includeToday: true);
     _clock = Timer.periodic(const Duration(minutes: 1), (_) {
       if (!mounted) return;
       setState(() {
         _now = DateTime.now();
-        _snapshot = SynaxariumService.loadUpcoming(now: _now);
+        _snapshot = SynaxariumService.loadUpcoming(
+          now: _now,
+          includeToday: true,
+        );
       });
     });
   }
@@ -65,7 +68,8 @@ class _UpcomingSynaxariumCardState extends State<UpcomingSynaxariumCard> {
                 );
                 return Semantics(
                   container: true,
-                  label: 'السنكسار القبطي، الأعياد والتذكارات القادمة',
+                  label:
+                      'السنكسار القبطي، أعياد وتذكارات اليوم والأيام القادمة',
                   child: content,
                 );
               },
@@ -141,7 +145,7 @@ class _UpcomingSynaxariumCardState extends State<UpcomingSynaxariumCard> {
         ),
         const SizedBox(height: 12),
         Text(
-          'الأعياد القادمة',
+          'أعياد اليوم والأيام القادمة',
           style: TextStyle(
             color: palette.heading,
             fontSize: 21,
@@ -151,7 +155,7 @@ class _UpcomingSynaxariumCardState extends State<UpcomingSynaxariumCard> {
         ),
         const SizedBox(height: 4),
         Text(
-          'تذكارات الكنيسة في الأيام المقبلة',
+          'تذكارات الكنيسة مرتبة حسب اليوم',
           style: TextStyle(color: palette.muted, fontSize: 12, height: 1.5),
         ),
         const SizedBox(height: 14),
@@ -232,7 +236,7 @@ class _UpcomingSynaxariumCardState extends State<UpcomingSynaxariumCard> {
     final observances = result.data!.observances;
     if (observances.isEmpty) {
       return _message(
-        'لا توجد تذكارات مسجلة خلال الأيام المقبلة.',
+        'لا توجد تذكارات مسجلة لهذا اليوم أو الأيام القادمة.',
         palette: palette,
       );
     }
@@ -240,7 +244,6 @@ class _UpcomingSynaxariumCardState extends State<UpcomingSynaxariumCard> {
       observances,
       expanded: _expanded,
     );
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -270,7 +273,7 @@ class _UpcomingSynaxariumCardState extends State<UpcomingSynaxariumCard> {
                   Icon(
                     _expanded
                         ? Icons.keyboard_arrow_up_rounded
-                        : Icons.arrow_back_rounded,
+                        : Icons.keyboard_arrow_down_rounded,
                     size: 19,
                   ),
                 ],

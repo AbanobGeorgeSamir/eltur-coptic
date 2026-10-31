@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
-import '../data/colleges.dart' show academicYears, collegeGroups;
+import '../data/colleges.dart' show academicYears, collegeGroups, otherCollegeValue, otherCollegeLabel;
+import '../data/residence_options.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../models/user_model.dart';
@@ -33,6 +34,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _interestsController = TextEditingController();
   final _birthDateController = TextEditingController();
   final _nationalIdController = TextEditingController();
+  final _otherCollegeController = TextEditingController();
   bool _fatherNameManuallyEdited = false;
   bool _usernameManuallyEdited = false;
 
@@ -43,6 +45,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String _grade = '';
   String _academicYear = '';
   String _college = '';
+  String _country = '';
+  String _governorate = '';
+
 
   static const _grades = <Map<String, String>>[
     {
@@ -129,6 +134,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _interestsController.dispose();
     _birthDateController.dispose();
     _nationalIdController.dispose();
+    _otherCollegeController.dispose();
     super.dispose();
   }
 
@@ -170,8 +176,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       'whatsappNumber': _whatsapp.isNotEmpty ? _whatsapp : _phone,
       'privacyAccepted': _privacyPolicyAccepted,
       'grade': _grade,
-      if (_grade == 'expatriates') 'academicYear': _academicYear,
-      if (_grade == 'expatriates') 'college': _college,
+      if (isHigherEducationGrade(_grade)) 'academicYear': _academicYear,
+      if (isHigherEducationGrade(_grade)) 'college': _college == otherCollegeValue ? _otherCollegeController.text.trim() : _college,
+      if (isHigherEducationGrade(_grade)) 'country': _country,
+      if (isHigherEducationGrade(_grade) && _country == egyptCountryName) 'governorate': _governorate,
     };
 
     var routeReplaced = false;
@@ -319,9 +327,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (value != null) {
                       setState(() {
                         _grade = value;
-                        if (value != 'expatriates') {
+                        if (!isHigherEducationGrade(value)) {
                           _academicYear = '';
                           _college = '';
+                          _otherCollegeController.clear();
+                          _country = '';
+                          _governorate = '';
                         }
                       });
                     }
@@ -341,7 +352,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                 ),
-                if (_grade == 'expatriates') ...[
+                if (isHigherEducationGrade(_grade)) ...[
                   const SizedBox(height: 12),
                   Card(
                     color: Theme.of(context).brightness == Brightness.dark
@@ -396,33 +407,56 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           DropdownButtonFormField<String>(
                             initialValue: _college.isEmpty ? null : _college,
                             isExpanded: true,
-                            decoration: InputDecoration(
-                              labelText: 'الكلية *',
-                              prefixIcon: Icon(
-                                Icons.school_outlined,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
+                            decoration: InputDecoration(labelText: 'الكلية *', prefixIcon: const Icon(Icons.school_outlined)),
                             hint: const Text('اختر'),
                             items: [
-                              for (final group in collegeGroups) ...[
+                              for (final group in collegeGroups)
                                 for (final college in group.colleges)
-                                  DropdownMenuItem(
-                                    value: college,
-                                    child: Text(
-                                      college,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                              ],
+                                  if (college != otherCollegeLabel)
+                                    DropdownMenuItem(value: college, child: Text(college, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                              DropdownMenuItem(value: otherCollegeValue, child: Text(otherCollegeLabel)),
                             ],
-                            onChanged: (value) =>
-                                setState(() => _college = value ?? ''),
-                            validator: (value) => value == null || value.isEmpty
-                                ? 'يرجى اختيار الكلية'
-                                : null,
+                            onChanged: (value) => setState(() {
+                              _college = value ?? '';
+                              if (_college != otherCollegeValue) _otherCollegeController.clear();
+                            }),
+                            validator: (value) => value == null || value.isEmpty ? 'اختر الكلية' : null,
                           ),
+                          if (_college == otherCollegeValue) ...[
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _otherCollegeController,
+                              maxLength: 160,
+                              decoration: InputDecoration(labelText: 'اكتب اسم الكلية *', hintText: 'اسم الكلية أو المعهد', prefixIcon: const Icon(Icons.edit_outlined)),
+                              validator: (value) => _college == otherCollegeValue && (value == null || value.trim().isEmpty) ? 'يرجى كتابة اسم الكلية أو المعهد' : null,
+                            ),
+                          ],
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            initialValue: _country.isEmpty ? null : _country,
+                            isExpanded: true,
+                            decoration: InputDecoration(labelText: 'بلد الإقامة *', prefixIcon: const Icon(Icons.public_outlined)),
+                            hint: Text('اختر البلد'),
+                            items: residenceCountries.map((country) => DropdownMenuItem(value: country.name, child: Text(country.name, maxLines: 1, overflow: TextOverflow.ellipsis))).toList(),
+                            onChanged: (value) => setState(() {
+                              _country = value ?? '';
+                              if (_country != egyptCountryName) _governorate = '';
+                            }),
+                            validator: (value) => value == null || value.isEmpty ? 'اختر بلد الإقامة' : null,
+                          ),
+                          if (_country == egyptCountryName) ...[
+                            const SizedBox(height: 12),
+                            DropdownButtonFormField<String>(
+                              initialValue: _governorate.isEmpty ? null : _governorate,
+                              isExpanded: true,
+                              decoration: InputDecoration(labelText: 'المحافظة *', prefixIcon: const Icon(Icons.location_city_outlined)),
+                              hint: Text('اختر المحافظة'),
+                              items: egyptGovernorates.map((governorate) => DropdownMenuItem(value: governorate, child: Text(governorate))).toList(),
+                              onChanged: (value) => setState(() => _governorate = value ?? ''),
+                              validator: (value) => _country == egyptCountryName && (value == null || value.isEmpty) ? 'اختر المحافظة' : null,
+                            ),
+                          ],
+
                         ],
                       ),
                     ),

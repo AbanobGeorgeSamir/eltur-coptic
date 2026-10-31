@@ -85,6 +85,7 @@ class SynaxariumService {
   static Future<SynaxariumSnapshot> loadUpcoming({
     DateTime? now,
     int lookAheadDays = 45,
+    bool includeToday = false,
   }) async {
     final today = now ?? DateTime.now();
     final data = await _calendar;
@@ -96,7 +97,7 @@ class SynaxariumService {
     };
     final upcoming = <SynaxariumObservance>[];
 
-    for (var offset = 1; offset <= lookAheadDays; offset++) {
+    for (var offset = includeToday ? 0 : 1; offset <= lookAheadDays; offset++) {
       final date = DateTime.utc(
         today.year,
         today.month,
@@ -174,6 +175,7 @@ class SynaxariumService {
       '${_digits(date.day)} ${_gregorianMonths[date.month - 1]}';
 
   static String _relativeDayLabel(int offset) {
+    if (offset == 0) return 'اليوم';
     if (offset == 1) return 'غدًا';
     if (offset == 2) return 'بعد غد';
     return 'بعد ${_digits(offset)} أيام';

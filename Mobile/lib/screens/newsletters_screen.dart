@@ -137,7 +137,7 @@ class _NewslettersScreenState extends State<NewslettersScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(title: const Text('النشرات والإعلانات')),
+        appBar: AppBar(title: const Text('الرحلات والإعلانات')),
         floatingActionButton: canPublish
             ? FloatingActionButton.extended(
                 onPressed: () async {

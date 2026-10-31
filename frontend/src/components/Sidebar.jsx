@@ -60,38 +60,38 @@ export default function Sidebar() {
     ['/liturgy', 'القداسات', Calendar],
     ['/tasks', 'واجبات الأبناء', CheckSquare],
     ['/quizzes', 'مسابقات الأبناء', Award],
-    ['/trips', 'الرحلات والحجز', MapPin],
+    ['/trips', 'الرحلات والتسجيل', MapPin],
     ['/gallery', 'معرض الصور', Image],
   ];
 
   const adminLinks = isGlobalAdmin
     ? [
-        ['/', 'لوحة المتابعة', Home],
+        ['/', 'الرئيسية', Home],
         ['/admin-students', 'إدارة الطلاب', Users],
         ['/admin-attendance', 'تسجيل الحضور', Calendar],
         ['/admin-access', 'المراحل والخدام', Shield],
         ['/admin-tasks', 'تكليف الواجبات', CheckSquare],
         ['/quizzes', 'المسابقات والنتائج', Award],
-        ['/trips', 'الرحلات والحجوزات', MapPin],
+        ['/trips', 'الرحلات والتسجيل', MapPin],
         ['/admin-verse', 'آية اليوم', Sparkles],
         ['/admin-daily-reading', 'القراءة اليومية', BookOpen],
-        ['/admin-newsletter', 'أخبار الكنيسة', Layers],
+        ['/admin-newsletter', 'الرحلات والإعلانات', Layers],
         ['/admin-gallery', 'إدارة المعرض', Image],
         ['/admin-liturgy', 'إدارة القداسات', Calendar],
-        ['/bible', 'مكتبة الإنجيل', BookOpen],
+        ['/bible', 'الإنجيل', BookOpen],
         ['/agpeya', 'الأجبية', BookOpen],
       ]
     : isStageAdmin
     ? [
-        ['/', 'متابعة المرحلة', Home],
+        ['/', 'الرئيسية', Home],
         ['/admin-students', 'طلاب المرحلة', Users],
         ['/admin-attendance', 'حضور المرحلة', Calendar],
         ['/admin-tasks', 'واجبات المرحلة', CheckSquare],
         ['/quizzes', 'المسابقات', Award],
-        ['/trips', 'رحلات المرحلة', MapPin],
+        ['/trips', 'الرحلات والتسجيل', MapPin],
         ['/admin-access', 'مجموعات المرحلة', Shield],
-        ['/admin-newsletter', 'نشر أخبار', Layers],
-        ['/bible', 'مكتبة الإنجيل', BookOpen],
+        ['/admin-newsletter', 'الرحلات والإعلانات', Layers],
+        ['/bible', 'الإنجيل', BookOpen],
         ['/agpeya', 'الأجبية', BookOpen],
       ]
     : studentLinks;

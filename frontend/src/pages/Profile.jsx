@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/useAuth';
 import PhoneField from '../components/PhoneField';
+import StudentStudyDetailsFields from '../components/StudentStudyDetailsFields';
 import { isValidComEmail, normalizeEmail } from '../utils/email';
 import { grades, gradeLabel, isGradeAdminRole } from '../data/grades';
-import { ACADEMIC_YEARS, COLLEGES } from '../data/expatriatesData';
+import { EGYPT_COUNTRY_NAME, isHigherEducationGrade } from '../data/residenceOptions';
+import { collegeChoiceFor } from '../utils/studyDetails';
 
 const initialForm = (user) => ({
   name: user?.name || '',
@@ -21,6 +23,9 @@ const initialForm = (user) => ({
   grade: user?.grade || '',
   academicYear: user?.academicYear || '',
   college: user?.college || '',
+  collegeChoice: collegeChoiceFor(user?.college || ''),
+  country: user?.country || '',
+  governorate: user?.governorate || '',
 });
 
 export default function Profile({ showToast }) {
@@ -37,10 +42,11 @@ export default function Profile({ showToast }) {
   const update = (key, value) => setForm((old) => ({
     ...old,
     [key]: value,
-    ...(key === 'grade' && value !== 'expatriates' ? { academicYear: '', college: '' } : {}),
+    ...(key === 'grade' && !isHigherEducationGrade(value) ? { academicYear: '', college: '', collegeChoice: '', country: '', governorate: '' } : {}),
+    ...(key === 'country' && value !== EGYPT_COUNTRY_NAME ? { governorate: '' } : {}),
   }));
 
-  const isExpatriate = user?.grade === 'expatriates' || form.grade === 'expatriates';
+  const hasStudyDetails = user?.role === 'student' && isHigherEducationGrade(form.grade);
 
   const save = async (event) => {
     event.preventDefault();
@@ -50,8 +56,8 @@ export default function Profile({ showToast }) {
       setError('أدخل بريدًا إلكترونيًا صحيحًا.');
       return;
     }
-    if (isExpatriate && (!form.academicYear || !form.college)) {
-      setError('يرجى اختيار الفرقة والكلية لمرحلة المغتربين.');
+    if (hasStudyDetails && (!form.academicYear || !form.college.trim() || !form.country || (form.country === EGYPT_COUNTRY_NAME && !form.governorate))) {
+      setError('يرجى استكمال بيانات الفرقة والكلية والبلد والمحافظة داخل مصر.');
       return;
     }
     setSaving(true);
@@ -62,11 +68,16 @@ export default function Profile({ showToast }) {
       };
       delete profilePayload.academicYear;
       delete profilePayload.college;
+      delete profilePayload.collegeChoice;
+      delete profilePayload.country;
+      delete profilePayload.governorate;
       if (user?.role === 'student') {
         if (user.grade) delete profilePayload.grade;
-        if (isExpatriate) {
+        if (hasStudyDetails) {
           profilePayload.academicYear = form.academicYear;
-          profilePayload.college = form.college;
+          profilePayload.college = form.college.trim();
+          profilePayload.country = form.country;
+          profilePayload.governorate = form.country === EGYPT_COUNTRY_NAME ? form.governorate : '';
         }
       } else {
         delete profilePayload.grade;
@@ -117,10 +128,12 @@ export default function Profile({ showToast }) {
           <p className="text-sm text-amber-300">
             {user?.role === 'admin' ? 'الأدمن العام' : isGradeAdminRole(user?.role) ? `أدمن ${gradeLabel(user.grade)}` : user?.confessionFather || ''}
           </p>
-          {user?.grade === 'expatriates' && (user?.college || user?.academicYear) && (
+          {isHigherEducationGrade(user?.grade) && (user?.college || user?.academicYear || user?.country || user?.governorate) && (
             <p className="mt-1 flex flex-wrap gap-2 text-xs">
               {user.college && <span className="rounded-lg bg-amber-400/15 px-2 py-0.5 font-bold text-amber-300">{user.college}</span>}
               {user.academicYear && <span className="rounded-lg bg-amber-400/15 px-2 py-0.5 font-bold text-amber-300">{user.academicYear}</span>}
+              {user.country && <span className="rounded-lg bg-emerald-400/15 px-2 py-0.5 font-bold text-emerald-300">البلد: {user.country}</span>}
+              {user.governorate && <span className="rounded-lg bg-cyan-400/15 px-2 py-0.5 font-bold text-cyan-200">المحافظة: {user.governorate}</span>}
             </p>
           )}
           <p className="mt-1 break-all text-xs text-slate-400" dir="ltr">
@@ -168,35 +181,10 @@ export default function Profile({ showToast }) {
             </label>
           )}
 
-          {isExpatriate && (
-            <>
-              <label className="block text-xs font-semibold text-amber-300">
-                الفرقة
-                <select
-                  value={form.academicYear}
-                  onChange={(e) => update('academicYear', e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-amber-400/40 bg-slate-800 p-2.5 text-sm text-white focus:border-amber-400 focus:outline-none"
-                >
-                  <option value="">اختر</option>
-                  {ACADEMIC_YEARS.map((year) => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="block text-xs font-semibold text-amber-300">
-                الكلية
-                <select
-                  value={form.college}
-                  onChange={(e) => update('college', e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-amber-400/40 bg-slate-800 p-2.5 text-sm text-white focus:border-amber-400 focus:outline-none"
-                >
-                  <option value="">اختر</option>
-                  {COLLEGES.map((col) => (
-                    <option key={col} value={col}>{col}</option>
-                  ))}
-                </select>
-              </label>
-            </>
+          {hasStudyDetails && (
+            <div className="sm:col-span-2">
+              <StudentStudyDetailsFields value={form} onChange={update} />
+            </div>
           )}
 
           <label className="block text-xs text-slate-400">

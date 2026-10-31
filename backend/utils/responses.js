@@ -20,6 +20,8 @@ const sanitizeUser = (user, { includeNationalId = false } = {}) => {
         grade: user.grade || null,
         academicYear: user.academicYear || null,
         college: user.college || null,
+        country: user.country || null,
+        governorate: user.governorate || null,
         meetingGroup: getId(user.meetingGroup),
         meetingGroupName: user.meetingGroup && typeof user.meetingGroup === 'object' ? user.meetingGroup.name || null : null,
         isActive: user.isActive !== false,

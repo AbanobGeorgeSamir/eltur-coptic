@@ -37,10 +37,7 @@ try {
         $flutterArguments += @('-d', $DeviceId)
     }
 
-    $flutterSdkRoot = 'C:\Program Files\Flutter'
-    $env:PATH = "$(Join-Path $flutterSdkRoot 'bin');$env:PATH"
-
-    & (Join-Path $flutterSdkRoot 'bin\flutter.bat') @flutterArguments
+    & flutter @flutterArguments
     $flutterExitCode = $LASTEXITCODE
     exit $flutterExitCode
 }

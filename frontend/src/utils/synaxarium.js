@@ -29,6 +29,7 @@ const formatCopticDate = (year, month, day) => {
 };
 
 const relativeDayLabel = (offset) => {
+  if (offset === 0) return 'اليوم';
   if (offset === 1) return 'غدًا';
   if (offset === 2) return 'بعد غد';
   return `بعد ${new Intl.NumberFormat('ar-EG', { useGrouping: false }).format(offset)} أيام`;
@@ -69,7 +70,7 @@ export function getUpcomingSynaxariumObservances(now = new Date(), data, lookAhe
   const today = numericParts(cairoDateFormatter, now);
   const observances = [];
 
-  for (let offset = 1; offset <= lookAheadDays; offset += 1) {
+  for (let offset = 0; offset <= lookAheadDays; offset += 1) {
     const date = new Date(Date.UTC(today.year, today.month - 1, today.day + offset, 12));
     const coptic = numericParts(copticFormatter, date);
     const dayRecord = daysByDate.get(`${coptic.month}-${coptic.day}`);

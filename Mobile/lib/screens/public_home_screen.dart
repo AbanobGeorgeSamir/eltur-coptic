@@ -51,10 +51,7 @@ class PublicHomeScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: 72,
-          actions: const [
-            ThemeToggleButton(),
-            SizedBox(width: 8),
-          ],
+          actions: const [ThemeToggleButton(), SizedBox(width: 8)],
           title: Row(
             children: [
               ClipRRect(
@@ -69,10 +66,11 @@ class PublicHomeScreen extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Semantics(
-                  label: 'كنيسة موسي النبي ومارمرقس الرسول - طور سيناء',
+                  label: 'كنيسة موسى النبي ومارمرقس الرسول - طور سيناء',
                   child: Text(
-                    'كنيسة موسي النبي ومارمرقس الرسول - طور سيناء',
-                    maxLines: 2,
+                    'كنيسة موسى النبي ومارمرقس الرسول - طور سيناء',
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 14, height: 1.15),
                   ),
                 ),

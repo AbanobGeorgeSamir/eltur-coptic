@@ -10,6 +10,7 @@ const TripRegistration = require('../models/TripRegistration');
 const { gradeIds, isGradeAdminRole } = require('../config/grades');
 const { hashPassword, verifyPassword, needsRehash } = require('../utils/passwords');
 const { sanitizeUser } = require('../utils/responses');
+const { countries, egyptGovernorates, egyptCountryName, isHigherEducationGrade } = require('../utils/registrationOptions');
 const auth = require('../middleware/authMiddleware');
 const { loginRateLimit, loginAccountRateLimit, registrationRateLimit } = require('../middleware/rateLimit');
 const { isBrowserRequest } = require('../config/origins');
@@ -48,6 +49,8 @@ const normalizeRegistration = (body = {}) => ({
     grade: String(body.grade || '').trim(),
     academicYear: String(body.academicYear || '').trim(),
     college: String(body.college || '').trim(),
+    country: String(body.country || '').trim(),
+    governorate: String(body.governorate || '').trim(),
     birthDate: body.birthDate,
     gender: body.gender,
     nationalId: String(body.nationalId || '').trim(),
@@ -65,11 +68,17 @@ const checkRegistration = (input, { parent = false } = {}) => {
     if (input.interests.length > 500) return 'Interests must be 500 characters or fewer.';
     if (!parent && !input.interests) return 'Enter at least one interest.';
     if (!parent && !gradeIds.has(input.grade)) return 'Choose a valid study grade.';
-    if (!parent && input.grade === 'expatriates') {
+    if (!parent && isHigherEducationGrade(input.grade)) {
         if (!input.academicYear) return 'Choose your academic year.';
         if (input.academicYear.length > 80) return 'Academic year must be 80 characters or fewer.';
         if (!input.college) return 'Choose your college.';
         if (input.college.length > 160) return 'College must be 160 characters or fewer.';
+        if (!countries.has(input.country)) return 'Choose a valid country of residence.';
+        if (input.country === egyptCountryName) {
+            if (!egyptGovernorates.has(input.governorate)) return 'Choose a valid Egyptian governorate.';
+        } else if (input.governorate) {
+            return 'A governorate can only be selected when the country is Egypt.';
+        }
     }
     if (!validPhone(input.phone)) return 'Phone number must use international format, such as +201001234567.';
     if (input.password.length < 8 || input.password.length > 256) return 'Password must contain between 8 and 256 characters.';
@@ -109,9 +118,11 @@ const completeRegistration = async (req, res, role) => {
             password: await hashPassword(input.password),
             role,
             ...(role === 'student' ? { grade: input.grade, meetingGroup: null, assignedAdmin: null } : {}),
-            ...(role === 'student' && input.grade === 'expatriates' ? {
+            ...(role === 'student' && isHigherEducationGrade(input.grade) ? {
                 academicYear: input.academicYear,
                 college: input.college,
+                country: input.country,
+                governorate: input.governorate || null,
             } : {}),
             ...(role === 'student' ? {
                 fatherName: input.fatherName,
@@ -209,7 +220,7 @@ router.get(['/user', '/auth/me'], auth, async (req, res, next) => {
 
 router.patch('/users/me', auth, async (req, res, next) => {
     try {
-        const allowed = ['name', 'email', 'phone', 'interests', 'fatherName', 'confessionFather', 'guardianPhone', 'address', 'birthDate', 'gender', 'isDeacon', 'whatsappNumber', 'academicYear', 'college'];
+        const allowed = ['name', 'email', 'phone', 'interests', 'fatherName', 'confessionFather', 'guardianPhone', 'address', 'birthDate', 'gender', 'isDeacon', 'whatsappNumber', 'academicYear', 'college', 'country', 'governorate'];
         const changes = {};
         for (const key of allowed) {
             if (req.body?.[key] !== undefined) changes[key] = req.body[key];
@@ -224,28 +235,40 @@ router.patch('/users/me', auth, async (req, res, next) => {
             changes.meetingGroup = null;
             changes.assignedAdmin = null;
         }
-        if (changes.academicYear !== undefined || changes.college !== undefined) {
+        const studyDetailsTouched = ['academicYear', 'college', 'country', 'governorate'].some((field) => changes[field] !== undefined);
+        if (studyDetailsTouched) {
             if (req.user.role !== 'student') {
-                return res.status(403).json({ message: 'Expatriate study details are only available for student accounts.' });
+                return res.status(403).json({ message: 'Study details are only available for student accounts.' });
             }
-            for (const [field, max] of [['academicYear', 80], ['college', 160]]) {
+            for (const [field, max] of [['academicYear', 80], ['college', 160], ['country', 100], ['governorate', 100]]) {
                 if (changes[field] !== undefined) {
                     changes[field] = String(changes[field] || '').trim();
-                    if (changes[field].length > max) return res.status(422).json({ message: 'Expatriate study details are too long.' });
+                    if (changes[field].length > max) return res.status(422).json({ message: 'Study details are too long.' });
                 }
             }
         }
         if (req.user.role === 'student') {
             const resolvedGrade = changes.grade !== undefined ? changes.grade : req.user.grade;
-            if (resolvedGrade === 'expatriates') {
+            if (isHigherEducationGrade(resolvedGrade)) {
                 const academicYear = changes.academicYear !== undefined ? changes.academicYear : req.user.academicYear;
                 const college = changes.college !== undefined ? changes.college : req.user.college;
-                if (!academicYear || !college) {
-                    return res.status(422).json({ message: 'Academic year and college are required for expatriate students.' });
+                const country = changes.country !== undefined ? changes.country : req.user.country;
+                const governorate = changes.governorate !== undefined ? changes.governorate : req.user.governorate;
+                if (!academicYear || !college || !countries.has(country)) {
+                    return res.status(422).json({ message: 'Academic year, college, and a valid country are required for university students.' });
                 }
-            } else if (changes.academicYear !== undefined || changes.college !== undefined || changes.grade !== undefined) {
+                if (country === egyptCountryName && !egyptGovernorates.has(governorate)) {
+                    return res.status(422).json({ message: 'Choose a valid Egyptian governorate.' });
+                }
+                if (studyDetailsTouched) {
+                    changes.country = country;
+                    changes.governorate = country === egyptCountryName ? governorate : null;
+                }
+            } else if (studyDetailsTouched || changes.grade !== undefined) {
                 changes.academicYear = null;
                 changes.college = null;
+                changes.country = null;
+                changes.governorate = null;
             }
         }
         if (changes.email !== undefined) {

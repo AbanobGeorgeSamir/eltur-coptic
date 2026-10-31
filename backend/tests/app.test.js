@@ -114,6 +114,8 @@ test('expatriate registration requires and stores academic year and college', as
         address: 'Test address',
         interests: 'Bible study',
         grade: 'expatriates',
+        country: 'مصر',
+        governorate: 'جنوب سيناء',
         birthDate: '2002-01-01',
         gender: 'male',
         nationalId: '12345678901234',

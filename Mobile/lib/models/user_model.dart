@@ -10,6 +10,8 @@ class UserModel {
   final String grade;
   final String academicYear;
   final String college;
+  final String country;
+  final String governorate;
   final String meetingGroup;
   final String? assignedAdmin;
   final String fullNameArabic;
@@ -46,6 +48,8 @@ class UserModel {
     required this.grade,
     this.academicYear = '',
     this.college = '',
+    this.country = '',
+    this.governorate = '',
     required this.meetingGroup,
     this.assignedAdmin,
     required this.fullNameArabic,
@@ -76,6 +80,8 @@ class UserModel {
       grade: json['grade'] ?? '',
       academicYear: json['academicYear'] ?? '',
       college: json['college'] ?? '',
+      country: json['country'] ?? '',
+      governorate: json['governorate'] ?? '',
       meetingGroup: json['meetingGroup'] is Map
           ? (json['meetingGroup']['_id'] ?? json['meetingGroup']['id'] ?? '')
                 .toString()
@@ -116,6 +122,8 @@ class UserModel {
       'grade': grade,
       'academicYear': academicYear,
       'college': college,
+      'country': country,
+      'governorate': governorate,
       'meetingGroup': meetingGroup,
       'assignedAdmin': assignedAdmin,
       'fullNameArabic': fullNameArabic,
@@ -143,6 +151,8 @@ class UserModel {
     'grade': grade,
     'academicYear': academicYear,
     'college': college,
+    'country': country,
+    'governorate': governorate,
     'meetingGroup': meetingGroup,
     'assignedAdmin': assignedAdmin,
   };

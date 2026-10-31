@@ -46,7 +46,8 @@ export default function Navbar({ showToast, onRefresh }) {
         <img src={kenesaIcon} alt="كنيسة موسي النبي ومارمرقس الرسول" width="40" height="40" loading="eager" fetchPriority="high" decoding="async" className="h-9 w-9 shrink-0 rounded-full border border-amber-500/40 bg-white object-cover sm:h-10 sm:w-10" />
         <span className="min-w-0">
           <span className="block truncate text-sm font-bold text-white sm:text-base">بوابة الكنيسة</span>
-          <span className="block max-w-[190px] truncate text-[10px] text-amber-400 sm:max-w-[300px] sm:text-xs">كنيسة موسي النبي ومارمرقس الرسول - طور سيناء</span>
+          <span className="block max-w-[190px] truncate text-[10px] text-amber-400 sm:max-w-[300px] sm:text-xs">كنيسة موسى النبي ومارمرقس الرسول</span>
+          <span className="block whitespace-nowrap text-[10px] font-bold text-amber-300 sm:text-xs">- طور سيناء</span>
           <span className="hidden sm:block text-xs text-slate-400">{user?.name || ''}</span>
         </span>
       </button>

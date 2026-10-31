@@ -836,10 +836,11 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Semantics(
-                  label: 'كنيسة موسي النبي ومارمرقس الرسول - طور سيناء',
+                  label: 'كنيسة موسى النبي ومارمرقس الرسول - طور سيناء',
                   child: Text(
-                    'كنيسة موسي النبي ومارمرقس الرسول - طور سيناء',
-                    maxLines: 2,
+                    'كنيسة موسى النبي ومارمرقس الرسول - طور سيناء',
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 14, height: 1.15),
                   ),
                 ),
@@ -1389,7 +1390,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       _buildServiceTile(
                                         icon: Icons.directions_bus,
-                                        title: 'الرحلات والأخبار',
+                                        title: 'الرحلات والإعلانات',
                                         color: Colors.indigo.shade800,
                                         onTap: () => Navigator.of(context).push(
                                           MaterialPageRoute(
@@ -1579,7 +1580,7 @@ class _HomeScreenState extends State<HomeScreen> {
       const ConfessionScreen(),
     );
     addPage(
-      'الأخبار والرحلات',
+      'الرحلات والإعلانات',
       Icons.campaign_rounded,
       Colors.indigo,
       const NewslettersScreen(),

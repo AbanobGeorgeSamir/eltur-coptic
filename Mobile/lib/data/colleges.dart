@@ -86,3 +86,18 @@ const List<CollegeGroup> collegeGroups = [
 
 List<String> get colleges =>
     [for (final group in collegeGroups) ...group.colleges];
+
+const String otherCollegeValue = '__other__';
+
+String get otherCollegeLabel => collegeGroups.last.colleges.last;
+
+bool isKnownCollege(String college) =>
+    college.isNotEmpty &&
+    college != otherCollegeLabel &&
+    colleges.contains(college);
+
+String collegeChoiceFor(String college) => college.isEmpty
+    ? ''
+    : isKnownCollege(college)
+    ? college
+    : otherCollegeValue;

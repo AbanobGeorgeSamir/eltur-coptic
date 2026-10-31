@@ -93,7 +93,7 @@ export default function AdminNewsletter({ showToast }) {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6" dir="rtl">
-      <div><h1 className="text-2xl font-bold text-white">النشرات والإعلانات</h1><p className="text-sm text-slate-400 mt-1">الإعلانات المنشورة من حسابك.</p></div>
+      <div><h1 className="text-2xl font-bold text-white">الرحلات والإعلانات</h1><p className="text-sm text-slate-400 mt-1">الإعلانات المنشورة من حسابك.</p></div>
       <form onSubmit={submit} className="bg-slate-900 border border-slate-800 p-5 md:p-6 rounded-2xl space-y-4">
         <GradeScopeFields user={user} grade={audience.grade} meetingGroup={audience.meetingGroup} onChange={(key, value) => setAudience((current) => ({ ...current, [key]: value, ...(key === 'grade' ? { meetingGroup: '' } : {}) }))} idPrefix="post-audience" />
         {audienceNeedsReview && <label className="flex items-start gap-2 rounded-xl border border-amber-400/20 bg-amber-400/5 p-3 text-sm leading-6 text-amber-100">

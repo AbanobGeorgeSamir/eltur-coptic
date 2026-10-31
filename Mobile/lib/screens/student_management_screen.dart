@@ -834,7 +834,10 @@ class _StudentEditorState extends State<_StudentEditor> {
   late bool _isDeacon;
   late DateTime? _birthDate;
   late String _academicYear;
-  late String _college;
+  late String _collegeChoice;
+  late String _country;
+  late String _governorate;
+  final _otherCollegeController = TextEditingController();
   bool _saving = false;
   bool _routeClosed = false;
   String? _error;
@@ -859,7 +862,10 @@ class _StudentEditorState extends State<_StudentEditor> {
     _isDeacon = student.isDeacon;
     _birthDate = DateTime.tryParse(student.birthDate);
     _academicYear = student.academicYear;
-    _college = student.college;
+    _collegeChoice = collegeChoiceFor(student.college);
+    _otherCollegeController.text = isKnownCollege(student.college) ? '' : student.college;
+    _country = student.country;
+    _governorate = student.governorate;
   }
 
   @override
@@ -867,6 +873,7 @@ class _StudentEditorState extends State<_StudentEditor> {
     for (final controller in _controllers.values) {
       controller.dispose();
     }
+    _otherCollegeController.dispose();
     super.dispose();
   }
 
@@ -904,9 +911,13 @@ class _StudentEditorState extends State<_StudentEditor> {
           _birthDate!.day,
           12,
         ).toUtc().toIso8601String(),
-        if (widget.student.grade == 'expatriates') ...{
+        if (isHigherEducationGrade(widget.student.grade)) ...{
           'academicYear': _academicYear,
-          'college': _college,
+          'college': _collegeChoice == otherCollegeValue
+              ? _otherCollegeController.text.trim()
+              : _collegeChoice,
+          'country': _country,
+          'governorate': _country == egyptCountryName ? _governorate : '',
         },
       });
       if (result == null) throw Exception('تعذر حفظ بيانات الطالب.');

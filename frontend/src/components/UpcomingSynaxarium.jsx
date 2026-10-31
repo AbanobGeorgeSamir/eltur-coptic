@@ -24,7 +24,7 @@ export default function UpcomingSynaxarium() {
   const visibleObservances = getVisibleSynaxariumObservances(observances, expanded);
 
   return (
-    <section aria-busy={calendar === undefined} aria-labelledby="upcoming-synaxarium-title" className="synaxarium-card relative isolate overflow-hidden rounded-3xl border shadow-xl shadow-black/10" dir="rtl">
+    <section aria-busy={calendar === undefined} aria-labelledby="today-synaxarium-title" className="synaxarium-card relative isolate overflow-hidden rounded-3xl border shadow-xl shadow-black/10" dir="rtl">
       <div aria-hidden="true" className="pointer-events-none absolute -left-20 -top-24 -z-10 h-64 w-64 rounded-full bg-[#7d2038]/[0.07] blur-3xl" />
       <div className="grid gap-5 p-4 sm:p-6 lg:grid-cols-[0.8fr_1.2fr] lg:gap-8 lg:p-7">
         <header className="flex flex-col justify-between gap-5 border-b pb-5 synaxarium-rule lg:border-b-0 lg:border-l lg:pb-0 lg:pl-7">
@@ -32,8 +32,8 @@ export default function UpcomingSynaxarium() {
             <span className="synaxarium-badge inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold">
               السنكسار القبطي
             </span>
-            <h2 id="upcoming-synaxarium-title" className="synaxarium-heading mt-3 text-2xl font-extrabold sm:text-3xl">الأعياد القادمة</h2>
-            <p className="mt-1 text-sm leading-6 text-slate-600">تذكارات الكنيسة في الأيام المقبلة</p>
+            <h2 id="today-synaxarium-title" className="synaxarium-heading mt-3 text-2xl font-extrabold sm:text-3xl">أعياد اليوم والأيام القادمة</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">تذكارات الكنيسة مرتبة حسب اليوم</p>
           </div>
           <div className="synaxarium-surface rounded-2xl border p-4">
             <p className="synaxarium-accent text-sm font-bold leading-6">{dateLabels.copticDate}</p>
@@ -69,7 +69,7 @@ export default function UpcomingSynaxarium() {
               ))}
             </ol>
           ) : (
-            <p className="synaxarium-surface rounded-2xl border p-5 text-sm leading-6 text-slate-600">لا توجد تذكارات مسجلة خلال الأيام المقبلة.</p>
+            <p className="synaxarium-surface rounded-2xl border p-5 text-sm leading-6 text-slate-600">لا توجد تذكارات مسجلة لهذا اليوم أو الأيام القادمة.</p>
           )}
 
           {observances.length > 3 && (

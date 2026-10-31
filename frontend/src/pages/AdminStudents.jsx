@@ -4,6 +4,9 @@ import { api } from '../services/api';
 import { useAuth } from '../contexts/useAuth';
 import { grades, gradeLabel, isGradeAdminRole } from '../data/grades';
 import { ACADEMIC_YEARS, COLLEGES } from '../data/expatriatesData';
+import StudentStudyDetailsFields from '../components/StudentStudyDetailsFields';
+import { countries, EGYPT_COUNTRY_NAME, isHigherEducationGrade } from '../data/residenceOptions';
+import { collegeChoiceFor } from '../utils/studyDetails';
 
 export default function AdminStudents() {
   const { user } = useAuth();
@@ -18,6 +21,8 @@ export default function AdminStudents() {
   const [filterGrade, setFilterGrade] = useState('');
   const [filterAcademicYear, setFilterAcademicYear] = useState('');
   const [filterCollege, setFilterCollege] = useState('');
+  const [filterCountry, setFilterCountry] = useState('');
+  const [filterGovernorate, setFilterGovernorate] = useState('');
   const [editingId, setEditingId] = useState('');
   const [draft, setDraft] = useState(null);
   const [savingId, setSavingId] = useState('');
@@ -65,19 +70,28 @@ export default function AdminStudents() {
       if (filterGrade && student.grade !== filterGrade) return false;
       if (filterAcademicYear && student.academicYear !== filterAcademicYear) return false;
       if (filterCollege && student.college !== filterCollege) return false;
+      if (filterCountry && student.country !== filterCountry) return false;
+      if (filterGovernorate && student.governorate !== filterGovernorate) return false;
       if (!normalized) return true;
-      return [student.name, student.email, student.phone, student.whatsappNumber, student.academicYear, student.college]
+      return [student.name, student.email, student.phone, student.whatsappNumber, student.academicYear, student.college, student.country, student.governorate]
         .some((value) => String(value || '').toLocaleLowerCase('ar').includes(normalized));
     });
-  }, [students, query, filterGrade, filterAcademicYear, filterCollege]);
+  }, [students, query, filterGrade, filterAcademicYear, filterCollege, filterCountry, filterGovernorate]);
+
+  const filterAcademicYearOptions = useMemo(() => [...new Set([...ACADEMIC_YEARS, ...students.map((student) => student.academicYear).filter(Boolean)])].sort((a, b) => a.localeCompare(b, 'ar')), [students]);
+  const filterCollegeOptions = useMemo(() => [...new Set([...COLLEGES.filter((college) => college !== 'أخرى'), ...students.map((student) => student.college).filter(Boolean)])].sort((a, b) => a.localeCompare(b, 'ar')), [students]);
+  const filterCountryOptions = countries;
+  const filterGovernorateOptions = [...new Set(students.map((student) => student.governorate).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar'));
 
   const pendingCount = visibleStudents.filter((student) => !student.assignedAdmin).length;
-  const hasActiveFilters = Boolean(filterGrade || filterAcademicYear || filterCollege || query);
+  const hasActiveFilters = Boolean(filterGrade || filterAcademicYear || filterCollege || filterCountry || filterGovernorate || query);
 
   const resetFilters = () => {
     setFilterGrade('');
     setFilterAcademicYear('');
     setFilterCollege('');
+    setFilterCountry('');
+    setFilterGovernorate('');
     setQuery('');
   };
 
@@ -159,6 +173,9 @@ export default function AdminStudents() {
       grade: student.grade || '',
       academicYear: student.academicYear || '',
       college: student.college || '',
+      collegeChoice: collegeChoiceFor(student.college || ''),
+      country: student.country || '',
+      governorate: student.governorate || '',
       meetingGroup: student.meetingGroup || '',
     });
   };
@@ -166,7 +183,8 @@ export default function AdminStudents() {
   const updateDraft = (key, value) => setDraft((current) => ({
     ...current,
     [key]: value,
-    ...(key === 'grade' ? { meetingGroup: '', ...(value !== 'expatriates' ? { academicYear: '', college: '' } : {}) } : {}),
+    ...(key === 'grade' ? { meetingGroup: '', ...(!isHigherEducationGrade(value) ? { academicYear: '', college: '', collegeChoice: '', country: '', governorate: '' } : {}) } : {}),
+    ...(key === 'country' && value !== EGYPT_COUNTRY_NAME ? { governorate: '' } : {}),
   }));
 
   const saveStudent = async (event) => {
@@ -180,6 +198,7 @@ export default function AdminStudents() {
         ...draft,
         birthDate: draft.birthDate ? new Date(`${draft.birthDate}T12:00:00`).toISOString() : undefined,
       };
+      delete studentPayload.collegeChoice;
       if (draft.grade === (originalStudent?.grade || '')
         && draft.meetingGroup === (originalStudent?.meetingGroup || '')) {
         delete studentPayload.grade;
@@ -267,7 +286,7 @@ export default function AdminStudents() {
               className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-sm text-white focus:border-amber-400 focus:outline-none"
             >
               <option value="">كل الفرق</option>
-              {ACADEMIC_YEARS.map((year) => (
+              {filterAcademicYearOptions.map((year) => (
                 <option key={year} value={year}>{year}</option>
               ))}
             </select>
@@ -281,9 +300,25 @@ export default function AdminStudents() {
               className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-sm text-white focus:border-amber-400 focus:outline-none"
             >
               <option value="">كل الكليات</option>
-              {COLLEGES.map((col) => (
+              {filterCollegeOptions.map((col) => (
                 <option key={col} value={col}>{col}</option>
               ))}
+            </select>
+          </label>
+
+          <label className="block text-xs font-semibold text-slate-400">
+            البلد
+            <select value={filterCountry} onChange={(event) => { setFilterCountry(event.target.value); setFilterGovernorate(''); }} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-sm text-white focus:border-amber-400 focus:outline-none">
+              <option value="">كل البلدان</option>
+              {filterCountryOptions.map((country) => <option key={country.code} value={country.name}>{country.name}</option>)}
+            </select>
+          </label>
+
+          <label className="block text-xs font-semibold text-slate-400">
+            المحافظة
+            <select value={filterGovernorate} onChange={(event) => setFilterGovernorate(event.target.value)} disabled={filterCountry && filterCountry !== EGYPT_COUNTRY_NAME} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-sm text-white focus:border-amber-400 focus:outline-none disabled:opacity-50">
+              <option value="">كل المحافظات</option>
+              {filterGovernorateOptions.map((governorate) => <option key={governorate} value={governorate}>{governorate}</option>)}
             </select>
           </label>
         </div>
@@ -377,7 +412,7 @@ export default function AdminStudents() {
               </div>
 
               {/* Expatriates Information Badges */}
-              {(student.grade === 'expatriates' || student.academicYear || student.college) && (
+              {(isHigherEducationGrade(student.grade) || student.academicYear || student.college || student.country || student.governorate) && (
                 <div className="mt-3 flex flex-wrap gap-1.5 pt-2 border-t border-slate-800/80 text-xs">
                   {student.academicYear && (
                     <span className="inline-flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 font-semibold text-amber-300">
@@ -388,6 +423,12 @@ export default function AdminStudents() {
                     <span className="inline-flex items-center gap-1 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 font-semibold text-blue-300">
                       <Building2 className="h-3.5 w-3.5" /> الكلية: {student.college}
                     </span>
+                  )}
+                  {student.country && (
+                    <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 font-semibold text-emerald-300">البلد: {student.country}</span>
+                  )}
+                  {student.governorate && (
+                    <span className="inline-flex items-center gap-1 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 font-semibold text-cyan-200">المحافظة: {student.governorate}</span>
                   )}
                 </div>
               )}
@@ -501,33 +542,10 @@ export default function AdminStudents() {
                       </select>
                     </label>
 
-                    {draft.grade === 'expatriates' && (
-                      <>
-                        <label className="block text-xs font-semibold text-amber-300">الفرقة (المغتربين)
-                          <select
-                            value={draft.academicYear}
-                            onChange={(e) => updateDraft('academicYear', e.target.value)}
-                            className="mt-1 w-full rounded-xl border border-amber-400/40 bg-slate-800 p-2.5 text-sm text-white focus:border-amber-400 focus:outline-none"
-                          >
-                            <option value="">اختر</option>
-                            {ACADEMIC_YEARS.map((year) => (
-                              <option key={year} value={year}>{year}</option>
-                            ))}
-                          </select>
-                        </label>
-                        <label className="block text-xs font-semibold text-amber-300">الكلية (المغتربين)
-                          <select
-                            value={draft.college}
-                            onChange={(e) => updateDraft('college', e.target.value)}
-                            className="mt-1 w-full rounded-xl border border-amber-400/40 bg-slate-800 p-2.5 text-sm text-white focus:border-amber-400 focus:outline-none"
-                          >
-                            <option value="">اختر</option>
-                            {COLLEGES.map((col) => (
-                              <option key={col} value={col}>{col}</option>
-                            ))}
-                          </select>
-                        </label>
-                      </>
+                    {isHigherEducationGrade(draft.grade) && (
+                      <div className="sm:col-span-2">
+                        <StudentStudyDetailsFields value={draft} onChange={updateDraft} />
+                      </div>
                     )}
 
                     <StudentGroupSelector user={user} grade={draft.grade} value={draft.meetingGroup} onChange={(value) => updateDraft('meetingGroup', value)} />

@@ -22,6 +22,7 @@ const MeetingGroup = require('../models/MeetingGroup');
 const auth = require('../middleware/authMiddleware');
 const adminOnly = require('../middleware/adminMiddleware');
 const { sanitizeUser } = require('../utils/responses');
+const { countries, egyptGovernorates, egyptCountryName, isHigherEducationGrade } = require('../utils/registrationOptions');
 const { validEmail, validPhone, normalizePhone, hasFourPartName } = require('../utils/validation');
 const { hashPassword } = require('../utils/passwords');
 const { roleLabelFor } = require('../utils/roleLabels');
@@ -1392,7 +1393,7 @@ router.patch('/students/:id', auth, adminOnly, async (req, res, next) => {
 
         const editable = [
             'name', 'phone', 'interests', 'fatherName', 'confessionFather', 'guardianPhone', 'address',
-            'birthDate', 'gender', 'nationalId', 'isDeacon', 'whatsappNumber', 'academicYear', 'college',
+            'birthDate', 'gender', 'nationalId', 'isDeacon', 'whatsappNumber', 'academicYear', 'college', 'country', 'governorate',
         ];
         for (const key of editable) {
             if (req.body?.[key] !== undefined) student[key] = req.body[key];
@@ -1432,21 +1433,29 @@ router.patch('/students/:id', auth, adminOnly, async (req, res, next) => {
                     || null;
             }
         }
-        const expatDetailsTouched = req.body?.academicYear !== undefined || req.body?.college !== undefined;
-        const movedToExpatriates = req.body?.grade !== undefined && student.grade === 'expatriates';
-        if (expatDetailsTouched || movedToExpatriates) {
+        const studyDetailsTouched = ['academicYear', 'college', 'country', 'governorate'].some((field) => req.body?.[field] !== undefined);
+        const movedToHigherEducation = req.body?.grade !== undefined && isHigherEducationGrade(student.grade);
+        if (studyDetailsTouched || movedToHigherEducation) {
             student.academicYear = String(student.academicYear || '').trim();
             student.college = String(student.college || '').trim();
-            if (student.academicYear.length > 80 || student.college.length > 160) {
-                return res.status(422).json({ message: 'Expatriate study details are too long.' });
+            student.country = String(student.country || '').trim();
+            student.governorate = String(student.governorate || '').trim();
+            if (student.academicYear.length > 80 || student.college.length > 160 || student.country.length > 100 || student.governorate.length > 100) {
+                return res.status(422).json({ message: 'Study details are too long.' });
             }
-            if (student.grade === 'expatriates' && (!student.academicYear || !student.college)) {
-                return res.status(422).json({ message: 'Academic year and college are required for expatriate students.' });
+            if (isHigherEducationGrade(student.grade) && (!student.academicYear || !student.college || !countries.has(student.country))) {
+                return res.status(422).json({ message: 'Academic year, college, and a valid country are required for university students.' });
             }
+            if (isHigherEducationGrade(student.grade) && student.country === egyptCountryName && !egyptGovernorates.has(student.governorate)) {
+                return res.status(422).json({ message: 'Choose a valid Egyptian governorate.' });
+            }
+            if (student.country !== egyptCountryName) student.governorate = null;
         }
-        if (req.body?.grade !== undefined && student.grade !== 'expatriates') {
+        if (req.body?.grade !== undefined && !isHigherEducationGrade(student.grade)) {
             student.academicYear = null;
             student.college = null;
+            student.country = null;
+            student.governorate = null;
         }
         const email = req.body?.email === undefined
             ? undefined
