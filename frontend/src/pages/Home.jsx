@@ -239,7 +239,7 @@ export default function Home() {
         )}
         {!loading && loadErrors.dailyReading && <p role="alert" className="rounded-2xl border border-rose-400/20 bg-rose-400/5 p-5 text-sm text-rose-200">تعذر تحميل القراءة اليومية.</p>}
         {!loading && !loadErrors.dailyReading && !dailyReading && <p className="rounded-2xl border border-slate-800 bg-slate-900 p-5 text-sm text-slate-400">لم تُنشر قراءة يومية بعد.</p>}
-        {!loading && !loadErrors.dailyReading && dailyReading && <article className="rounded-2xl border border-[#e9dfcb] bg-[#fffaf0] p-5 sm:p-6" dir="rtl">
+        {!loading && !loadErrors.dailyReading && dailyReading && <article className="reading-paper rounded-2xl border p-5 sm:p-6" dir="rtl">
           <h3 className="font-bold text-[#7d2038]">{dailyReading.reference}</h3>
           <p className="mt-3 whitespace-pre-wrap font-serif text-xl leading-[1.9] text-black sm:text-2xl">{dailyReading.text}</p>
         </article>}

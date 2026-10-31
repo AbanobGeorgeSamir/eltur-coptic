@@ -14,6 +14,7 @@ import '../utils/roles.dart';
 import '../utils/liturgy_schedule.dart';
 import '../utils/daily_reading_title.dart';
 import '../widgets/fathers_section.dart';
+import '../widgets/theme_toggle_button.dart';
 import '../widgets/upcoming_synaxarium_card.dart';
 import 'agpeya_screen.dart';
 import 'bible_screen.dart';
@@ -835,9 +836,9 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: Semantics(
-                  label: 'كنيسة موسي النبي ومارمرقس الرسول',
+                  label: 'كنيسة موسي النبي ومارمرقس الرسول - طور سيناء',
                   child: Text(
-                    'كنيسة موسي النبي ومارمرقس الرسول',
+                    'كنيسة موسي النبي ومارمرقس الرسول - طور سيناء',
                     maxLines: 2,
                     style: const TextStyle(fontSize: 14, height: 1.15),
                   ),
@@ -846,6 +847,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           actions: [
+            const ThemeToggleButton(),
             IconButton(
               tooltip: 'الملف الشخصي',
               icon: const Icon(Icons.person),
@@ -944,7 +946,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                         child: Text(
                                           _dashboardError!,
                                           style: TextStyle(
-                                            color: Theme.of(context).colorScheme.onSurface,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurface,
                                             height: 1.4,
                                           ),
                                         ),
@@ -1010,7 +1014,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               if (user?.role == 'student' &&
                                   (user?.assignedAdmin == null ||
-                                      user?.assignedAdmin?.isEmpty == true)) ...[
+                                      user?.assignedAdmin?.isEmpty ==
+                                          true)) ...[
                                 const SizedBox(height: 12),
                                 Container(
                                   padding: const EdgeInsets.all(18),
@@ -1023,14 +1028,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.amber.withValues(alpha: 0.1),
+                                        color: Colors.amber.withValues(
+                                          alpha: 0.1,
+                                        ),
                                         blurRadius: 12,
                                         offset: const Offset(0, 4),
                                       ),
                                     ],
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
@@ -1111,7 +1119,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                               style: TextStyle(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.bold,
-                                                color: Theme.of(context).colorScheme.onSurface,
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.onSurface,
                                               ),
                                             ),
                                           ),
@@ -1132,7 +1142,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                         'قراءة اليوم',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: Theme.of(context).colorScheme.primary,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
                                         ),
                                       ),
                                       const SizedBox(height: 6),
@@ -1149,7 +1161,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                         Text(
                                           dailyReadingTitle(_dailyReading!),
                                           style: TextStyle(
-                                            color: Theme.of(context).colorScheme.primary,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
@@ -1160,7 +1174,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                           style: GoogleFonts.amiri(
                                             fontSize: 24,
                                             height: 1.8,
-                                            color: Theme.of(context).colorScheme.onSurface,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurface,
                                           ),
                                         ),
                                       ],
@@ -1268,7 +1284,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -1631,7 +1649,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     options.add((
       title: ThemeController.isDark ? 'الوضع النهاري' : 'الوضع الليلي',
-      icon: ThemeController.isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+      icon: ThemeController.isDark
+          ? Icons.light_mode_rounded
+          : Icons.dark_mode_rounded,
       color: Colors.amber.shade700,
       onTap: () {
         ThemeController.toggleTheme();
@@ -1671,14 +1691,18 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(sheetContext).colorScheme.onSurface,
+                              color: Theme.of(
+                                sheetContext,
+                              ).colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             'اختر القسم الذي تريد فتحه.',
                             style: TextStyle(
-                              color: Theme.of(sheetContext).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                sheetContext,
+                              ).colorScheme.onSurfaceVariant,
                               fontSize: 13,
                             ),
                           ),
@@ -1690,17 +1714,25 @@ class _HomeScreenState extends State<HomeScreen> {
                           final isDarkMode = mode == ThemeMode.dark;
                           return OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
                             icon: Icon(
-                              isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                              isDarkMode
+                                  ? Icons.light_mode_rounded
+                                  : Icons.dark_mode_rounded,
                               size: 18,
                             ),
                             label: Text(
                               isDarkMode ? 'الوضع النهاري' : 'الوضع الليلي',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             onPressed: ThemeController.toggleTheme,
                           );

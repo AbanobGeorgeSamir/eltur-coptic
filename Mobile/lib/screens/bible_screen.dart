@@ -8,6 +8,7 @@ import '../data/bible_books.dart';
 import '../models/ministry_post_model.dart';
 import '../services/api_service.dart';
 import '../widgets/asset_pdf_viewer.dart';
+import '../widgets/theme_toggle_button.dart';
 
 import '../theme/app_theme.dart';
 import '../utils/daily_reading_title.dart';
@@ -228,7 +229,9 @@ class _BibleScreenState extends State<BibleScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? AppTheme.darkBackground
+            : Colors.white,
         appBar: AppBar(
           title: Text(
             '${book.name} · ${_arabicizeDigits(_chapterNumber)}',
@@ -236,6 +239,7 @@ class _BibleScreenState extends State<BibleScreen> {
             overflow: TextOverflow.ellipsis,
           ),
           actions: [
+            const ThemeToggleButton(),
             IconButton(
               tooltip: 'اختيار السفر والإصحاح والبحث',
               icon: Icon(_showControls ? Icons.close : Icons.tune),

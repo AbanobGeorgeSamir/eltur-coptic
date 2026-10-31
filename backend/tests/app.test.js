@@ -85,6 +85,57 @@ test('student registration creates a session without phone verification', async 
     assert.equal(JSON.parse(body).user.nationalId, undefined);
 });
 
+test('expatriate registration requires and stores academic year and college', async (t) => {
+    const server = http.createServer(app);
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    t.after(() => server.close());
+
+    const originalCreate = User.create;
+    const originalFind = User.find;
+    const originalCountDocuments = MeetingGroup.countDocuments;
+    User.create = async (input) => ({ ...input, _id: 'expatriate-id' });
+    User.find = () => ({ select: () => ({ lean: async () => [] }) });
+    MeetingGroup.countDocuments = async () => 0;
+    t.after(() => {
+        User.create = originalCreate;
+        User.find = originalFind;
+        MeetingGroup.countDocuments = originalCountDocuments;
+    });
+
+    const base = {
+        name: 'Mina Samir Adel Hanna',
+        username: 'minasamir',
+        email: 'mina@example.com',
+        phone: '+201001234567',
+        password: 'secure-password',
+        fatherName: 'Father',
+        confessionFather: 'Confessor',
+        guardianPhone: '+201009876543',
+        address: 'Test address',
+        interests: 'Bible study',
+        grade: 'expatriates',
+        birthDate: '2002-01-01',
+        gender: 'male',
+        nationalId: '12345678901234',
+        privacyAccepted: true,
+    };
+
+    const missing = await makeRequest(server, '/api/auth/register', {
+        'content-type': 'application/json',
+    }, { method: 'POST', body: JSON.stringify(base) });
+    assert.equal(missing.response.statusCode, 422);
+
+    const { response, body } = await makeRequest(server, '/api/auth/register', {
+        'content-type': 'application/json',
+    }, {
+        method: 'POST',
+        body: JSON.stringify({ ...base, academicYear: 'الفرقة الثالثة', college: 'كلية الهندسة' }),
+    });
+    assert.equal(response.statusCode, 201);
+    assert.equal(JSON.parse(body).user.academicYear, 'الفرقة الثالثة');
+    assert.equal(JSON.parse(body).user.college, 'كلية الهندسة');
+});
+
 test('registration rejects names without four parts and emails with spaces or non-.com domains', async (t) => {
     const server = http.createServer(app);
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));

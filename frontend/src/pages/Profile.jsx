@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/useAuth';
 import PhoneField from '../components/PhoneField';
 import { isValidComEmail, normalizeEmail } from '../utils/email';
 import { grades, gradeLabel, isGradeAdminRole } from '../data/grades';
+import { ACADEMIC_YEARS, COLLEGES } from '../data/expatriatesData';
 
 const initialForm = (user) => ({
   name: user?.name || '',
@@ -18,6 +19,8 @@ const initialForm = (user) => ({
   address: user?.address || '',
   isDeacon: Boolean(user?.isDeacon),
   grade: user?.grade || '',
+  academicYear: user?.academicYear || '',
+  college: user?.college || '',
 });
 
 export default function Profile({ showToast }) {
@@ -31,7 +34,13 @@ export default function Profile({ showToast }) {
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [deleting, setDeleting] = useState(false);
-  const update = (key, value) => setForm((old) => ({ ...old, [key]: value }));
+  const update = (key, value) => setForm((old) => ({
+    ...old,
+    [key]: value,
+    ...(key === 'grade' && value !== 'expatriates' ? { academicYear: '', college: '' } : {}),
+  }));
+
+  const isExpatriate = user?.grade === 'expatriates' || form.grade === 'expatriates';
 
   const save = async (event) => {
     event.preventDefault();
@@ -41,13 +50,25 @@ export default function Profile({ showToast }) {
       setError('أدخل بريدًا إلكترونيًا صحيحًا.');
       return;
     }
+    if (isExpatriate && (!form.academicYear || !form.college)) {
+      setError('يرجى اختيار الفرقة والكلية لمرحلة المغتربين.');
+      return;
+    }
     setSaving(true);
     try {
       const profilePayload = {
         ...form,
         email,
       };
-      if (user?.role !== 'student' || user.grade) {
+      delete profilePayload.academicYear;
+      delete profilePayload.college;
+      if (user?.role === 'student') {
+        if (user.grade) delete profilePayload.grade;
+        if (isExpatriate) {
+          profilePayload.academicYear = form.academicYear;
+          profilePayload.college = form.college;
+        }
+      } else {
         delete profilePayload.grade;
       }
       const result = await api.updateProfile(profilePayload);
@@ -96,6 +117,12 @@ export default function Profile({ showToast }) {
           <p className="text-sm text-amber-300">
             {user?.role === 'admin' ? 'الأدمن العام' : isGradeAdminRole(user?.role) ? `أدمن ${gradeLabel(user.grade)}` : user?.confessionFather || ''}
           </p>
+          {user?.grade === 'expatriates' && (user?.college || user?.academicYear) && (
+            <p className="mt-1 flex flex-wrap gap-2 text-xs">
+              {user.college && <span className="rounded-lg bg-amber-400/15 px-2 py-0.5 font-bold text-amber-300">{user.college}</span>}
+              {user.academicYear && <span className="rounded-lg bg-amber-400/15 px-2 py-0.5 font-bold text-amber-300">{user.academicYear}</span>}
+            </p>
+          )}
           <p className="mt-1 break-all text-xs text-slate-400" dir="ltr">
             {[user?.email, user?.phone].filter(Boolean).join(' · ')}
           </p>
@@ -132,14 +159,46 @@ export default function Profile({ showToast }) {
             value={form.phone}
             onChange={(phone) => update('phone', phone)}
           />
-          {user?.role === 'student' && !user.grade && <>
+          {user?.role === 'student' && !user.grade && (
             <label className="block text-xs text-slate-400">المرحلة الدراسية (تُحدد مرة واحدة)
               <select required value={form.grade} onChange={(event) => setForm((old) => ({ ...old, grade: event.target.value }))} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-800 p-2.5 text-sm text-white">
                 <option value="">اختر المرحلة</option>
                 {grades.map((grade) => <option key={grade.id} value={grade.id}>{grade.label}</option>)}
               </select>
             </label>
-          </>}
+          )}
+
+          {isExpatriate && (
+            <>
+              <label className="block text-xs font-semibold text-amber-300">
+                الفرقة
+                <select
+                  value={form.academicYear}
+                  onChange={(e) => update('academicYear', e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-amber-400/40 bg-slate-800 p-2.5 text-sm text-white focus:border-amber-400 focus:outline-none"
+                >
+                  <option value="">اختر</option>
+                  {ACADEMIC_YEARS.map((year) => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-xs font-semibold text-amber-300">
+                الكلية
+                <select
+                  value={form.college}
+                  onChange={(e) => update('college', e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-amber-400/40 bg-slate-800 p-2.5 text-sm text-white focus:border-amber-400 focus:outline-none"
+                >
+                  <option value="">اختر</option>
+                  {COLLEGES.map((col) => (
+                    <option key={col} value={col}>{col}</option>
+                  ))}
+                </select>
+              </label>
+            </>
+          )}
+
           <label className="block text-xs text-slate-400">
             اسم الأب
             <input
@@ -219,9 +278,9 @@ export default function Profile({ showToast }) {
               <input required type="password" autoComplete="current-password" value={deletePassword} onChange={(event) => setDeletePassword(event.target.value)} className="mt-2 min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
             </label>
             {deleteError && <p role="alert" className="text-sm text-rose-300">{deleteError}</p>}
-            <div className="flex flex-wrap gap-2">
-              <button disabled={deleting} className="min-h-11 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{deleting ? 'جارٍ حذف الحساب...' : 'تأكيد الحذف'}</button>
-              <button type="button" disabled={deleting} onClick={() => { setDeleteOpen(false); setDeletePassword(''); setDeleteError(''); }} className="min-h-11 rounded-xl border border-slate-600 px-4 py-2 text-sm text-slate-200">إلغاء</button>
+            <div className="flex gap-2">
+              <button disabled={deleting} className="min-h-11 rounded-xl bg-rose-500 px-4 py-2 text-sm font-bold text-white hover:bg-rose-600 disabled:opacity-50">تأكيد حذف الحساب نهائيًا</button>
+              <button type="button" onClick={() => setDeleteOpen(false)} className="min-h-11 rounded-xl border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800">إلغاء</button>
             </div>
           </form>
         )}

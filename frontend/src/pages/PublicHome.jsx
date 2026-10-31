@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, BookOpen, CalendarDays, CheckSquare, Heart, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import churchIcon from '../images/kenesa-icon.png';
+import ThemeToggle from '../components/ThemeToggle';
 import UpcomingSynaxarium from '../components/UpcomingSynaxarium';
 import FathersSection from '../components/FathersSection';
 
@@ -35,10 +36,11 @@ export default function PublicHome() {
               <img src={churchIcon} alt="" width="44" height="44" loading="eager" fetchPriority="high" decoding="async" className="h-full w-full object-cover" />
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-sm font-extrabold sm:text-base">كنيسة موسي النبي ومارمرقس الرسول</span>
+              <span className="block truncate text-sm font-extrabold sm:text-base">كنيسة موسي النبي ومارمرقس الرسول - طور سيناء</span>
             </span>
           </a>
-          <div className="flex shrink-0 flex-col items-stretch gap-1 sm:flex-row sm:gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <ThemeToggle />
             <Link to="/login" className="inline-flex min-h-9 items-center justify-center rounded-xl border border-white/10 px-3 text-xs font-bold text-white transition-all duration-200 ease-out hover:border-amber-300/40 hover:bg-white/5 hover:scale-105 active:scale-95 sm:min-h-10 sm:px-4 sm:text-sm">تسجيل الدخول</Link>
             <Link to="/register" className="inline-flex min-h-9 items-center justify-center rounded-xl bg-amber-400 px-3 text-xs font-extrabold text-slate-950 shadow-md shadow-amber-950/25 transition-all duration-200 ease-out hover:bg-amber-300 hover:shadow-lg hover:shadow-amber-400/20 hover:-translate-y-0.5 active:translate-y-0 sm:min-h-10 sm:px-4 sm:text-sm">إنشاء حساب</Link>
           </div>

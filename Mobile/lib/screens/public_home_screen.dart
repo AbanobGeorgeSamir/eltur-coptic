@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/fathers_section.dart';
+import '../widgets/theme_toggle_button.dart';
 import '../widgets/upcoming_synaxarium_card.dart';
 import 'login_screen.dart';
 import 'privacy_policy_screen.dart';
@@ -50,6 +51,10 @@ class PublicHomeScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: 72,
+          actions: const [
+            ThemeToggleButton(),
+            SizedBox(width: 8),
+          ],
           title: Row(
             children: [
               ClipRRect(
@@ -64,9 +69,9 @@ class PublicHomeScreen extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Semantics(
-                  label: 'كنيسة موسي النبي ومارمرقس الرسول',
+                  label: 'كنيسة موسي النبي ومارمرقس الرسول - طور سيناء',
                   child: Text(
-                    'كنيسة موسي النبي ومارمرقس الرسول',
+                    'كنيسة موسي النبي ومارمرقس الرسول - طور سيناء',
                     maxLines: 2,
                     style: const TextStyle(fontSize: 14, height: 1.15),
                   ),

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
+import ThemeToggle from '../components/ThemeToggle';
 
 export default function Login() {
   const [name, setName] = useState('');
@@ -27,13 +28,16 @@ export default function Login() {
   };
 
   return (
-    <main className="grid min-h-dvh place-items-center px-3 py-8 sm:px-5 sm:py-12" dir="rtl">
+    <main className="relative grid min-h-dvh place-items-center px-3 py-8 sm:px-5 sm:py-12" dir="rtl">
+      <div className="absolute left-4 top-[max(1rem,env(safe-area-inset-top))] z-10 sm:left-6 sm:top-6">
+        <ThemeToggle />
+      </div>
       <form onSubmit={submit} className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-900/95 p-6 shadow-2xl shadow-black/35 sm:p-8 animate-fade-in-up">
         <div className="mb-8 text-center">
           <span className="mx-auto mb-4 grid h-16 w-16 place-items-center overflow-hidden rounded-[1.35rem] border border-amber-200/30 bg-amber-100 shadow-lg shadow-amber-950/20">
             <img src="/favicon.png" alt="" width="64" height="64" className="h-full w-full object-cover" />
           </span>
-          <p className="text-xs font-bold text-amber-300">كنيسة موسى النبي ومارمرقس الرسول</p>
+          <p className="text-xs font-bold text-amber-300">كنيسة موسى النبي ومارمرقس الرسول - طور سيناء</p>
           <h1 className="mt-2 text-2xl font-extrabold text-white">تسجيل الدخول</h1>
           <p className="mt-2 text-sm leading-6 text-slate-400">تابع قراءاتك وخدمتك من مكان واحد.</p>
         </div>

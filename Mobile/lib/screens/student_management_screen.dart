@@ -7,6 +7,7 @@ import '../services/api_service.dart';
 import '../utils/roles.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
+import '../data/colleges.dart';
 
 class StudentManagementScreen extends StatefulWidget {
   const StudentManagementScreen({super.key});
@@ -21,6 +22,8 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
   List<Map<String, dynamic>> _pendingParents = [];
   bool _loading = true;
   String _query = '';
+  String _filterAcademicYear = '';
+  String _filterCollege = '';
   String? _error;
   String? _approvingParentKey;
   String? _rejectingStudentId;
@@ -160,7 +163,9 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
       await _load();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم حذف حساب الطالب وجميع سجلاته بنجاح.')),
+          const SnackBar(
+            content: Text('تم حذف حساب الطالب وجميع سجلاته بنجاح.'),
+          ),
         );
       }
     } catch (error) {
@@ -234,12 +239,21 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
     }
     final normalized = _query.trim().toLowerCase();
     final visibleStudents = _students.where((student) {
+      if (_filterAcademicYear.isNotEmpty &&
+          student.academicYear != _filterAcademicYear) {
+        return false;
+      }
+      if (_filterCollege.isNotEmpty && student.college != _filterCollege) {
+        return false;
+      }
       if (normalized.isEmpty) return true;
       return [
         student.name,
         student.email,
         student.phone,
         student.whatsappNumber,
+        student.academicYear,
+        student.college,
       ].any((value) => value.toLowerCase().contains(normalized));
     }).toList();
     final unassignedStudents = visibleStudents
@@ -289,6 +303,93 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                 ),
                 onChanged: (value) => setState(() => _query = value),
               ),
+              const SizedBox(height: 10),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final fieldWidth = constraints.maxWidth >= 600
+                      ? (constraints.maxWidth - 10) / 2
+                      : constraints.maxWidth;
+                  return Wrap(
+                    spacing: 10,
+                    runSpacing: 8,
+                    children: [
+                      SizedBox(
+                        width: fieldWidth,
+                        child: DropdownButtonFormField<String>(
+                          initialValue: _filterAcademicYear,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            labelText: 'تصفية حسب الفرقة',
+                            prefixIcon: Icon(Icons.groups_outlined),
+                          ),
+                          items: [
+                            const DropdownMenuItem(
+                              value: '',
+                              child: Text('كل الفرق'),
+                            ),
+                            ...academicYears.map(
+                              (year) => DropdownMenuItem(
+                                value: year,
+                                child: Text(
+                                  year,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) =>
+                              setState(() => _filterAcademicYear = value ?? ''),
+                        ),
+                      ),
+                      SizedBox(
+                        width: fieldWidth,
+                        child: DropdownButtonFormField<String>(
+                          initialValue: _filterCollege,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            labelText: 'تصفية حسب الكلية',
+                            prefixIcon: Icon(Icons.account_balance_outlined),
+                          ),
+                          items: [
+                            const DropdownMenuItem(
+                              value: '',
+                              child: Text('كل الكليات'),
+                            ),
+                            ...colleges.map(
+                              (college) => DropdownMenuItem(
+                                value: college,
+                                child: Text(
+                                  college,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) =>
+                              setState(() => _filterCollege = value ?? ''),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              if (_query.isNotEmpty ||
+                  _filterAcademicYear.isNotEmpty ||
+                  _filterCollege.isNotEmpty)
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: TextButton.icon(
+                    onPressed: () => setState(() {
+                      _query = '';
+                      _filterAcademicYear = '';
+                      _filterCollege = '';
+                    }),
+                    icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
+                    label: const Text('مسح عوامل التصفية'),
+                  ),
+                ),
               const SizedBox(height: 12),
               if (_error != null)
                 Card(
@@ -395,7 +496,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                 const Card(
                   child: Padding(
                     padding: EdgeInsets.all(18),
-                    child: Text('لا توجد نتائج مطابقة للبحث.'),
+                    child: Text('لا توجد نتائج مطابقة للبحث أو عوامل التصفية.'),
                   ),
                 )
               else ...[
@@ -505,6 +606,13 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                         student.name,
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
+                      Text(
+                        _gradeLabel(student.grade),
+                        style: TextStyle(
+                          color: AppTheme.textSecondary(context),
+                          fontSize: 12,
+                        ),
+                      ),
                       if (student.email.isNotEmpty)
                         Text(student.email, textDirection: TextDirection.ltr),
                     ],
@@ -512,6 +620,85 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                 ),
               ],
             ),
+            if (student.academicYear.isNotEmpty || student.college.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.only(top: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppTheme.accentGold.withValues(alpha: 0.12)
+                      : AppTheme.lightGold,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppTheme.accentGold.withValues(alpha: 0.3)
+                        : const Color(0xFFEADFCB),
+                  ),
+                ),
+                child: Wrap(
+                  spacing: 12,
+                  runSpacing: 6,
+                  children: [
+                    if (student.academicYear.isNotEmpty)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.school_outlined,
+                            size: 16,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? AppTheme.accentGold
+                                : AppTheme.primaryBurgundy,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            'الفرقة: ${student.academicYear}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppTheme.darkTextLight
+                                  : AppTheme.textDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                    if (student.college.isNotEmpty)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.account_balance_outlined,
+                            size: 16,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? AppTheme.accentGold
+                                : AppTheme.primaryBurgundy,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            'الكلية: ${student.college}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppTheme.darkTextLight
+                                  : AppTheme.textDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
             if (student.phone.isNotEmpty) ...[
               const SizedBox(height: 10),
               Text(
@@ -582,7 +769,10 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                   ),
                   OutlinedButton.icon(
                     onPressed: () => _deleteStudent(student),
-                    icon: const Icon(Icons.delete_outline, color: AppTheme.dangerRed),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: AppTheme.dangerRed,
+                    ),
                     label: const Text(
                       'حذف نهائياً',
                       style: TextStyle(color: AppTheme.dangerRed),
@@ -606,7 +796,10 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                   if (canManageStudent)
                     OutlinedButton.icon(
                       onPressed: () => _deleteStudent(student),
-                      icon: const Icon(Icons.delete_outline, color: AppTheme.dangerRed),
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: AppTheme.dangerRed,
+                      ),
                       label: const Text(
                         'حذف المستخدم',
                         style: TextStyle(color: AppTheme.dangerRed),
@@ -640,6 +833,8 @@ class _StudentEditorState extends State<_StudentEditor> {
   late String _gender;
   late bool _isDeacon;
   late DateTime? _birthDate;
+  late String _academicYear;
+  late String _college;
   bool _saving = false;
   bool _routeClosed = false;
   String? _error;
@@ -663,6 +858,8 @@ class _StudentEditorState extends State<_StudentEditor> {
     _gender = student.gender == 'female' ? 'female' : 'male';
     _isDeacon = student.isDeacon;
     _birthDate = DateTime.tryParse(student.birthDate);
+    _academicYear = student.academicYear;
+    _college = student.college;
   }
 
   @override
@@ -707,6 +904,10 @@ class _StudentEditorState extends State<_StudentEditor> {
           _birthDate!.day,
           12,
         ).toUtc().toIso8601String(),
+        if (widget.student.grade == 'expatriates') ...{
+          'academicYear': _academicYear,
+          'college': _college,
+        },
       });
       if (result == null) throw Exception('تعذر حفظ بيانات الطالب.');
       if (mounted) {
@@ -805,6 +1006,43 @@ class _StudentEditorState extends State<_StudentEditor> {
                       onChanged: (value) =>
                           setState(() => _gender = value ?? 'male'),
                     ),
+                    if (widget.student.grade == 'expatriates') ...[
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        initialValue: _academicYear.isEmpty
+                            ? null
+                            : _academicYear,
+                        decoration: const InputDecoration(
+                          labelText: 'الفرقة (المغتربين)',
+                        ),
+                        hint: const Text('اختر'),
+                        items: academicYears
+                            .map(
+                              (y) => DropdownMenuItem(value: y, child: Text(y)),
+                            )
+                            .toList(),
+                        onChanged: (v) =>
+                            setState(() => _academicYear = v ?? ''),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        initialValue: _college.isEmpty ? null : _college,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'الكلية (المغتربين)',
+                        ),
+                        hint: const Text('اختر'),
+                        items: colleges
+                            .map(
+                              (c) => DropdownMenuItem(
+                                value: c,
+                                child: Text(c, overflow: TextOverflow.ellipsis),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (v) => setState(() => _college = v ?? ''),
+                      ),
+                    ],
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       title: const Text('شماس'),

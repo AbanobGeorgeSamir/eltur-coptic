@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+﻿import 'package:material_ui/material_ui.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
@@ -289,6 +289,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           avatar: const Icon(Icons.school_outlined, size: 18),
                           label: Text(user.gradeInArabic),
                           backgroundColor: AppTheme.lightGold,
+                        ),
+                      ],
+                      if (user.grade == 'expatriates' && (user.academicYear.isNotEmpty || user.college.isNotEmpty)) ...[
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: [
+                            if (user.academicYear.isNotEmpty)
+                              Chip(
+                                avatar: const Icon(Icons.school, size: 16),
+                                label: Text('الفرقة: ${user.academicYear}'),
+                                backgroundColor: AppTheme.lightGold,
+                              ),
+                            if (user.college.isNotEmpty)
+                              Chip(
+                                avatar: const Icon(Icons.account_balance, size: 16),
+                                label: Text('الكلية: ${user.college}'),
+                                backgroundColor: AppTheme.lightGold,
+                              ),
+                          ],
                         ),
                       ],
                       if (user.role == 'student' && user.grade.isEmpty) ...[

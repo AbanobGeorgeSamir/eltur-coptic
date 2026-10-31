@@ -149,7 +149,7 @@ export default function Tasks({ showToast }) {
         </div>
       </section>
 
-      {completingTask && <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-slate-950/80 p-3 sm:p-4" role="presentation" onClick={(event) => { if (event.target === event.currentTarget && !busy) setCompletingTask(null); }}>
+      {completingTask && <div className="modal-scrim fixed inset-0 z-50 grid place-items-center overflow-y-auto p-3 sm:p-4" role="presentation" onClick={(event) => { if (event.target === event.currentTarget && !busy) setCompletingTask(null); }}>
         <form onSubmit={(event) => { event.preventDefault(); void complete(completingTask); }} role="dialog" aria-modal="true" aria-labelledby="complete-task-title" className="my-auto max-h-[90dvh] w-full max-w-lg space-y-4 overflow-y-auto rounded-2xl border border-amber-500/30 bg-slate-900 p-4 shadow-2xl sm:p-5">
           <div className="flex items-start justify-between gap-3"><div><h2 id="complete-task-title" className="text-lg font-bold text-white">تسليم المهمة</h2><p className="mt-1 text-sm text-amber-300">{completingTask.title}</p></div><button type="button" onClick={() => setCompletingTask(null)} disabled={Boolean(busy)} aria-label="إغلاق" className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white"><X className="h-4 w-4" /></button></div>
           <label className="block text-sm text-slate-300">ملاحظة التسليم (اختيارية)

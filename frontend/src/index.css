@@ -2,6 +2,7 @@
 
 @theme {
   --font-sans: "Cairo", "Noto Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Amiri", "Noto Naskh Arabic", "Times New Roman", serif;
 }
 
 @layer base {
@@ -9,8 +10,25 @@
     color-scheme: dark;
     --app-canvas: #020617;
     --app-panel: #0f172a;
+    --app-surface: #0f172a;
+    --app-surface-soft: #1e293b;
+    --app-ink: #f1f5f9;
+    --app-muted: #94a3b8;
     --app-border: rgb(148 163 184 / 0.14);
     --app-gold: #fbbf24;
+    --reading-paper: #fffaf0;
+    --reading-paper-soft: #fff4df;
+    --reading-border: #e9dfcb;
+    --reading-ink: #342c27;
+    --reading-heading: #20243b;
+    --reading-muted: #786b60;
+    --reading-accent: #8c1d40;
+    --synaxarium-surface: #fffaf0;
+    --synaxarium-border: #eadfca;
+    --synaxarium-heading: #20243b;
+    --synaxarium-accent: #7d2038;
+    --synaxarium-button: #2e376f;
+    --synaxarium-divider: #e5ded2;
     font-family: var(--font-sans);
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -270,6 +288,297 @@
   .scroll-snap-section {
     scroll-snap-align: start;
   }
+}
+
+/* ── Light theme palette ──────────────────────────────────────────────
+   Scoped to html[data-theme="light"] so the original dark baseline keeps
+   its exact colours. Tailwind v4 utilities resolve through CSS variables,
+   so remapping the slate surface tokens re-themes the whole app without
+   touching every component. */
+html[data-theme="light"] {
+  color-scheme: light;
+  --app-canvas: #f5f7fb;
+  --app-panel: #ffffff;
+  --app-surface: #ffffff;
+  --app-surface-soft: #f1f5f9;
+  --app-ink: #0f172a;
+  --app-muted: #64748b;
+  --app-border: rgb(15 23 42 / 0.10);
+  --color-slate-950: #eef2f8;
+  --color-slate-900: #ffffff;
+  --color-slate-800: #f1f5f9;
+  --color-slate-700: #e2e8f0;
+  --color-slate-600: #cbd5e1;
+  --color-blue-950: #eef4ff;
+  --color-amber-950: #fff8eb;
+  --color-rose-950: #fff1f2;
+  --color-rose-900: #ffe4e6;
+  --color-emerald-950: #ecfdf5;
+  --reading-paper: #fffdf8;
+  --reading-paper-soft: #fff8ec;
+  --reading-border: #e8dcc6;
+  --reading-ink: #27211d;
+  --reading-heading: #1c2138;
+  --reading-muted: #6d6156;
+  --reading-accent: #7d2038;
+  --synaxarium-surface: #fffdf8;
+  --synaxarium-border: #eadfc9;
+  --synaxarium-heading: #1c2138;
+  --synaxarium-accent: #7d2038;
+  --synaxarium-button: #2e376f;
+  --synaxarium-divider: #eae2d6;
+}
+
+html[data-theme="light"] body {
+  background:
+    radial-gradient(ellipse at 88% -12%, rgb(251 191 36 / 0.16), transparent 38rem),
+    radial-gradient(ellipse at 0% 40%, rgb(59 130 246 / 0.10), transparent 34rem),
+    var(--app-canvas);
+}
+
+html[data-theme="light"] :where(.text-white, .hover\:text-white:hover) {
+  color: #0f172a;
+}
+
+html[data-theme="light"] :where(.text-slate-50, .text-slate-100, .text-slate-200) {
+  color: #1e293b;
+}
+
+html[data-theme="light"] :where(.text-slate-300) {
+  color: #334155;
+}
+
+html[data-theme="light"] :where(.text-slate-400) {
+  color: #64748b;
+}
+
+html[data-theme="light"] :where(.text-slate-500) {
+  color: #475569;
+}
+
+html[data-theme="light"] :where(.text-slate-600, .text-slate-700, .text-slate-800, .text-slate-900, .text-slate-950) {
+  color: #0f172a;
+}
+
+html[data-theme="light"] :where(.text-amber-300, .text-amber-400, .hover\:text-amber-300:hover) {
+  color: #b45309;
+}
+
+html[data-theme="light"] :where(.text-amber-200, .hover\:text-amber-200:hover) {
+  color: #92400e;
+}
+
+html[data-theme="light"] :where(
+  .text-amber-200\/70, .text-amber-200\/90, .text-amber-300\/70,
+  .text-amber-300\/75, .text-amber-400\/80
+) {
+  color: #92400e;
+}
+
+html[data-theme="light"] :where(.text-amber-100, .hover\:text-amber-100:hover) {
+  color: #78350f;
+}
+
+html[data-theme="light"] :where(.text-rose-300, .text-rose-400) {
+  color: #be123c;
+}
+
+html[data-theme="light"] :where(.text-rose-200) {
+  color: #9f1239;
+}
+
+html[data-theme="light"] :where(.text-rose-100) {
+  color: #881337;
+}
+
+html[data-theme="light"] :where(.text-emerald-300, .text-emerald-400) {
+  color: #047857;
+}
+
+html[data-theme="light"] :where(.text-emerald-200) {
+  color: #065f46;
+}
+
+html[data-theme="light"] :where(.text-emerald-100) {
+  color: #064e3b;
+}
+
+html[data-theme="light"] :where(.text-sky-300, .text-sky-200) {
+  color: #0369a1;
+}
+
+html[data-theme="light"] :where(.text-violet-300, .text-violet-200) {
+  color: #6d28d9;
+}
+
+html[data-theme="light"] :where(.text-blue-300, .text-blue-200) {
+  color: #1d4ed8;
+}
+
+html[data-theme="light"] :where(.text-red-300) {
+  color: #b91c1c;
+}
+
+/* Keep white ink on saturated buttons that stay vivid in light mode. */
+html[data-theme="light"] :is(
+  .bg-amber-200, .bg-amber-300, .bg-amber-400, .bg-amber-500,
+  .bg-rose-300, .bg-rose-400, .bg-rose-500, .bg-rose-600,
+  .bg-emerald-400, .bg-emerald-500, .bg-emerald-600,
+  .bg-blue-500, .bg-red-500, .bg-sky-300, .bg-violet-300
+).text-white {
+  color: #ffffff;
+}
+
+html[data-theme="light"] :where(.border-slate-800) {
+  border-color: rgb(15 23 42 / 0.07);
+}
+
+html[data-theme="light"] :where(.border-slate-700, .border-slate-600) {
+  border-color: rgb(15 23 42 / 0.12);
+}
+
+html[data-theme="light"] :where(.border-slate-950) {
+  border-color: #0f172a;
+}
+
+html[data-theme="light"] :where(
+  .border-white\/10, .border-white\/15,
+  .border-white\/\[0\.08\], .border-white\/\[0\.07\], .border-white\/\[0\.06\]
+) {
+  border-color: rgb(15 23 42 / 0.10);
+}
+
+html[data-theme="light"] :where(
+  .bg-white\/5, .bg-white\/\[0\.07\], .bg-white\/\[0\.035\],
+  .bg-white\/\[0\.025\], .bg-white\/\[0\.018\]
+) {
+  background-color: rgb(15 23 42 / 0.045);
+}
+
+html[data-theme="light"] :where(.hover\:bg-white\/5:hover, .hover\:bg-white\/\[0\.07\]:hover) {
+  background-color: rgb(15 23 42 / 0.06);
+}
+
+html[data-theme="light"] .divide-slate-800 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgb(15 23 42 / 0.08);
+}
+
+html[data-theme="light"] :focus-visible {
+  outline-color: #b45309;
+}
+
+html[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgb(100 116 139 / 0.35);
+}
+
+html[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: rgb(100 116 139 / 0.55);
+}
+
+/* ── Reading surfaces (Synaxarium & Bible) ─────────────────────────── */
+.reading-paper {
+  background-color: var(--reading-paper);
+  border-color: var(--reading-border);
+  color: var(--reading-ink);
+}
+
+.reading-paper-soft {
+  background-color: var(--reading-paper-soft);
+  border-color: var(--reading-border);
+}
+
+.reading-heading {
+  color: var(--reading-heading);
+}
+
+.reading-accent {
+  color: var(--reading-accent);
+}
+
+.reading-muted {
+  color: var(--reading-muted);
+}
+
+.reading-rule {
+  border-color: var(--reading-border);
+}
+
+.reading-badge {
+  border-color: color-mix(in srgb, var(--reading-accent) 20%, transparent);
+  background-color: color-mix(in srgb, var(--reading-accent) 6%, transparent);
+  color: var(--reading-accent);
+}
+
+.reading-body {
+  color: var(--reading-ink);
+}
+
+.synaxarium-card {
+  background-color: var(--synaxarium-surface);
+  border-color: var(--synaxarium-border);
+  color: var(--synaxarium-heading);
+}
+
+.synaxarium-heading {
+  color: var(--synaxarium-heading);
+}
+
+.synaxarium-accent {
+  color: var(--synaxarium-accent);
+}
+
+.synaxarium-rule {
+  border-color: var(--synaxarium-divider);
+}
+
+.synaxarium-surface {
+  background-color: rgb(255 255 255 / 0.7);
+  border-color: var(--synaxarium-border);
+}
+
+.synaxarium-skeleton {
+  background-color: color-mix(in srgb, var(--synaxarium-heading) 8%, transparent);
+}
+
+.synaxarium-badge {
+  border-color: color-mix(in srgb, var(--synaxarium-accent) 18%, transparent);
+  background-color: color-mix(in srgb, var(--synaxarium-accent) 6%, transparent);
+  color: var(--synaxarium-accent);
+}
+
+.synaxarium-divide > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--synaxarium-divider);
+}
+
+.synaxarium-action {
+  background-color: var(--synaxarium-button);
+  color: #ffffff;
+}
+
+.synaxarium-action:hover {
+  background-color: color-mix(in srgb, var(--synaxarium-button) 84%, #000000);
+}
+
+/* ── Modal scrims ──────────────────────────────────────────────────── */
+.modal-scrim {
+  background-color: rgb(2 6 23 / 0.72);
+}
+
+html[data-theme="light"] .modal-scrim {
+  background-color: rgb(15 23 42 / 0.32);
+}
+
+/* ── Theme toggle icons (CSS-driven so SSR markup stays stable) ────── */
+.theme-icon-moon {
+  display: none;
+}
+
+html[data-theme="light"] .theme-icon-sun {
+  display: none;
+}
+
+html[data-theme="light"] .theme-icon-moon {
+  display: block;
 }
 
 @media (max-width: 639px) {

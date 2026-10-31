@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { LogOut, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
+import ThemeToggle from './ThemeToggle';
 import kenesaIcon from '../images/kenesa-icon.png';
 import { isAdminRole } from '../data/grades';
 
@@ -45,7 +46,7 @@ export default function Navbar({ showToast, onRefresh }) {
         <img src={kenesaIcon} alt="كنيسة موسي النبي ومارمرقس الرسول" width="40" height="40" loading="eager" fetchPriority="high" decoding="async" className="h-9 w-9 shrink-0 rounded-full border border-amber-500/40 bg-white object-cover sm:h-10 sm:w-10" />
         <span className="min-w-0">
           <span className="block truncate text-sm font-bold text-white sm:text-base">بوابة الكنيسة</span>
-          <span className="block max-w-[170px] truncate text-[10px] text-amber-400 sm:max-w-[260px] sm:text-xs">كنيسة موسي النبي ومارمرقس الرسول</span>
+          <span className="block max-w-[190px] truncate text-[10px] text-amber-400 sm:max-w-[300px] sm:text-xs">كنيسة موسي النبي ومارمرقس الرسول - طور سيناء</span>
           <span className="hidden sm:block text-xs text-slate-400">{user?.name || ''}</span>
         </span>
       </button>
@@ -53,6 +54,7 @@ export default function Navbar({ showToast, onRefresh }) {
         <span className="hidden sm:block text-xs text-slate-300">
           {isAdminRole(user?.role) ? (user?.role === 'admin' ? 'إدارة عامة' : 'إدارة المرحلة') : user?.role === 'parent' ? 'ولي أمر' : 'المخدوم'}
         </span>
+        <ThemeToggle />
         <button type="button" aria-label="تحديث بيانات الصفحة" title="تحديث بيانات الصفحة" onClick={onRefresh} className="grid h-10 w-10 place-items-center rounded-xl border border-slate-700 text-slate-200 transition-all duration-200 ease-out hover:border-amber-400/50 hover:text-amber-300 hover:scale-105 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300">
           <RefreshCw aria-hidden="true" className="h-4 w-4" />
         </button>

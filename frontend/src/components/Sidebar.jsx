@@ -1,142 +1,142 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
-  Award,
-  Bell,
+  Home,
   BookOpen,
-  Bus,
   Calendar,
   CheckSquare,
-  FileText,
-  Heart,
-  Home,
-  Image as ImageIcon,
-  Menu,
-  Quote,
-  ShieldCheck,
-  User,
-  UserCheck,
+  Award,
   Users,
+  Image,
+  Shield,
+  Layers,
+  Sparkles,
+  MapPin,
+  Heart,
+  ChevronDown,
   X,
 } from 'lucide-react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/useAuth';
 import { isGradeAdminRole } from '../data/grades';
 
-const linksByRole = {
-  student: [
-    ['/', 'الرئيسية', Home],
-    ['/bible', 'الإنجيل', BookOpen],
-    ['/agpeya', 'الأجبية', BookOpen],
-    ['/sunday-school', 'مدارس الأحد', FileText],
-    ['/quizzes', 'الاختبارات', FileText],
-    ['/tasks', 'المهام', CheckSquare],
-    ['/trips', 'الرحلات والتسجيل', Bus],
-    ['/prayers', 'صلوات اليوم', CheckSquare],
-    ['/liturgy', 'مواعيد القداسات', Calendar],
-    ['/gallery', 'المعرض', ImageIcon],
-    ['/confession', 'الاعتراف', Heart],
-    ['/profile', 'الملف الشخصي', User],
-  ],
-  admin: [
-    ['/', 'الرئيسية', Home],
-    ['/admin-students', 'الطلاب', Users],
-    ['/admin-attendance', 'الحضور', UserCheck],
-    ['/admin-tasks', 'المهام', CheckSquare],
-    ['/sunday-school', 'مدارس الأحد', FileText],
-    ['/quizzes', 'الاختبارات والنتائج', FileText],
-    ['/admin-newsletter', 'الإعلانات والدروس', Bell],
-    ['/trips', 'الرحلات والتحصيل', Bus],
-    ['/admin-gallery', 'إدارة المعرض', ImageIcon],
-    ['/admin-liturgy', 'مواعيد القداسات', Calendar],
-    ['/admin-daily-reading', 'القراءة اليومية', BookOpen],
-    ['/admin-verse', 'آية للجميع', Quote],
-    ['/admin-access', 'إدارة المراحل والمسؤولين', ShieldCheck],
-    ['/agpeya', 'الأجبية', BookOpen],
-    ['/bible', 'الإنجيل', BookOpen],
-    ['/prayers', 'متابعة الصلوات', CheckSquare],
-    ['/confession', 'سجلات الاعتراف', Heart],
-  ],
-  parent: [
-    ['/', 'الرئيسية', Home],
-    ['/father-dashboard', 'متابعة الأبناء', Award],
-    ['/trips', 'الرحلات', Bus],
-    ['/prayers', 'صلوات الأبناء', CheckSquare],
-    ['/bible', 'الإنجيل', BookOpen],
-    ['/agpeya', 'الأجبية', BookOpen],
-  ],
-};
-
-const primaryByRole = {
-  student: ['/', '/bible', '/agpeya', '/tasks'],
-  admin: ['/', '/admin-students', '/admin-attendance', '/admin-tasks'],
-  grade_admin: ['/', '/admin-students', '/admin-attendance', '/admin-tasks'],
-  parent: ['/', '/father-dashboard', '/prayers', '/bible'],
-};
-
-function LinkItem({ item, onNavigate, compact = false }) {
-  const [path, label, Icon] = item;
-  return (
-    <NavLink
-      to={path}
-      end={path === '/'}
-      onClick={onNavigate}
-      className={({ isActive }) => `group flex min-h-11 items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold transition-all duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 ${isActive ? 'bg-amber-400 text-slate-950 shadow-sm shadow-amber-950/20 active-link-glow scale-[1.02]' : 'text-slate-300 hover:bg-white/5 hover:text-white hover:translate-x-1'} ${compact ? 'shrink-0 whitespace-nowrap' : ''}`}
-    >
-      <Icon aria-hidden="true" className="h-[18px] w-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110" />
-      <span>{label}</span>
-    </NavLink>
-  );
-}
-
-export default function Sidebar({ userRole }) {
+export default function Sidebar() {
+  const { user } = useAuth();
+  const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
   const moreTriggerRef = useRef(null);
-  const closeButtonRef = useRef(null);
-  const dialogRef = useRef(null);
-  const location = useLocation();
-  const links = isGradeAdminRole(userRole)
-    ? linksByRole.admin.filter(([path]) => !['/admin-verse', '/admin-daily-reading'].includes(path))
-    : linksByRole[userRole] || linksByRole.student;
-  const primaryPaths = (isGradeAdminRole(userRole) ? primaryByRole.grade_admin : primaryByRole[userRole]) || primaryByRole.student;
-  const primaryLinks = primaryPaths.map((path) => links.find(([itemPath]) => itemPath === path)).filter(Boolean);
-  const secondaryLinks = links.filter(([path]) => !primaryPaths.includes(path));
-  const sectionLabel = userRole === 'admin' || isGradeAdminRole(userRole)
-    ? 'إدارة الخدمة'
-    : userRole === 'parent'
-      ? 'متابعة الأبناء'
-      : 'الخدمات الكنسية';
 
-  useEffect(() => setMoreOpen(false), [location.pathname]);
+  const isGlobalAdmin = user?.role === 'admin';
+  const isStageAdmin = isGradeAdminRole(user?.role);
+  const isStudent = user?.role === 'student';
+  const isParent = user?.role === 'parent';
 
+  // Section title based on role
+  const sectionLabel = isGlobalAdmin
+    ? 'الإدارة العامة'
+    : isStageAdmin
+    ? 'إدارة المرحلة'
+    : isParent
+    ? 'بوابة ولي الأمر'
+    : 'خدمات الكنيسة';
+
+  const studentLinks = [
+    ['/', 'الرئيسية', Home],
+    ['/bible', 'الإنجيل', BookOpen],
+    ['/agpeya', 'الأجبية', BookOpen],
+    ['/liturgy', 'القداسات', Calendar],
+    ['/tasks', 'الواجبات', CheckSquare],
+    ['/quizzes', 'المسابقات', Award],
+    ['/trips', 'الرحلات', MapPin],
+    ['/confession', 'الاعتراف', Heart],
+    ['/sunday-school', 'مدارس الأحد', Sparkles],
+    ['/prayer-checklist', 'متابعة الصلاة', CheckSquare],
+    ['/gallery', 'معرض الصور', Image],
+  ];
+
+  const parentLinks = [
+    ['/', 'الرئيسية', Home],
+    ['/bible', 'الإنجيل', BookOpen],
+    ['/agpeya', 'الأجبية', BookOpen],
+    ['/liturgy', 'القداسات', Calendar],
+    ['/tasks', 'واجبات الأبناء', CheckSquare],
+    ['/quizzes', 'مسابقات الأبناء', Award],
+    ['/trips', 'الرحلات والحجز', MapPin],
+    ['/gallery', 'معرض الصور', Image],
+  ];
+
+  const adminLinks = isGlobalAdmin
+    ? [
+        ['/', 'لوحة المتابعة', Home],
+        ['/admin-students', 'إدارة الطلاب', Users],
+        ['/admin-attendance', 'تسجيل الحضور', Calendar],
+        ['/admin-access', 'المراحل والخدام', Shield],
+        ['/admin-tasks', 'تكليف الواجبات', CheckSquare],
+        ['/quizzes', 'المسابقات والنتائج', Award],
+        ['/trips', 'الرحلات والحجوزات', MapPin],
+        ['/admin-verse', 'آية اليوم', Sparkles],
+        ['/admin-daily-reading', 'القراءة اليومية', BookOpen],
+        ['/admin-newsletter', 'أخبار الكنيسة', Layers],
+        ['/admin-gallery', 'إدارة المعرض', Image],
+        ['/admin-liturgy', 'إدارة القداسات', Calendar],
+        ['/bible', 'مكتبة الإنجيل', BookOpen],
+        ['/agpeya', 'الأجبية', BookOpen],
+      ]
+    : isStageAdmin
+    ? [
+        ['/', 'متابعة المرحلة', Home],
+        ['/admin-students', 'طلاب المرحلة', Users],
+        ['/admin-attendance', 'حضور المرحلة', Calendar],
+        ['/admin-tasks', 'واجبات المرحلة', CheckSquare],
+        ['/quizzes', 'المسابقات', Award],
+        ['/trips', 'رحلات المرحلة', MapPin],
+        ['/admin-access', 'مجموعات المرحلة', Shield],
+        ['/admin-newsletter', 'نشر أخبار', Layers],
+        ['/bible', 'مكتبة الإنجيل', BookOpen],
+        ['/agpeya', 'الأجبية', BookOpen],
+      ]
+    : studentLinks;
+
+  const links = isParent ? parentLinks : isStudent ? studentLinks : adminLinks;
+
+  // Split links for compact horizontal subnav: first 4 visible, rest under "المزيد"
+  const primaryLinks = links.slice(0, 4);
+  const secondaryLinks = links.slice(4);
+
+  // Close "more" popover on navigation
   useEffect(() => {
-    if (!moreOpen) return undefined;
-    const previousOverflow = document.body.style.overflow;
-    const closeOnEscapeAndTrapFocus = (event) => {
-      if (event.key === 'Escape') {
-        setMoreOpen(false);
-        return;
-      }
-      if (event.key !== 'Tab') return;
-      const focusable = dialogRef.current?.querySelectorAll('a[href], button:not(:disabled)');
-      if (!focusable?.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && (document.activeElement === first || !dialogRef.current.contains(document.activeElement))) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && (document.activeElement === last || !dialogRef.current.contains(document.activeElement))) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.body.style.overflow = 'hidden';
-    closeButtonRef.current?.focus();
-    window.addEventListener('keydown', closeOnEscapeAndTrapFocus);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', closeOnEscapeAndTrapFocus);
-      moreTriggerRef.current?.focus();
-    };
-  }, [moreOpen]);
+    setMoreOpen(false);
+  }, [location.pathname]);
+
+  const LinkItem = ({ item, compact = false, onClick }) => {
+    const [path, label, Icon] = item;
+    return (
+      <NavLink
+        to={path}
+        end={path === '/'}
+        onClick={onClick}
+        className={({ isActive }) =>
+          `group flex items-center gap-2.5 rounded-xl text-xs font-bold transition-all duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 ${
+            compact ? 'min-h-9 px-3 py-1.5' : 'min-h-11 px-3 py-2.5'
+          } ${
+            isActive
+              ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-950/20'
+              : 'text-slate-300 hover:bg-white/[0.07] hover:text-white'
+          }`
+        }
+      >
+        {({ isActive }) => (
+          <>
+            <Icon
+              className={`h-4 w-4 shrink-0 transition-transform duration-200 ease-out group-hover:scale-110 ${
+                isActive ? 'text-slate-950' : 'text-amber-400/90'
+              }`}
+            />
+            <span className="truncate">{label}</span>
+          </>
+        )}
+      </NavLink>
+    );
+  };
 
   const openMore = (event) => {
     moreTriggerRef.current = event.currentTarget;
@@ -147,8 +147,8 @@ export default function Sidebar({ userRole }) {
     <>
       <aside className="sticky top-[68px] hidden h-[calc(100dvh-68px)] w-64 shrink-0 flex-col border-l border-white/[0.07] bg-slate-950/70 p-4 lg:flex">
         <div className="mb-4 px-3 pt-2">
-          <p className="text-[10px] font-bold text-amber-300/70">كنيسة موسي النبي ومارمرقس الرسول</p>
-          <h2 className="mt-1 text-sm font-bold text-white">{ sectionLabel}</h2>
+          <p className="text-[10px] font-bold text-amber-300/70">كنيسة موسي النبي ومارمرقس الرسول - طور سيناء</p>
+          <h2 className="mt-1 text-sm font-bold text-white">{sectionLabel}</h2>
         </div>
         <nav aria-label="التنقل الرئيسي" className="flex flex-1 flex-col gap-1 overflow-y-auto scrollbar-none">
           {links.map((item) => <LinkItem key={item[0]} item={item} />)}
@@ -163,47 +163,27 @@ export default function Sidebar({ userRole }) {
         {primaryLinks.map((item) => <LinkItem key={item[0]} item={item} compact />)}
         {secondaryLinks.length > 0 && (
           <button type="button" onClick={openMore} className="mr-auto inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-white/10 px-3 text-xs font-bold text-slate-200 transition-all duration-200 ease-out hover:border-amber-400/40 hover:text-amber-200 hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300">
-            <Menu aria-hidden="true" className="h-4 w-4" /> كل الأقسام
+            <span>المزيد</span>
+            <ChevronDown className="h-3.5 w-3.5" />
           </button>
         )}
       </nav>
 
-      <nav aria-label="التنقل السريع" className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-slate-950/95 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-[0_-12px_36px_rgba(2,6,23,0.45)] backdrop-blur-xl sm:hidden">
-        <div className="mx-auto grid max-w-lg gap-1" style={{ gridTemplateColumns: `repeat(${primaryLinks.length + 1}, minmax(0, 1fr))` }}>
-          {primaryLinks.map(([path, label, Icon]) => (
-            <NavLink
-              key={path}
-              to={path}
-              end={path === '/'}
-              className={({ isActive }) => `flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-bold transition-all duration-200 ease-out ${isActive ? 'bg-amber-400/12 text-amber-300 scale-105' : 'text-slate-400 hover:text-white'}`}
-            >
-              <Icon aria-hidden="true" className="h-5 w-5" />
-              <span className="max-w-full truncate px-1">{label}</span>
-            </NavLink>
-          ))}
-          <button type="button" aria-haspopup="dialog" aria-expanded={moreOpen} onClick={openMore} className={`flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-bold transition-all duration-200 ease-out ${moreOpen ? 'bg-amber-400/12 text-amber-300' : 'text-slate-400 hover:text-white'}`}>
-            <Menu aria-hidden="true" className="h-5 w-5" />
-            <span>المزيد</span>
-          </button>
-        </div>
-      </nav>
-
       {moreOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/70 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-sm sm:items-center sm:p-6 animate-fade-in" onMouseDown={(event) => { if (event.target === event.currentTarget) setMoreOpen(false); }}>
-          <section ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="more-menu-title" className="w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/50 animate-scale-in">
-            <header className="flex items-center justify-between gap-4 border-b border-white/[0.08] px-5 py-4 sm:px-6">
-              <div>
-                <p className="text-[11px] font-bold text-amber-300">{sectionLabel}</p>
-                <h2 id="more-menu-title" className="mt-1 text-lg font-bold text-white">كل أقسام البوابة</h2>
-              </div>
-              <button ref={closeButtonRef} type="button" aria-label="إغلاق القائمة" onClick={() => setMoreOpen(false)} className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 text-slate-300 transition-all duration-200 ease-out hover:bg-white/5 hover:text-white hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300">
-                <X aria-hidden="true" className="h-5 w-5" />
+        <div className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm sm:items-center sm:justify-center p-3 animate-fade-in" onClick={() => setMoreOpen(false)}>
+          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-slate-900 p-4 shadow-2xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between border-b border-white/10 pb-2">
+              <span className="text-xs font-bold text-amber-300">{sectionLabel} - المزيد</span>
+              <button onClick={() => setMoreOpen(false)} className="rounded-lg p-1 text-slate-400 hover:bg-white/5 hover:text-white">
+                <X className="h-4 w-4" />
               </button>
-            </header>
-            <nav aria-label="جميع الأقسام" className="grid max-h-[65dvh] grid-cols-2 gap-2 overflow-y-auto scrollbar-none p-4 sm:grid-cols-3 sm:p-5">
-              {links.map((item) => <LinkItem key={item[0]} item={item} onNavigate={() => setMoreOpen(false)} />)}
-            </nav>
-          </section>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5 max-h-[60vh] overflow-y-auto">
+              {secondaryLinks.map((item) => (
+                <LinkItem key={item[0]} item={item} compact onClick={() => setMoreOpen(false)} />
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </>

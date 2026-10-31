@@ -31,7 +31,7 @@ class ThemeToggleButton extends StatelessWidget {
               isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
               key: ValueKey<bool>(isDark),
               size: size,
-              color: color ?? (isDark ? AppTheme.accentGold : Colors.white),
+              color: color ?? Theme.of(context).colorScheme.primary,
             ),
           ),
           onPressed: () {

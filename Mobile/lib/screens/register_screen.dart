@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
+import '../data/colleges.dart' show academicYears, collegeGroups;
 import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../models/user_model.dart';
@@ -7,6 +8,7 @@ import '../services/auth_service.dart';
 import 'home_screen.dart';
 import 'privacy_policy_screen.dart';
 import '../widgets/phone_field.dart';
+import '../widgets/theme_toggle_button.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -39,6 +41,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _privacyPolicyAccepted = false;
   bool _isLoading = false;
   String _grade = '';
+  String _academicYear = '';
+  String _college = '';
 
   static const _grades = <Map<String, String>>[
     {
@@ -140,9 +144,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
     if (_grade.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('اختر مرحلتك قبل إكمال التسجيل.'),
-        ),
+        const SnackBar(content: Text('اختر مرحلتك قبل إكمال التسجيل.')),
       );
       return;
     }
@@ -168,6 +170,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       'whatsappNumber': _whatsapp.isNotEmpty ? _whatsapp : _phone,
       'privacyAccepted': _privacyPolicyAccepted,
       'grade': _grade,
+      if (_grade == 'expatriates') 'academicYear': _academicYear,
+      if (_grade == 'expatriates') 'college': _college,
     };
 
     var routeReplaced = false;
@@ -209,6 +213,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
+          actions: const [ThemeToggleButton(), SizedBox(width: 8)],
           title: const Text(
             'استمارة تسجيل بيانات الخادم/المخدوم',
             maxLines: 1,
@@ -311,20 +316,118 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       )
                       .toList(),
                   onChanged: (value) {
-                    if (value != null) setState(() => _grade = value);
+                    if (value != null) {
+                      setState(() {
+                        _grade = value;
+                        if (value != 'expatriates') {
+                          _academicYear = '';
+                          _college = '';
+                        }
+                      });
+                    }
                   },
                   validator: (value) => value == null || value.isEmpty
                       ? 'يرجى اختيار المرحلة الدراسية'
                       : null,
                 ),
                 const SizedBox(height: 4),
-                const Align(
+                Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: Text(
                     'سيُراجع الأدمن طلبك ويضيفك إلى الاجتماع المناسب من إدارة الطلاب.',
-                    style: TextStyle(fontSize: 12, color: Colors.black54),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary(context),
+                    ),
                   ),
                 ),
+                if (_grade == 'expatriates') ...[
+                  const SizedBox(height: 12),
+                  Card(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppTheme.darkCardSurface
+                        : AppTheme.lightGold.withValues(alpha: 0.35),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'بيانات مرحلة المغتربين',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.textPrimary(context),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            initialValue: _academicYear.isEmpty
+                                ? null
+                                : _academicYear,
+                            isExpanded: true,
+                            decoration: InputDecoration(
+                              labelText: 'الفرقة *',
+                              prefixIcon: Icon(
+                                Icons.groups_outlined,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                            hint: const Text('اختر'),
+                            items: academicYears
+                                .map(
+                                  (year) => DropdownMenuItem(
+                                    value: year,
+                                    child: Text(
+                                      year,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) =>
+                                setState(() => _academicYear = value ?? ''),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'يرجى اختيار الفرقة'
+                                : null,
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            initialValue: _college.isEmpty ? null : _college,
+                            isExpanded: true,
+                            decoration: InputDecoration(
+                              labelText: 'الكلية *',
+                              prefixIcon: Icon(
+                                Icons.school_outlined,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                            hint: const Text('اختر'),
+                            items: [
+                              for (final group in collegeGroups) ...[
+                                for (final college in group.colleges)
+                                  DropdownMenuItem(
+                                    value: college,
+                                    child: Text(
+                                      college,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                              ],
+                            ],
+                            onChanged: (value) =>
+                                setState(() => _college = value ?? ''),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'يرجى اختيار الكلية'
+                                : null,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 12),
 
                 TextFormField(

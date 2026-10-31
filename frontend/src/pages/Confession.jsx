@@ -151,7 +151,7 @@ export default function Confession({ showToast }) {
           </div>
         </article>)}
       </div>}
-      {editingRecord && <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-slate-950/80 p-3 sm:p-4" role="presentation">
+      {editingRecord && <div className="modal-scrim fixed inset-0 z-50 grid place-items-center overflow-y-auto p-3 sm:p-4" role="presentation">
         <form onSubmit={saveEdit} role="dialog" aria-modal="true" aria-labelledby="confession-edit-title" className="my-auto max-h-[90dvh] w-full max-w-lg space-y-4 overflow-y-auto rounded-2xl border border-amber-500/30 bg-slate-900 p-4 shadow-2xl sm:p-5">
           <h2 id="confession-edit-title" className="text-lg font-bold text-white">تعديل سجل {editingRecord.student?.name || 'الاعتراف'}</h2>
           <label className="block text-sm text-slate-300">التاريخ<input required type="date" max={today()} value={editDate} onChange={(event) => setEditDate(event.target.value)} className="mt-2 block w-full rounded-xl border border-slate-700 bg-slate-800 p-3 text-white" /></label>

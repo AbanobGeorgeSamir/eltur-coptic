@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/useAuth';
 import PhoneField from '../components/PhoneField';
+import ThemeToggle from '../components/ThemeToggle';
 import { isValidComEmail, normalizeEmail } from '../utils/email';
 import { grades } from '../data/grades';
+import { academicYears, collegeGroups } from '../data/colleges';
 import { getBirthDateFromNationalId } from '../utils/egyptianNationalId';
 
 const fields = [
@@ -14,8 +16,27 @@ const fields = [
   ['confessionFather', 'أب الاعتراف', 'text'],
   ['address', 'العنوان', 'text'], ['birthDate', 'تاريخ الميلاد', 'date'], ['nationalId', 'الرقم القومي (14 رقم)', 'text'],
 ];
+
 export default function Register() {
-  const [form, setForm] = useState({ name: '', username: '', email: '', phone: '', password: '', fatherName: '', confessionFather: '', guardianPhone: '', address: '', interests: '', birthDate: '', nationalId: '', gender: 'male', grade: '', privacyAccepted: false });
+  const [form, setForm] = useState({
+    name: '',
+    username: '',
+    email: '',
+    phone: '',
+    password: '',
+    fatherName: '',
+    confessionFather: '',
+    guardianPhone: '',
+    address: '',
+    interests: '',
+    birthDate: '',
+    nationalId: '',
+    gender: 'male',
+    grade: '',
+    academicYear: '',
+    college: '',
+    privacyAccepted: false,
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const fatherNameManuallyEdited = useRef(false);
@@ -28,6 +49,10 @@ export default function Register() {
     if (key === 'username') usernameManuallyEdited.current = true;
     setForm((current) => {
       const next = { ...current, [key]: value };
+      if (key === 'grade' && value !== 'expatriates') {
+        next.academicYear = '';
+        next.college = '';
+      }
       if (key === 'nationalId') {
         const birthDate = getBirthDateFromNationalId(value);
         if (birthDate) next.birthDate = birthDate;
@@ -65,13 +90,31 @@ export default function Register() {
       setError('يرجى اختيار المرحلة الدراسية أو الاجتماع.');
       return;
     }
+    if (form.grade === 'expatriates') {
+      if (!form.academicYear) {
+        setError('يرجى اختيار الفرقة الدراسية لمرحلة المغتربين.');
+        return;
+      }
+      if (!form.college) {
+        setError('يرجى اختيار الكلية لمرحلة المغتربين.');
+        return;
+      }
+    }
     if (!form.privacyAccepted) {
       setError('يرجى قراءة سياسة الخصوصية والموافقة عليها للمتابعة.');
       return;
     }
     setLoading(true);
     try {
-      const registration = { ...form, name: form.name.trim().replace(/\s+/g, ' '), username: form.username.trim().toLowerCase(), email: normalizeEmail(form.email), interests: form.interests.trim() };
+      const registration = {
+        ...form,
+        name: form.name.trim().replace(/\s+/g, ' '),
+        username: form.username.trim().toLowerCase(),
+        email: normalizeEmail(form.email),
+        interests: form.interests.trim(),
+        academicYear: form.grade === 'expatriates' ? form.academicYear : undefined,
+        college: form.grade === 'expatriates' ? form.college : undefined,
+      };
       const session = await api.register(registration);
       saveSession(session);
       navigate('/', { replace: true });
@@ -83,20 +126,73 @@ export default function Register() {
   };
 
   return (
-    <main className="grid min-h-dvh place-items-center px-3 py-8 sm:px-5 sm:py-12" dir="rtl">
+    <main className="relative grid min-h-dvh place-items-center px-3 py-8 sm:px-5 sm:py-12" dir="rtl">
+      <div className="absolute left-4 top-[max(1rem,env(safe-area-inset-top))] z-10 sm:left-6 sm:top-6">
+        <ThemeToggle />
+      </div>
       <form onSubmit={submit} className="w-full max-w-3xl rounded-3xl border border-white/10 bg-slate-900/95 p-5 shadow-2xl shadow-black/35 sm:p-7 md:p-9">
         <div className="mb-7 flex items-center gap-3 sm:gap-4">
           <img src="/favicon.png" alt="" width="56" height="56" className="h-12 w-12 shrink-0 rounded-2xl border border-amber-300/25 bg-amber-100 object-cover sm:h-14 sm:w-14" />
-          <div className="min-w-0"><p className="text-xs font-bold text-amber-300">بوابة كنيسة موسي النبي ومارمرقس الرسول</p><h1 className="mt-1 text-xl font-extrabold text-white sm:text-2xl">استمارة تسجيل بيانات الخادم/المخدوم</h1></div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-amber-300">بوابة كنيسة موسي النبي ومارمرقس الرسول - طور سيناء</p>
+            <h1 className="mt-1 text-xl font-extrabold text-white sm:text-2xl">استمارة تسجيل بيانات الخادم/المخدوم</h1>
+          </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="text-sm text-slate-300">المرحلة الدراسية
-            <select required value={form.grade} onChange={(event) => setForm((current) => ({ ...current, grade: event.target.value }))} className="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-white focus:border-amber-400 focus:outline-none">
+            <select
+              required
+              value={form.grade}
+              onChange={(event) => updateField('grade', event.target.value)}
+              className="mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-white focus:border-amber-400 focus:outline-none"
+            >
               <option value="">اختر المرحلة</option>
               {grades.map((grade) => <option key={grade.id} value={grade.id}>{grade.label}</option>)}
             </select>
             <span className="mt-1 block text-xs leading-5 text-slate-500">سيظهر طلب التسجيل للأدمن لاختيار المجموعة أو رفض الطلب.</span>
           </label>
+
+          {form.grade === 'expatriates' && (
+            <div className="grid animate-fade-in gap-4 rounded-2xl border border-amber-400/25 bg-amber-400/[0.06] p-4 sm:col-span-2 sm:grid-cols-2">
+              <p className="text-xs font-bold text-amber-300 sm:col-span-2">بيانات مرحلة المغتربين</p>
+              <label className="text-sm font-bold text-amber-300">
+                الفرقة *
+                <select
+                  required
+                  value={form.academicYear}
+                  onChange={(e) => setForm((old) => ({ ...old, academicYear: e.target.value }))}
+                  className="mt-1.5 min-h-12 w-full rounded-xl border border-amber-400/40 bg-slate-950 px-3 py-3 text-white focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20"
+                >
+                  <option value="">اختر</option>
+                  {academicYears.map((year) => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+                <span className="mt-1 block text-xs font-medium text-amber-200/70">حدد الفرقة الجامعية أو سنة الدراسة</span>
+              </label>
+
+              <label className="text-sm font-bold text-amber-300">
+                الكلية *
+                <select
+                  required
+                  value={form.college}
+                  onChange={(e) => setForm((old) => ({ ...old, college: e.target.value }))}
+                  className="mt-1.5 min-h-12 w-full rounded-xl border border-amber-400/40 bg-slate-950 px-3 py-3 text-white focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20"
+                >
+                  <option value="">اختر</option>
+                  {collegeGroups.map((group) => (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.colleges.map((college) => (
+                        <option key={college} value={college}>{college}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+                <span className="mt-1 block text-xs font-medium text-amber-200/70">اختر كليتك أو تخصصك الدراسي</span>
+              </label>
+            </div>
+          )}
+
           {fields.map(([key, label, type]) => (
             <label key={key} className="text-sm text-slate-300">{label}
               <input required={key !== 'email'} type={type} autoComplete={key === 'username' ? 'username' : key === 'email' ? 'email' : key === 'name' ? 'name' : key === 'password' ? 'new-password' : undefined} inputMode={key === 'nationalId' ? 'numeric' : undefined} minLength={key === 'password' ? 8 : key === 'nationalId' ? 14 : undefined} maxLength={key === 'nationalId' ? 14 : key === 'username' ? 64 : undefined}

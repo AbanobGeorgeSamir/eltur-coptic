@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
 import { AuthProvider } from './contexts/AuthContext.jsx';
+import { ThemeProvider } from './contexts/ThemeContext.jsx';
 import { useAuth } from './contexts/useAuth';
 import Seo from './components/Seo';
 import PublicHome from './pages/PublicHome';
@@ -185,21 +186,23 @@ export default function App() {
   }, []);
 
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppErrorBoundary>
-          {toastMessage && (
-            <div
-              role="status"
-              aria-live="polite"
-              className={`fixed inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))] z-[60] mx-auto max-w-md rounded-2xl border border-amber-200/50 bg-amber-300 px-5 py-3 text-sm font-bold text-slate-950 shadow-2xl shadow-black/30 sm:inset-x-auto sm:right-5 sm:mx-0 ${toastExiting ? 'animate-slide-out-up' : 'animate-slide-in-down'}`}
-            >
-              {toastMessage}
-            </div>
-          )}
-          <AppRoutes showToast={showToast} />
-        </AppErrorBoundary>
-      </AuthProvider>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <AppErrorBoundary>
+            {toastMessage && (
+              <div
+                role="status"
+                aria-live="polite"
+                className={`fixed inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))] z-[60] mx-auto max-w-md rounded-2xl border border-amber-200/50 bg-amber-300 px-5 py-3 text-sm font-bold text-slate-950 shadow-2xl shadow-black/30 sm:inset-x-auto sm:right-5 sm:mx-0 ${toastExiting ? 'animate-slide-out-up' : 'animate-slide-in-down'}`}
+              >
+                {toastMessage}
+              </div>
+            )}
+            <AppRoutes showToast={showToast} />
+          </AppErrorBoundary>
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }

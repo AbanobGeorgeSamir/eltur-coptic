@@ -1,6 +1,7 @@
 import { renderToString } from 'react-dom/server';
 import { StaticRouter } from 'react-router';
 import { AuthProvider } from './contexts/AuthContext.jsx';
+import { ThemeProvider } from './contexts/ThemeContext.jsx';
 import { AppRoutes } from './App.jsx';
 import Login from './pages/Login.jsx';
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
@@ -10,10 +11,12 @@ const serverPages = { login: Login, privacy: PrivacyPolicy, register: Register }
 
 export function render(url = '/') {
   return renderToString(
-    <StaticRouter location={url}>
-      <AuthProvider>
-        <AppRoutes showToast={() => {}} serverPages={serverPages} />
-      </AuthProvider>
-    </StaticRouter>,
+    <ThemeProvider>
+      <StaticRouter location={url}>
+        <AuthProvider>
+          <AppRoutes showToast={() => {}} serverPages={serverPages} />
+        </AuthProvider>
+      </StaticRouter>
+    </ThemeProvider>,
   );
 }

@@ -4,7 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#020617" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="dark light" />
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('eltor-coptic-theme');
+          var theme = saved === 'light' ? 'light' : 'dark';
+          document.documentElement.dataset.theme = theme;
+          if (theme === 'light') {
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', '#f5f7fb');
+          }
+        } catch (error) {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="كنيسة موسي النبي ومارمرقس الرسول" />
@@ -23,6 +38,9 @@
     <meta name="twitter:description" content="بوابة كنيسة موسي النبي ومارمرقس الرسول بطور سيناء: صلوات الأجبية، قراءة الكتاب المقدس، مدارس الأحد، وخدمات الكنيسة." />
     <meta name="twitter:image" content="/icons/Icon-512.png" />
     <meta name="twitter:image:alt" content="شعار كنيسة موسي النبي ومارمرقس الرسول" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400..900&family=Amiri:wght@400;700&display=swap" />
     <link rel="canonical" href="https://eltur-coptic.vercel.app/" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/icons/Icon-192.png" />

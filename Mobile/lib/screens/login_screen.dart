@@ -3,6 +3,7 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
 import '../theme/app_theme.dart';
+import '../widgets/theme_toggle_button.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
 
@@ -34,13 +35,10 @@ class _LoginScreenState extends State<LoginScreen>
       parent: _animController,
       curve: Curves.easeOutCubic,
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.08),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(
+          CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
+        );
     _animController.forward();
     _checkServerConnection();
   }
@@ -152,47 +150,61 @@ class _LoginScreenState extends State<LoginScreen>
                           bottomRight: Radius.circular(36),
                         ),
                       ),
-                      child: Column(
+                      child: Stack(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withValues(alpha: 0.15),
-                              border: Border.all(
-                                color: AppTheme.accentGold,
-                                width: 2,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.accentGold.withValues(alpha: 0.25),
-                                  blurRadius: 18,
-                                  spreadRadius: 2,
+                          const PositionedDirectional(
+                            top: 0,
+                            start: 0,
+                            child: ThemeToggleButton(),
+                          ),
+                          Column(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  border: Border.all(
+                                    color: AppTheme.accentGold,
+                                    width: 2,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppTheme.accentGold.withValues(
+                                        alpha: 0.25,
+                                      ),
+                                      blurRadius: 18,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            child: ClipOval(
-                              child: Image.asset(
-                                'resources/images/kenesa-icon.png',
-                                width: 72,
-                                height: 72,
-                                fit: BoxFit.cover,
+                                child: ClipOval(
+                                  child: Image.asset(
+                                    'resources/images/kenesa-icon.png',
+                                    width: 72,
+                                    height: 72,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'كنيسة موسي النبي ومارمرقس الرسول',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.accentGold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'تسجيل الدخول - الخدمات الكنسية',
-                            style: TextStyle(fontSize: 14, color: Colors.white70),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'كنيسة موسي النبي ومارمرقس الرسول',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.accentGold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'تسجيل الدخول - الخدمات الكنسية',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -210,7 +222,8 @@ class _LoginScreenState extends State<LoginScreen>
                                 textInputAction: TextInputAction.next,
                                 autofillHints: const [AutofillHints.username],
                                 decoration: const InputDecoration(
-                                  labelText: 'اسم المستخدم أو البريد الإلكتروني',
+                                  labelText:
+                                      'اسم المستخدم أو البريد الإلكتروني',
                                   prefixIcon: Icon(
                                     Icons.person_outline,
                                     color: AppTheme.primaryBurgundy,
@@ -238,21 +251,27 @@ class _LoginScreenState extends State<LoginScreen>
                                       color: AppTheme.primaryBurgundy,
                                     ),
                                     onPressed: () => setState(
-                                      () => _obscurePassword = !_obscurePassword,
+                                      () =>
+                                          _obscurePassword = !_obscurePassword,
                                     ),
                                   ),
                                 ),
                               ),
                               const SizedBox(height: 24),
                               ElevatedButton(
-                                onPressed: _isLoading ? null : () => _handleLogin(),
+                                onPressed: _isLoading
+                                    ? null
+                                    : () => _handleLogin(),
                                 child: _isLoading
                                     ? const SizedBox(
                                         height: 20,
                                         width: 20,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2.2,
-                                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
                                         ),
                                       )
                                     : const Text('تسجيل الدخول'),
@@ -268,7 +287,8 @@ class _LoginScreenState extends State<LoginScreen>
                                     onPressed: () {
                                       Navigator.of(context).push(
                                         MaterialPageRoute(
-                                          builder: (_) => const RegisterScreen(),
+                                          builder: (_) =>
+                                              const RegisterScreen(),
                                         ),
                                       );
                                     },

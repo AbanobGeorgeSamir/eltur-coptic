@@ -8,6 +8,8 @@ class UserModel {
   final String role; // admin, primary_admin, secondary_admin, student, parent
   final String roleLabel;
   final String grade;
+  final String academicYear;
+  final String college;
   final String meetingGroup;
   final String? assignedAdmin;
   final String fullNameArabic;
@@ -42,6 +44,8 @@ class UserModel {
     required this.role,
     this.roleLabel = '',
     required this.grade,
+    this.academicYear = '',
+    this.college = '',
     required this.meetingGroup,
     this.assignedAdmin,
     required this.fullNameArabic,
@@ -70,6 +74,8 @@ class UserModel {
       role: json['role'] ?? 'student',
       roleLabel: (json['roleLabel'] ?? '').toString(),
       grade: json['grade'] ?? '',
+      academicYear: json['academicYear'] ?? '',
+      college: json['college'] ?? '',
       meetingGroup: json['meetingGroup'] is Map
           ? (json['meetingGroup']['_id'] ?? json['meetingGroup']['id'] ?? '')
                 .toString()
@@ -108,6 +114,8 @@ class UserModel {
       'role': role,
       'roleLabel': roleLabel,
       'grade': grade,
+      'academicYear': academicYear,
+      'college': college,
       'meetingGroup': meetingGroup,
       'assignedAdmin': assignedAdmin,
       'fullNameArabic': fullNameArabic,
@@ -133,6 +141,8 @@ class UserModel {
     'role': role,
     'roleLabel': roleLabel,
     'grade': grade,
+    'academicYear': academicYear,
+    'college': college,
     'meetingGroup': meetingGroup,
     'assignedAdmin': assignedAdmin,
   };
@@ -180,4 +190,6 @@ class UserModel {
         return '';
     }
   }
+
+  bool get isExpatriate => grade == 'expatriates';
 }

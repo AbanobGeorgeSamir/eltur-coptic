@@ -133,20 +133,20 @@ export default function Bible() {
                   <p className="text-base leading-8 text-white">{verse.text}</p>
                 </article>)}
               </div>
-              : <article className="rounded-3xl border border-[#e9dfcb] bg-[#fffaf0] p-5 text-[#342c27] shadow-sm md:p-8">
-                <header className="mb-6 flex items-center gap-4 border-b border-[#e9dfcb] pb-5">
-                  <span aria-hidden="true" className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[#8c1d40]/20 bg-[#8c1d40]/5 font-serif text-2xl font-bold text-[#8c1d40]">
+              : <article className="reading-paper rounded-3xl border p-5 shadow-sm md:p-8">
+                <header className="mb-6 flex items-center gap-4 border-b pb-5 reading-rule">
+                  <span aria-hidden="true" className="reading-badge flex h-14 w-14 shrink-0 items-center justify-center rounded-full border font-serif text-2xl font-bold">
                     {arabicizeDigits(chapterNumber)}
                   </span>
                   <div>
-                    <p className="text-xs font-semibold text-[#8c1d40]">الكتاب المقدس</p>
-                    <h3 className="mt-1 text-lg font-bold md:text-xl">{currentBook.name}</h3>
-                    <p className="mt-1 text-sm text-[#786b60]">الإصحاح {arabicizeDigits(chapterNumber)}</p>
+                    <p className="reading-accent text-xs font-semibold">الكتاب المقدس</p>
+                    <h3 className="reading-body mt-1 text-lg font-bold md:text-xl">{currentBook.name}</h3>
+                    <p className="reading-muted mt-1 text-sm">الإصحاح {arabicizeDigits(chapterNumber)}</p>
                   </div>
                 </header>
-                <p className="font-serif text-lg leading-[2.45] text-[#342c27] md:text-xl md:leading-[2.5]">
+                <p className="reading-body font-serif text-lg leading-[2.45] md:text-xl md:leading-[2.5]">
                   {visibleVerses.map((verse) => <span key={`${verse.chapter}:${verse.number}`}>
-                    <sup className="mx-1 text-xs font-bold text-[#8c1d40]">{arabicizeDigits(verse.number)}</sup>
+                    <sup className="reading-accent mx-1 text-xs font-bold">{arabicizeDigits(verse.number)}</sup>
                     {verse.text}{' '}
                   </span>)}
                 </p>
