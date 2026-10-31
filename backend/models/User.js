@@ -23,6 +23,8 @@ const userSchema = new mongoose.Schema({
     phone: { type: String, required: true, unique: true, trim: true, index: true },
     interests: { type: String, trim: true, maxlength: 500 },
     grade: { type: String, enum: [...gradeIds], default: null, index: true },
+    academicYear: { type: String, trim: true, maxlength: 80, default: null },
+    college: { type: String, trim: true, maxlength: 160, default: null, index: true },
     meetingGroup: { type: mongoose.Schema.Types.ObjectId, ref: 'MeetingGroup', default: null, index: true },
     fatherName: { type: String, trim: true, maxlength: 120 },
     confessionFather: { type: String, trim: true, maxlength: 160 },

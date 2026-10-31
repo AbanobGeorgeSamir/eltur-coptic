@@ -1392,7 +1392,7 @@ router.patch('/students/:id', auth, adminOnly, async (req, res, next) => {
 
         const editable = [
             'name', 'phone', 'interests', 'fatherName', 'confessionFather', 'guardianPhone', 'address',
-            'birthDate', 'gender', 'nationalId', 'isDeacon', 'whatsappNumber',
+            'birthDate', 'gender', 'nationalId', 'isDeacon', 'whatsappNumber', 'academicYear', 'college',
         ];
         for (const key of editable) {
             if (req.body?.[key] !== undefined) student[key] = req.body[key];
@@ -1431,6 +1431,22 @@ router.patch('/students/:id', auth, adminOnly, async (req, res, next) => {
                     || gradeAdmins.find((admin) => !admin.meetingGroup)?._id
                     || null;
             }
+        }
+        const expatDetailsTouched = req.body?.academicYear !== undefined || req.body?.college !== undefined;
+        const movedToExpatriates = req.body?.grade !== undefined && student.grade === 'expatriates';
+        if (expatDetailsTouched || movedToExpatriates) {
+            student.academicYear = String(student.academicYear || '').trim();
+            student.college = String(student.college || '').trim();
+            if (student.academicYear.length > 80 || student.college.length > 160) {
+                return res.status(422).json({ message: 'Expatriate study details are too long.' });
+            }
+            if (student.grade === 'expatriates' && (!student.academicYear || !student.college)) {
+                return res.status(422).json({ message: 'Academic year and college are required for expatriate students.' });
+            }
+        }
+        if (req.body?.grade !== undefined && student.grade !== 'expatriates') {
+            student.academicYear = null;
+            student.college = null;
         }
         const email = req.body?.email === undefined
             ? undefined

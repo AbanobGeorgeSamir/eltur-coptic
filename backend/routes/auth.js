@@ -46,6 +46,8 @@ const normalizeRegistration = (body = {}) => ({
     address: String(body.address || '').trim(),
     interests: String(body.interests || '').trim(),
     grade: String(body.grade || '').trim(),
+    academicYear: String(body.academicYear || '').trim(),
+    college: String(body.college || '').trim(),
     birthDate: body.birthDate,
     gender: body.gender,
     nationalId: String(body.nationalId || '').trim(),
@@ -63,6 +65,12 @@ const checkRegistration = (input, { parent = false } = {}) => {
     if (input.interests.length > 500) return 'Interests must be 500 characters or fewer.';
     if (!parent && !input.interests) return 'Enter at least one interest.';
     if (!parent && !gradeIds.has(input.grade)) return 'Choose a valid study grade.';
+    if (!parent && input.grade === 'expatriates') {
+        if (!input.academicYear) return 'Choose your academic year.';
+        if (input.academicYear.length > 80) return 'Academic year must be 80 characters or fewer.';
+        if (!input.college) return 'Choose your college.';
+        if (input.college.length > 160) return 'College must be 160 characters or fewer.';
+    }
     if (!validPhone(input.phone)) return 'Phone number must use international format, such as +201001234567.';
     if (input.password.length < 8 || input.password.length > 256) return 'Password must contain between 8 and 256 characters.';
     if (!parent && (!input.fatherName || !input.confessionFather || !input.address || !input.guardianPhone)) {
@@ -101,6 +109,10 @@ const completeRegistration = async (req, res, role) => {
             password: await hashPassword(input.password),
             role,
             ...(role === 'student' ? { grade: input.grade, meetingGroup: null, assignedAdmin: null } : {}),
+            ...(role === 'student' && input.grade === 'expatriates' ? {
+                academicYear: input.academicYear,
+                college: input.college,
+            } : {}),
             ...(role === 'student' ? {
                 fatherName: input.fatherName,
                 confessionFather: input.confessionFather,
@@ -197,7 +209,7 @@ router.get(['/user', '/auth/me'], auth, async (req, res, next) => {
 
 router.patch('/users/me', auth, async (req, res, next) => {
     try {
-        const allowed = ['name', 'email', 'phone', 'interests', 'fatherName', 'confessionFather', 'guardianPhone', 'address', 'birthDate', 'gender', 'isDeacon', 'whatsappNumber'];
+        const allowed = ['name', 'email', 'phone', 'interests', 'fatherName', 'confessionFather', 'guardianPhone', 'address', 'birthDate', 'gender', 'isDeacon', 'whatsappNumber', 'academicYear', 'college'];
         const changes = {};
         for (const key of allowed) {
             if (req.body?.[key] !== undefined) changes[key] = req.body[key];
@@ -211,6 +223,30 @@ router.patch('/users/me', auth, async (req, res, next) => {
             changes.grade = grade;
             changes.meetingGroup = null;
             changes.assignedAdmin = null;
+        }
+        if (changes.academicYear !== undefined || changes.college !== undefined) {
+            if (req.user.role !== 'student') {
+                return res.status(403).json({ message: 'Expatriate study details are only available for student accounts.' });
+            }
+            for (const [field, max] of [['academicYear', 80], ['college', 160]]) {
+                if (changes[field] !== undefined) {
+                    changes[field] = String(changes[field] || '').trim();
+                    if (changes[field].length > max) return res.status(422).json({ message: 'Expatriate study details are too long.' });
+                }
+            }
+        }
+        if (req.user.role === 'student') {
+            const resolvedGrade = changes.grade !== undefined ? changes.grade : req.user.grade;
+            if (resolvedGrade === 'expatriates') {
+                const academicYear = changes.academicYear !== undefined ? changes.academicYear : req.user.academicYear;
+                const college = changes.college !== undefined ? changes.college : req.user.college;
+                if (!academicYear || !college) {
+                    return res.status(422).json({ message: 'Academic year and college are required for expatriate students.' });
+                }
+            } else if (changes.academicYear !== undefined || changes.college !== undefined || changes.grade !== undefined) {
+                changes.academicYear = null;
+                changes.college = null;
+            }
         }
         if (changes.email !== undefined) {
             changes.email = typeof changes.email === 'string'
