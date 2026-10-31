@@ -1,8 +1,11 @@
-﻿import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
+import '../data/colleges.dart';
+import '../data/residence_options.dart';
 import '../widgets/phone_field.dart';
+import '../widgets/searchable_country_field.dart';
 import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -24,6 +27,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _emailController = TextEditingController();
   final _interestsController = TextEditingController();
   final _nationalIdController = TextEditingController();
+  final _otherCollegeController = TextEditingController();
+  String _academicYear = '';
+  String _collegeChoice = '';
+  String _country = '';
+  String _governorate = '';
   String _grade = '';
   String _meetingGroup = '';
   List<Map<String, dynamic>> _meetingGroups = [];
@@ -56,6 +64,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _nationalIdController.text = user.nationalId;
       _isDeacon = user.isDeacon;
       _grade = user.grade;
+      _academicYear = user.academicYear;
+      _collegeChoice = collegeChoiceFor(user.college);
+      _otherCollegeController.text = isKnownCollege(user.college)
+          ? ''
+          : user.college;
+      _country = user.country;
+      _governorate = user.governorate;
       _meetingGroup = user.meetingGroup;
     }
   }
@@ -65,6 +80,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _grade = grade;
       _meetingGroup = '';
+      if (!isHigherEducationGrade(grade)) {
+        _academicYear = '';
+        _collegeChoice = '';
+        _otherCollegeController.clear();
+        _country = '';
+        _governorate = '';
+      }
       _meetingGroups = [];
       _groupsLoading = true;
       _groupsError = null;
@@ -116,6 +138,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'fatherName': _fatherNameController.text.trim(),
       'guardianPhone': _parentPhone,
       'isDeacon': _isDeacon,
+      if (user.role == 'student' && isHigherEducationGrade(_grade)) ...{
+        'academicYear': _academicYear,
+        'college': _collegeChoice == otherCollegeValue
+            ? _otherCollegeController.text.trim()
+            : _collegeChoice,
+        'country': _country,
+        'governorate': _country == egyptCountryName ? _governorate : '',
+      },
       if (completingGrade) 'grade': _grade,
       if (completingGrade) 'meetingGroup': _meetingGroup,
     };
@@ -218,6 +248,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _emailController.dispose();
     _interestsController.dispose();
     _nationalIdController.dispose();
+    _otherCollegeController.dispose();
     super.dispose();
   }
 
@@ -291,7 +322,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           backgroundColor: AppTheme.lightGold,
                         ),
                       ],
-                      if (user.grade == 'expatriates' && (user.academicYear.isNotEmpty || user.college.isNotEmpty)) ...[
+                      if (isHigherEducationGrade(user.grade) &&
+                          (user.academicYear.isNotEmpty ||
+                              user.college.isNotEmpty ||
+                              user.country.isNotEmpty ||
+                              user.governorate.isNotEmpty)) ...[
                         const SizedBox(height: 6),
                         Wrap(
                           spacing: 8,
@@ -300,13 +335,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             if (user.academicYear.isNotEmpty)
                               Chip(
                                 avatar: const Icon(Icons.school, size: 16),
-                                label: Text('الفرقة: ${user.academicYear}'),
+                                label: Text(
+                                  '\u0627\u0644\u0641\u0631\u0642\u0629: ${user.academicYear}',
+                                ),
                                 backgroundColor: AppTheme.lightGold,
                               ),
                             if (user.college.isNotEmpty)
                               Chip(
-                                avatar: const Icon(Icons.account_balance, size: 16),
-                                label: Text('الكلية: ${user.college}'),
+                                avatar: const Icon(
+                                  Icons.account_balance,
+                                  size: 16,
+                                ),
+                                label: Text(
+                                  '\u0627\u0644\u0643\u0644\u064a\u0629: ${user.college}',
+                                ),
+                                backgroundColor: AppTheme.lightGold,
+                              ),
+                            if (user.country.isNotEmpty)
+                              Chip(
+                                avatar: const Icon(
+                                  Icons.public_outlined,
+                                  size: 16,
+                                ),
+                                label: Text(
+                                  '\u0627\u0644\u0628\u0644\u062f: ${user.country}',
+                                ),
+                                backgroundColor: AppTheme.lightGold,
+                              ),
+                            if (user.governorate.isNotEmpty)
+                              Chip(
+                                avatar: const Icon(
+                                  Icons.location_city_outlined,
+                                  size: 16,
+                                ),
+                                label: Text(
+                                  '\u0627\u0644\u0645\u062d\u0627\u0641\u0638\u0629: ${user.governorate}',
+                                ),
                                 backgroundColor: AppTheme.lightGold,
                               ),
                           ],
@@ -402,6 +466,144 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                       ],
+                      if (user.role == 'student' &&
+                          isHigherEducationGrade(_grade)) ...[
+                        const SizedBox(height: 16),
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: Text(
+                            '\u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u062f\u0631\u0627\u0633\u0629 \u0648\u0627\u0644\u0625\u0642\u0627\u0645\u0629',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        DropdownButtonFormField<String>(
+                          initialValue: academicYears.contains(_academicYear)
+                              ? _academicYear
+                              : null,
+                          isExpanded: true,
+                          decoration: InputDecoration(
+                            labelText: '\u0627\u0644\u0641\u0631\u0642\u0629 *',
+                          ),
+                          hint: Text('\u0627\u062e\u062a\u0631'),
+                          items: [
+                            ...academicYears.map(
+                              (year) => DropdownMenuItem(
+                                value: year,
+                                child: Text(year),
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) =>
+                              setState(() => _academicYear = value ?? ''),
+                          validator: (value) => value == null || value.isEmpty
+                              ? '\u0627\u062e\u062a\u0631 \u0627\u0644\u0641\u0631\u0642\u0629'
+                              : null,
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          initialValue: _collegeChoice.isEmpty
+                              ? null
+                              : _collegeChoice,
+                          isExpanded: true,
+                          decoration: InputDecoration(
+                            labelText: '\u0627\u0644\u0643\u0644\u064a\u0629 *',
+                          ),
+                          hint: Text('\u0627\u062e\u062a\u0631'),
+                          items: [
+                            for (final group in collegeGroups)
+                              for (final college in group.colleges)
+                                if (college != otherCollegeLabel)
+                                  DropdownMenuItem(
+                                    value: college,
+                                    child: Text(
+                                      college,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                            DropdownMenuItem(
+                              value: otherCollegeValue,
+                              child: Text(otherCollegeLabel),
+                            ),
+                          ],
+                          onChanged: (value) => setState(() {
+                            _collegeChoice = value ?? '';
+                            if (_collegeChoice != otherCollegeValue) {
+                              _otherCollegeController.clear();
+                            }
+                          }),
+                          validator: (value) => value == null || value.isEmpty
+                              ? '\u0627\u062e\u062a\u0631 \u0627\u0644\u0643\u0644\u064a\u0629'
+                              : null,
+                        ),
+                        if (_collegeChoice == otherCollegeValue) ...[
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _otherCollegeController,
+                            maxLength: 160,
+                            decoration: InputDecoration(
+                              labelText:
+                                  '\u0627\u0643\u062a\u0628 \u0627\u0633\u0645 \u0627\u0644\u0643\u0644\u064a\u0629 *',
+                              hintText:
+                                  '\u0627\u0633\u0645 \u0627\u0644\u0643\u0644\u064a\u0629 \u0623\u0648 \u0627\u0644\u0645\u0639\u0647\u062f',
+                            ),
+                            validator: (value) =>
+                                _collegeChoice == otherCollegeValue &&
+                                    (value == null || value.trim().isEmpty)
+                                ? '\u0627\u0643\u062a\u0628 \u0627\u0633\u0645 \u0627\u0644\u0643\u0644\u064a\u0629 \u0627\u0633\u0645 \u0627\u0644\u0643\u0644\u064a\u0629 \u0623\u0648 \u0627\u0644\u0645\u0639\u0647\u062f'
+                                : null,
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+                        SearchableCountryField(
+                          value: _country,
+                          label:
+                              '\u0628\u0644\u062f \u0627\u0644\u0625\u0642\u0627\u0645\u0629 *',
+                          hint:
+                              '\u0627\u062e\u062a\u0631 \u0628\u0644\u062f \u0627\u0644\u0625\u0642\u0627\u0645\u0629',
+                          validator: (value) => value == null || value.isEmpty
+                              ? '\u0627\u062e\u062a\u0631 \u0628\u0644\u062f \u0627\u0644\u0625\u0642\u0627\u0645\u0629'
+                              : null,
+                          onChanged: (value) => setState(() {
+                            _country = value;
+                            if (_country != egyptCountryName) _governorate = '';
+                          }),
+                        ),
+                        if (_country == egyptCountryName) ...[
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            initialValue: _governorate.isEmpty
+                                ? null
+                                : _governorate,
+                            isExpanded: true,
+                            decoration: InputDecoration(
+                              labelText:
+                                  '\u0627\u0644\u0645\u062d\u0627\u0641\u0638\u0629 *',
+                            ),
+                            hint: Text(
+                              '\u0627\u062e\u062a\u0631 \u0627\u0644\u0645\u062d\u0627\u0641\u0638\u0629',
+                            ),
+                            items: egyptGovernorates
+                                .map(
+                                  (governorate) => DropdownMenuItem(
+                                    value: governorate,
+                                    child: Text(governorate),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) =>
+                                setState(() => _governorate = value ?? ''),
+                            validator: (value) =>
+                                _country == egyptCountryName &&
+                                    (value == null || value.isEmpty)
+                                ? '\u0627\u062e\u062a\u0631 \u0627\u0644\u0645\u062d\u0627\u0641\u0638\u0629'
+                                : null,
+                          ),
+                        ],
+                        const SizedBox(height: 20),
+                      ],
+
                       const SizedBox(height: 20),
 
                       TextFormField(

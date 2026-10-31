@@ -24,6 +24,7 @@ web_modules/
 frontend/dist/
 frontend/dist-server/
 Mobile/build/
+Mobile/android/.kotlin/
 Mobile/.dart_tool/
 coverage/
 .next/

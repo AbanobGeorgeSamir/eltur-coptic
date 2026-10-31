@@ -85,7 +85,7 @@ test('student registration creates a session without phone verification', async 
     assert.equal(JSON.parse(body).user.nationalId, undefined);
 });
 
-test('expatriate registration requires and stores academic year and college', async (t) => {
+test('university and expatriate registration store college and residence details', async (t) => {
     const server = http.createServer(app);
     await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
     t.after(() => server.close());
@@ -93,7 +93,7 @@ test('expatriate registration requires and stores academic year and college', as
     const originalCreate = User.create;
     const originalFind = User.find;
     const originalCountDocuments = MeetingGroup.countDocuments;
-    User.create = async (input) => ({ ...input, _id: 'expatriate-id' });
+    User.create = async (input) => ({ ...input, _id: 'student-id' });
     User.find = () => ({ select: () => ({ lean: async () => [] }) });
     MeetingGroup.countDocuments = async () => 0;
     t.after(() => {
@@ -114,28 +114,45 @@ test('expatriate registration requires and stores academic year and college', as
         address: 'Test address',
         interests: 'Bible study',
         grade: 'expatriates',
-        country: 'مصر',
-        governorate: 'جنوب سيناء',
+        country: '\u0645\u0635\u0631',
+        governorate: '\u062c\u0646\u0648\u0628 \u0633\u064a\u0646\u0627\u0621',
         birthDate: '2002-01-01',
         gender: 'male',
         nationalId: '12345678901234',
         privacyAccepted: true,
     };
 
-    const missing = await makeRequest(server, '/api/auth/register', {
+    const missingStudyDetails = await makeRequest(server, '/api/auth/register', {
         'content-type': 'application/json',
     }, { method: 'POST', body: JSON.stringify(base) });
-    assert.equal(missing.response.statusCode, 422);
+    assert.equal(missingStudyDetails.response.statusCode, 422);
 
-    const { response, body } = await makeRequest(server, '/api/auth/register', {
+    const missingGovernorate = await makeRequest(server, '/api/auth/register', {
+        'content-type': 'application/json',
+    }, { method: 'POST', body: JSON.stringify({ ...base, academicYear: '\u0627\u0644\u0641\u0631\u0642\u0629 \u0627\u0644\u062b\u0627\u0644\u062b\u0629', college: '\u0645\u0639\u0647\u062f \u062a\u0643\u0646\u0648\u0644\u0648\u062c\u064a\u0627 \u0627\u0644\u0645\u0639\u0644\u0648\u0645\u0627\u062a', governorate: '' }) });
+    assert.equal(missingGovernorate.response.statusCode, 422);
+
+    const expatriate = await makeRequest(server, '/api/auth/register', {
         'content-type': 'application/json',
     }, {
         method: 'POST',
-        body: JSON.stringify({ ...base, academicYear: 'الفرقة الثالثة', college: 'كلية الهندسة' }),
+        body: JSON.stringify({ ...base, academicYear: '\u0627\u0644\u0641\u0631\u0642\u0629 \u0627\u0644\u062b\u0627\u0644\u062b\u0629', college: '\u0645\u0639\u0647\u062f \u062a\u0643\u0646\u0648\u0644\u0648\u062c\u064a\u0627 \u0627\u0644\u0645\u0639\u0644\u0648\u0645\u0627\u062a' }),
     });
-    assert.equal(response.statusCode, 201);
-    assert.equal(JSON.parse(body).user.academicYear, 'الفرقة الثالثة');
-    assert.equal(JSON.parse(body).user.college, 'كلية الهندسة');
+    assert.equal(expatriate.response.statusCode, 201);
+    assert.equal(JSON.parse(expatriate.body).user.academicYear, '\u0627\u0644\u0641\u0631\u0642\u0629 \u0627\u0644\u062b\u0627\u0644\u062b\u0629');
+    assert.equal(JSON.parse(expatriate.body).user.college, '\u0645\u0639\u0647\u062f \u062a\u0643\u0646\u0648\u0644\u0648\u062c\u064a\u0627 \u0627\u0644\u0645\u0639\u0644\u0648\u0645\u0627\u062a');
+    assert.equal(JSON.parse(expatriate.body).user.country, '\u0645\u0635\u0631');
+    assert.equal(JSON.parse(expatriate.body).user.governorate, '\u062c\u0646\u0648\u0628 \u0633\u064a\u0646\u0627\u0621');
+
+    const university = await makeRequest(server, '/api/auth/register', {
+        'content-type': 'application/json',
+    }, {
+        method: 'POST',
+        body: JSON.stringify({ ...base, grade: 'university', username: 'minauniversity', email: 'university@example.com', phone: '+201001234568', country: '\u0627\u0644\u0645\u0645\u0644\u0643\u0629 \u0627\u0644\u0639\u0631\u0628\u064a\u0629 \u0627\u0644\u0633\u0639\u0648\u062f\u064a\u0629', governorate: '', academicYear: '\u0627\u0644\u0641\u0631\u0642\u0629 \u0627\u0644\u0623\u0648\u0644\u0649', college: '\u0643\u0644\u064a\u0629 \u0627\u0644\u0647\u0646\u062f\u0633\u0629' }),
+    });
+    assert.equal(university.response.statusCode, 201);
+    assert.equal(JSON.parse(university.body).user.country, '\u0627\u0644\u0645\u0645\u0644\u0643\u0629 \u0627\u0644\u0639\u0631\u0628\u064a\u0629 \u0627\u0644\u0633\u0639\u0648\u062f\u064a\u0629');
+    assert.equal(JSON.parse(university.body).user.governorate, null);
 });
 
 test('registration rejects names without four parts and emails with spaces or non-.com domains', async (t) => {

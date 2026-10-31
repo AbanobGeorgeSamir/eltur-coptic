@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/useAuth';
 import { grades, gradeLabel, isGradeAdminRole } from '../data/grades';
 import { ACADEMIC_YEARS, COLLEGES } from '../data/expatriatesData';
 import StudentStudyDetailsFields from '../components/StudentStudyDetailsFields';
-import { countries, EGYPT_COUNTRY_NAME, isHigherEducationGrade } from '../data/residenceOptions';
+import { countries, EGYPT_COUNTRY_NAME, EGYPT_GOVERNORATES, isHigherEducationGrade } from '../data/residenceOptions';
 import { collegeChoiceFor } from '../utils/studyDetails';
 
 export default function AdminStudents() {
@@ -78,10 +78,10 @@ export default function AdminStudents() {
     });
   }, [students, query, filterGrade, filterAcademicYear, filterCollege, filterCountry, filterGovernorate]);
 
-  const filterAcademicYearOptions = useMemo(() => [...new Set([...ACADEMIC_YEARS, ...students.map((student) => student.academicYear).filter(Boolean)])].sort((a, b) => a.localeCompare(b, 'ar')), [students]);
+  const filterAcademicYearOptions = ACADEMIC_YEARS;
   const filterCollegeOptions = useMemo(() => [...new Set([...COLLEGES.filter((college) => college !== 'أخرى'), ...students.map((student) => student.college).filter(Boolean)])].sort((a, b) => a.localeCompare(b, 'ar')), [students]);
   const filterCountryOptions = countries;
-  const filterGovernorateOptions = [...new Set(students.map((student) => student.governorate).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar'));
+  const filterGovernorateOptions = [...new Set([...EGYPT_GOVERNORATES, ...students.map((student) => student.governorate).filter(Boolean)])].sort((a, b) => a.localeCompare(b, 'ar'));
 
   const pendingCount = visibleStudents.filter((student) => !student.assignedAdmin).length;
   const hasActiveFilters = Boolean(filterGrade || filterAcademicYear || filterCollege || filterCountry || filterGovernorate || query);
@@ -171,7 +171,7 @@ export default function AdminStudents() {
       whatsappNumber: student.whatsappNumber || '',
       isDeacon: Boolean(student.isDeacon),
       grade: student.grade || '',
-      academicYear: student.academicYear || '',
+      academicYear: ACADEMIC_YEARS.includes(student.academicYear) ? student.academicYear : '',
       college: student.college || '',
       collegeChoice: collegeChoiceFor(student.college || ''),
       country: student.country || '',

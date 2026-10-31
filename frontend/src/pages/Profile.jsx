@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../contexts/useAuth';
+import { academicYears } from '../data/colleges';
 import PhoneField from '../components/PhoneField';
 import StudentStudyDetailsFields from '../components/StudentStudyDetailsFields';
 import { isValidComEmail, normalizeEmail } from '../utils/email';
@@ -21,7 +22,7 @@ const initialForm = (user) => ({
   address: user?.address || '',
   isDeacon: Boolean(user?.isDeacon),
   grade: user?.grade || '',
-  academicYear: user?.academicYear || '',
+  academicYear: academicYears.includes(user?.academicYear) ? user.academicYear : '',
   college: user?.college || '',
   collegeChoice: collegeChoiceFor(user?.college || ''),
   country: user?.country || '',
