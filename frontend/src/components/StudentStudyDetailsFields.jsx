@@ -1,5 +1,5 @@
 import { academicYears, collegeGroups } from '../data/colleges';
-import { countries, EGYPT_COUNTRY_NAME, EGYPT_GOVERNORATES } from '../data/residenceOptions';
+import { EGYPT_GOVERNORATES, EGYPT_PLACES_BY_GOVERNORATE } from '../data/residenceOptions';
 import { OTHER_COLLEGE_LABEL, OTHER_COLLEGE_VALUE } from '../utils/studyDetails';
 
 const selectClass = 'mt-1.5 min-h-12 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-white outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20';
@@ -58,22 +58,34 @@ export default function StudentStudyDetailsFields({ value, onChange }) {
       )}
 
       <label className={labelClass}>
-        البلد <span aria-hidden="true">*</span>
-        <select required autoComplete="country-name" value={value.country} onChange={(event) => onChange('country', event.target.value)} className={selectClass}>
-          <option value="">اختر البلد</option>
-          {countries.map((country) => <option key={country.code} value={country.name}>{country.name}</option>)}
+        المحافظة <span aria-hidden="true">*</span>
+        <select
+          required
+          value={value.governorate}
+          onChange={(event) => {
+            onChange('governorate', event.target.value);
+            onChange('city', '');
+          }}
+          className={selectClass}
+        >
+          <option value="">اختر المحافظة</option>
+          {EGYPT_GOVERNORATES.map((governorate) => <option key={governorate} value={governorate}>{governorate}</option>)}
         </select>
       </label>
 
-      {value.country === EGYPT_COUNTRY_NAME && (
-        <label className={labelClass}>
-          المحافظة <span aria-hidden="true">*</span>
-          <select required value={value.governorate} onChange={(event) => onChange('governorate', event.target.value)} className={selectClass}>
-            <option value="">اختر المحافظة</option>
-            {EGYPT_GOVERNORATES.map((governorate) => <option key={governorate} value={governorate}>{governorate}</option>)}
-          </select>
-        </label>
-      )}
+      <label className={labelClass}>
+        المدينة أو الحي أو المركز <span aria-hidden="true">*</span>
+        <select
+          required
+          disabled={!value.governorate}
+          value={value.city}
+          onChange={(event) => onChange('city', event.target.value)}
+          className={selectClass}
+        >
+          <option value="">{value.governorate ? 'اختر المدينة أو الحي أو المركز' : 'اختر المحافظة أولاً'}</option>
+          {(EGYPT_PLACES_BY_GOVERNORATE[value.governorate] || []).map((city) => <option key={city} value={city}>{city}</option>)}
+        </select>
+      </label>
     </section>
   );
 }

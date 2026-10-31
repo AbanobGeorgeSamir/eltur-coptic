@@ -2,11 +2,13 @@ import { useRef, useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   Home,
+  Bell,
   BookOpen,
   Calendar,
   CheckSquare,
   Award,
   Users,
+  UserRound,
   Image,
   Shield,
   Layers,
@@ -47,10 +49,13 @@ export default function Sidebar() {
     ['/tasks', 'الواجبات', CheckSquare],
     ['/quizzes', 'المسابقات', Award],
     ['/trips', 'الرحلات', MapPin],
+    ['/newsletters', 'الرحلات والإعلانات', Layers],
     ['/confession', 'الاعتراف', Heart],
     ['/sunday-school', 'مدارس الأحد', Sparkles],
-    ['/prayer-checklist', 'متابعة الصلاة', CheckSquare],
+    ['/prayers', 'متابعة الصلاة', CheckSquare],
     ['/gallery', 'معرض الصور', Image],
+    ['/notifications', 'الإشعارات', Bell],
+    ['/profile', 'الملف الشخصي', UserRound],
   ];
 
   const parentLinks = [
@@ -61,7 +66,14 @@ export default function Sidebar() {
     ['/tasks', 'واجبات الأبناء', CheckSquare],
     ['/quizzes', 'مسابقات الأبناء', Award],
     ['/trips', 'الرحلات والتسجيل', MapPin],
+    ['/newsletters', 'الرحلات والإعلانات', Layers],
+    ['/confession', 'الاعتراف', Heart],
+    ['/sunday-school', 'مدارس الأحد', Sparkles],
+    ['/prayers', 'متابعة الصلاة', CheckSquare],
     ['/gallery', 'معرض الصور', Image],
+    ['/notifications', 'الإشعارات', Bell],
+    ['/father-dashboard', 'متابعة الأبناء', Users],
+    ['/profile', 'الملف الشخصي', UserRound],
   ];
 
   const adminLinks = isGlobalAdmin
@@ -73,13 +85,18 @@ export default function Sidebar() {
         ['/admin-tasks', 'تكليف الواجبات', CheckSquare],
         ['/quizzes', 'المسابقات والنتائج', Award],
         ['/trips', 'الرحلات والتسجيل', MapPin],
+        ['/newsletters', 'عرض الإعلانات', Layers],
         ['/admin-verse', 'آية اليوم', Sparkles],
         ['/admin-daily-reading', 'القراءة اليومية', BookOpen],
         ['/admin-newsletter', 'الرحلات والإعلانات', Layers],
         ['/admin-gallery', 'إدارة المعرض', Image],
         ['/admin-liturgy', 'إدارة القداسات', Calendar],
+        ['/confession', 'سجلات الاعتراف', Heart],
+        ['/prayers', 'متابعة الصلاة', CheckSquare],
+        ['/notifications', 'الإشعارات', Bell],
         ['/bible', 'الإنجيل', BookOpen],
         ['/agpeya', 'الأجبية', BookOpen],
+        ['/profile', 'الملف الشخصي', UserRound],
       ]
     : isStageAdmin
     ? [
@@ -89,10 +106,17 @@ export default function Sidebar() {
         ['/admin-tasks', 'واجبات المرحلة', CheckSquare],
         ['/quizzes', 'المسابقات', Award],
         ['/trips', 'الرحلات والتسجيل', MapPin],
+        ['/newsletters', 'عرض الإعلانات', Layers],
         ['/admin-access', 'مجموعات المرحلة', Shield],
         ['/admin-newsletter', 'الرحلات والإعلانات', Layers],
+        ['/admin-gallery', 'إدارة المعرض', Image],
+        ['/admin-liturgy', 'إدارة القداسات', Calendar],
+        ['/confession', 'سجلات الاعتراف', Heart],
+        ['/prayers', 'متابعة الصلاة', CheckSquare],
+        ['/notifications', 'الإشعارات', Bell],
         ['/bible', 'الإنجيل', BookOpen],
         ['/agpeya', 'الأجبية', BookOpen],
+        ['/profile', 'الملف الشخصي', UserRound],
       ]
     : studentLinks;
 

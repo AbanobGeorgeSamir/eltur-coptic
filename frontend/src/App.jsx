@@ -2,6 +2,7 @@ import { Component, lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
+import BrowserNotificationWatcher from './components/BrowserNotificationWatcher';
 import FloatingWhatsApp from './components/FloatingWhatsApp';
 import { AuthProvider } from './contexts/AuthContext.jsx';
 import { ThemeProvider } from './contexts/ThemeContext.jsx';
@@ -35,6 +36,8 @@ const AdminVerse = lazy(() => import('./pages/AdminVerse'));
 const AdminDailyReading = lazy(() => import('./pages/AdminDailyReading'));
 const AdminAccess = lazy(() => import('./pages/AdminAccess'));
 const FatherDashboard = lazy(() => import('./pages/FatherDashboard'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const Newsletters = lazy(() => import('./pages/Newsletters'));
 
 function LoadingPage() {
   return (
@@ -73,10 +76,11 @@ class AppErrorBoundary extends Component {
   }
 }
 
-function AppFrame({ userRole, showToast, children }) {
+function AppFrame({ userRole, userId, showToast, children }) {
   const [contentVersion, setContentVersion] = useState(0);
   return (
     <div className="min-h-dvh bg-transparent font-sans text-slate-100" dir="rtl">
+      <BrowserNotificationWatcher userId={userId} />
       <a href="#main-content" className="skip-link">انتقل إلى المحتوى</a>
       <Navbar showToast={showToast} onRefresh={() => setContentVersion((version) => version + 1)} />
       <div className="flex min-h-[calc(100dvh-68px)] flex-col lg:flex-row">
@@ -94,7 +98,7 @@ function ProtectedLayout({ showToast }) {
   if (!ready) return <LoadingPage />;
   if (!user) return <Navigate to="/" replace />;
   return (
-    <AppFrame userRole={user.role} showToast={showToast}>
+    <AppFrame userRole={user.role} userId={user.id} showToast={showToast}>
       <Seo title="بوابة الخدمة | كنيسة موسي النبي ومارمرقس الرسول" description="بوابة خدمة كنيسة موسي النبي ومارمرقس الرسول." indexable={false} />
       <Outlet context={{ showToast }} />
     </AppFrame>
@@ -107,7 +111,7 @@ function RootPage({ showToast }) {
   if (!ready) return <PublicHome />;
   if (!user) return <><Seo title="كنيسة موسي النبي ومارمرقس الرسول | الخدمات الكنسية ومدارس الأحد" description="بوابة كنيسة موسي النبي ومارمرقس الرسول بطور سيناء: صلوات الأجبية، قراءة الكتاب المقدس، مدارس الأحد، وخدمات الكنيسة." indexable /><PublicHome /></>;
   return (
-    <AppFrame userRole={user.role} showToast={showToast}>
+      <AppFrame userRole={user.role} userId={user.id} showToast={showToast}>
       <Seo title="الرئيسية | كنيسة موسي النبي ومارمرقس الرسول" description="الخدمات الروحية ومتابعة الأنشطة في كنيسة موسي النبي ومارمرقس الرسول." indexable={false} />
       <Home showToast={showToast} />
     </AppFrame>
@@ -134,7 +138,10 @@ export function AppRoutes({ showToast, serverPages = null }) {
           <Route path="/agpeya" element={<Agpeya />} />
           <Route path="/bible" element={<Bible />} />
           <Route path="/prayers" element={<PrayerChecklist showToast={showToast} />} />
+          <Route path="/prayer-checklist" element={<Navigate to="/prayers" replace />} />
           <Route path="/sunday-school" element={<SundaySchool />} />
+          <Route path="/newsletters" element={<Newsletters />} />
+          <Route path="/notifications" element={<Notifications showToast={showToast} />} />
           <Route path="/quizzes" element={<Quizzes />} />
           <Route path="/tasks" element={<Tasks showToast={showToast} />} />
           <Route path="/trips" element={<Trips showToast={showToast} />} />

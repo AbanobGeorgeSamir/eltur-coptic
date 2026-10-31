@@ -33,6 +33,7 @@ export default function Quizzes() {
   const [quizzes, setQuizzes] = useState([]);
   const [answers, setAnswers] = useState({});
   const [results, setResults] = useState({});
+  const [parentAttempts, setParentAttempts] = useState([]);
   const [adminResults, setAdminResults] = useState({});
   const [quizAudiences, setQuizAudiences] = useState({});
   const [savingAudienceId, setSavingAudienceId] = useState('');
@@ -46,7 +47,7 @@ export default function Quizzes() {
   const [savingQuiz, setSavingQuiz] = useState(false);
 
   const load = useCallback(async () => {
-    if (userRole !== 'student' && !isAdminRole(userRole)) {
+    if (userRole !== 'student' && userRole !== 'parent' && !isAdminRole(userRole)) {
       setLoading(false);
       return;
     }
@@ -65,6 +66,8 @@ export default function Quizzes() {
           return [quizId, await api.quizResults(quizId)];
         }));
         setAdminResults(Object.fromEntries(resultEntries));
+      } else if (userRole === 'parent') {
+        setParentAttempts(await api.parentQuizAttempts());
       } else {
         setResults(resultsFromAttempts(await api.quizAttempts()));
       }
@@ -143,7 +146,7 @@ export default function Quizzes() {
     }
   };
 
-  if (user?.role !== 'student' && !isAdminRole(user?.role)) {
+  if (user?.role !== 'student' && user?.role !== 'parent' && !isAdminRole(user?.role)) {
     return <div className="mx-auto max-w-3xl rounded-2xl border border-slate-800 bg-slate-900 p-5" dir="rtl">
       <h1 className="text-2xl font-bold text-white">الاختبارات</h1>
       <p className="mt-2 text-sm leading-6 text-slate-300">حل الاختبارات متاح لحسابات الطلاب.</p>
@@ -222,6 +225,34 @@ export default function Quizzes() {
           </article>;
         })}
       </section>
+    </div>;
+  }
+
+  if (userRole === 'parent') {
+    return <div className="mx-auto max-w-4xl space-y-5" dir="rtl">
+      <header>
+        <h1 className="text-2xl font-bold text-white">اختبارات الأبناء</h1>
+        <p className="mt-1 text-sm leading-6 text-slate-400">تابع الاختبارات المنشورة ونتائج الأبناء المرتبطين بحسابك.</p>
+      </header>
+      {error && <p role="alert" className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-3 text-sm text-rose-200">{error}</p>}
+      {loading && <p role="status" className="rounded-2xl bg-slate-900 p-5 text-sm text-slate-400">جارٍ تحميل الاختبارات...</p>}
+      {!loading && !error && quizzes.length === 0 && <p className="rounded-2xl border border-slate-800 bg-slate-900 p-5 text-sm text-slate-300">لا توجد اختبارات منشورة حاليًا.</p>}
+      {quizzes.map((quiz) => {
+        const quizId = quiz.id || quiz._id;
+        const attempts = parentAttempts.filter((attempt) => String(attempt.quiz?._id || attempt.quiz?.id || attempt.quiz) === String(quizId));
+        return <article key={quizId} className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+          <h2 className="font-bold text-amber-200">{quiz.title}</h2>
+          {quiz.description && <p className="mt-1 text-sm text-slate-400">{quiz.description}</p>}
+          <h3 className="mt-4 text-sm font-semibold text-slate-300">نتائج الأبناء</h3>
+          {attempts.length ? <ul className="mt-2 divide-y divide-slate-800 rounded-xl border border-slate-800">
+            {attempts.map((attempt) => <li key={attempt._id || `${attempt.student?._id}-${attempt.submittedAt}`} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
+              <span className="font-semibold text-slate-200">{attempt.student?.name || 'أحد الأبناء'}</span>
+              <span className="rounded-lg bg-emerald-500/10 px-2.5 py-1 font-bold text-emerald-300">{attempt.score} / {attempt.total}</span>
+              <time className="text-xs text-slate-500">{submittedAtLabel(attempt.submittedAt)}</time>
+            </li>)}
+          </ul> : <p className="mt-2 text-sm text-slate-500">لم يقدم أحد الأبناء هذا الاختبار بعد.</p>}
+        </article>;
+      })}
     </div>;
   }
 

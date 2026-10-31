@@ -37,8 +37,8 @@ export default function Register() {
     academicYear: '',
     college: '',
     collegeChoice: '',
-    country: '',
     governorate: '',
+    city: '',
     privacyAccepted: false,
   });
   const [error, setError] = useState('');
@@ -57,10 +57,10 @@ export default function Register() {
         next.academicYear = '';
         next.college = '';
         next.collegeChoice = '';
-        next.country = '';
         next.governorate = '';
+        next.city = '';
       }
-      if (key === 'country' && value !== EGYPT_COUNTRY_NAME) next.governorate = '';
+      if (key === 'governorate') next.city = '';
       if (key === 'nationalId') {
         const birthDate = getBirthDateFromNationalId(value);
         if (birthDate) next.birthDate = birthDate;
@@ -107,12 +107,8 @@ export default function Register() {
         setError('يرجى اختيار الكلية لمرحلة المغتربين.');
         return;
       }
-      if (!form.country) {
-        setError('يرجى اختيار بلد الإقامة.');
-        return;
-      }
-      if (form.country === EGYPT_COUNTRY_NAME && !form.governorate) {
-        setError('يرجى اختيار المحافظة داخل مصر.');
+      if (!form.governorate || !form.city) {
+        setError('يرجى اختيار المحافظة والمدينة داخل مصر.');
         return;
       }
     }
@@ -130,8 +126,9 @@ export default function Register() {
         interests: form.interests.trim(),
         academicYear: isHigherEducationGrade(form.grade) ? form.academicYear : undefined,
         college: isHigherEducationGrade(form.grade) ? form.college.trim() : undefined,
-        country: isHigherEducationGrade(form.grade) ? form.country : undefined,
-        governorate: isHigherEducationGrade(form.grade) && form.country === EGYPT_COUNTRY_NAME ? form.governorate : undefined,
+        country: isHigherEducationGrade(form.grade) ? EGYPT_COUNTRY_NAME : undefined,
+        governorate: isHigherEducationGrade(form.grade) ? form.governorate : undefined,
+        city: isHigherEducationGrade(form.grade) ? form.city : undefined,
       };
       delete registration.collegeChoice;
       const session = await api.register(registration);

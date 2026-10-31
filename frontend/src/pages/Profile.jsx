@@ -25,8 +25,8 @@ const initialForm = (user) => ({
   academicYear: academicYears.includes(user?.academicYear) ? user.academicYear : '',
   college: user?.college || '',
   collegeChoice: collegeChoiceFor(user?.college || ''),
-  country: user?.country || '',
   governorate: user?.governorate || '',
+  city: user?.city || '',
 });
 
 export default function Profile({ showToast }) {
@@ -43,8 +43,8 @@ export default function Profile({ showToast }) {
   const update = (key, value) => setForm((old) => ({
     ...old,
     [key]: value,
-    ...(key === 'grade' && !isHigherEducationGrade(value) ? { academicYear: '', college: '', collegeChoice: '', country: '', governorate: '' } : {}),
-    ...(key === 'country' && value !== EGYPT_COUNTRY_NAME ? { governorate: '' } : {}),
+    ...(key === 'grade' && !isHigherEducationGrade(value) ? { academicYear: '', college: '', collegeChoice: '', governorate: '', city: '' } : {}),
+    ...(key === 'governorate' ? { city: '' } : {}),
   }));
 
   const hasStudyDetails = user?.role === 'student' && isHigherEducationGrade(form.grade);
@@ -57,8 +57,8 @@ export default function Profile({ showToast }) {
       setError('أدخل بريدًا إلكترونيًا صحيحًا.');
       return;
     }
-    if (hasStudyDetails && (!form.academicYear || !form.college.trim() || !form.country || (form.country === EGYPT_COUNTRY_NAME && !form.governorate))) {
-      setError('يرجى استكمال بيانات الفرقة والكلية والبلد والمحافظة داخل مصر.');
+    if (hasStudyDetails && (!form.academicYear || !form.college.trim() || !form.governorate || !form.city)) {
+      setError('يرجى استكمال بيانات الفرقة والكلية والمحافظة والمدينة داخل مصر.');
       return;
     }
     setSaving(true);
@@ -70,15 +70,16 @@ export default function Profile({ showToast }) {
       delete profilePayload.academicYear;
       delete profilePayload.college;
       delete profilePayload.collegeChoice;
-      delete profilePayload.country;
       delete profilePayload.governorate;
+      delete profilePayload.city;
       if (user?.role === 'student') {
         if (user.grade) delete profilePayload.grade;
         if (hasStudyDetails) {
           profilePayload.academicYear = form.academicYear;
           profilePayload.college = form.college.trim();
-          profilePayload.country = form.country;
-          profilePayload.governorate = form.country === EGYPT_COUNTRY_NAME ? form.governorate : '';
+          profilePayload.country = EGYPT_COUNTRY_NAME;
+          profilePayload.governorate = form.governorate;
+          profilePayload.city = form.city;
         }
       } else {
         delete profilePayload.grade;
@@ -129,12 +130,12 @@ export default function Profile({ showToast }) {
           <p className="text-sm text-amber-300">
             {user?.role === 'admin' ? 'الأدمن العام' : isGradeAdminRole(user?.role) ? `أدمن ${gradeLabel(user.grade)}` : user?.confessionFather || ''}
           </p>
-          {isHigherEducationGrade(user?.grade) && (user?.college || user?.academicYear || user?.country || user?.governorate) && (
+          {isHigherEducationGrade(user?.grade) && (user?.college || user?.academicYear || user?.governorate || user?.city) && (
             <p className="mt-1 flex flex-wrap gap-2 text-xs">
               {user.college && <span className="rounded-lg bg-amber-400/15 px-2 py-0.5 font-bold text-amber-300">{user.college}</span>}
               {user.academicYear && <span className="rounded-lg bg-amber-400/15 px-2 py-0.5 font-bold text-amber-300">{user.academicYear}</span>}
-              {user.country && <span className="rounded-lg bg-emerald-400/15 px-2 py-0.5 font-bold text-emerald-300">البلد: {user.country}</span>}
               {user.governorate && <span className="rounded-lg bg-cyan-400/15 px-2 py-0.5 font-bold text-cyan-200">المحافظة: {user.governorate}</span>}
+              {user.city && <span className="rounded-lg bg-emerald-400/15 px-2 py-0.5 font-bold text-emerald-300">المدينة/المركز: {user.city}</span>}
             </p>
           )}
           <p className="mt-1 break-all text-xs text-slate-400" dir="ltr">

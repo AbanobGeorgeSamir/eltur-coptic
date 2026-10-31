@@ -27,6 +27,7 @@ const userSchema = new mongoose.Schema({
     college: { type: String, trim: true, maxlength: 160, default: null, index: true },
     country: { type: String, trim: true, maxlength: 100, default: null, index: true },
     governorate: { type: String, trim: true, maxlength: 100, default: null },
+    city: { type: String, trim: true, maxlength: 100, default: null },
     meetingGroup: { type: mongoose.Schema.Types.ObjectId, ref: 'MeetingGroup', default: null, index: true },
     fatherName: { type: String, trim: true, maxlength: 120 },
     confessionFather: { type: String, trim: true, maxlength: 160 },

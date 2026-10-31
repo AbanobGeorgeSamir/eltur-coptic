@@ -5,7 +5,7 @@ import '../theme/app_theme.dart';
 import '../data/colleges.dart';
 import '../data/residence_options.dart';
 import '../widgets/phone_field.dart';
-import '../widgets/searchable_country_field.dart';
+import '../widgets/residence_location_fields.dart';
 import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -30,8 +30,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _otherCollegeController = TextEditingController();
   String _academicYear = '';
   String _collegeChoice = '';
-  String _country = '';
   String _governorate = '';
+  String _city = '';
   String _grade = '';
   String _meetingGroup = '';
   List<Map<String, dynamic>> _meetingGroups = [];
@@ -69,8 +69,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _otherCollegeController.text = isKnownCollege(user.college)
           ? ''
           : user.college;
-      _country = user.country;
       _governorate = user.governorate;
+      _city = user.city;
       _meetingGroup = user.meetingGroup;
     }
   }
@@ -84,8 +84,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _academicYear = '';
         _collegeChoice = '';
         _otherCollegeController.clear();
-        _country = '';
         _governorate = '';
+        _city = '';
       }
       _meetingGroups = [];
       _groupsLoading = true;
@@ -143,8 +143,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'college': _collegeChoice == otherCollegeValue
             ? _otherCollegeController.text.trim()
             : _collegeChoice,
-        'country': _country,
-        'governorate': _country == egyptCountryName ? _governorate : '',
+        'country': egyptCountryName,
+        'governorate': _governorate,
+        'city': _city,
       },
       if (completingGrade) 'grade': _grade,
       if (completingGrade) 'meetingGroup': _meetingGroup,
@@ -325,7 +326,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       if (isHigherEducationGrade(user.grade) &&
                           (user.academicYear.isNotEmpty ||
                               user.college.isNotEmpty ||
-                              user.country.isNotEmpty ||
                               user.governorate.isNotEmpty)) ...[
                         const SizedBox(height: 6),
                         Wrap(
@@ -351,17 +351,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                                 backgroundColor: AppTheme.lightGold,
                               ),
-                            if (user.country.isNotEmpty)
-                              Chip(
-                                avatar: const Icon(
-                                  Icons.public_outlined,
-                                  size: 16,
-                                ),
-                                label: Text(
-                                  '\u0627\u0644\u0628\u0644\u062f: ${user.country}',
-                                ),
-                                backgroundColor: AppTheme.lightGold,
-                              ),
                             if (user.governorate.isNotEmpty)
                               Chip(
                                 avatar: const Icon(
@@ -371,6 +360,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 label: Text(
                                   '\u0627\u0644\u0645\u062d\u0627\u0641\u0638\u0629: ${user.governorate}',
                                 ),
+                                backgroundColor: AppTheme.lightGold,
+                              ),
+                            if (user.city.isNotEmpty)
+                              Chip(
+                                avatar: const Icon(Icons.place_outlined, size: 16),
+                                label: Text('المدينة/المركز: ${user.city}'),
                                 backgroundColor: AppTheme.lightGold,
                               ),
                           ],
@@ -556,51 +551,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ],
                         const SizedBox(height: 12),
-                        SearchableCountryField(
-                          value: _country,
-                          label:
-                              '\u0628\u0644\u062f \u0627\u0644\u0625\u0642\u0627\u0645\u0629 *',
-                          hint:
-                              '\u0627\u062e\u062a\u0631 \u0628\u0644\u062f \u0627\u0644\u0625\u0642\u0627\u0645\u0629',
-                          validator: (value) => value == null || value.isEmpty
-                              ? '\u0627\u062e\u062a\u0631 \u0628\u0644\u062f \u0627\u0644\u0625\u0642\u0627\u0645\u0629'
-                              : null,
-                          onChanged: (value) => setState(() {
-                            _country = value;
-                            if (_country != egyptCountryName) _governorate = '';
-                          }),
+                        ResidenceLocationFields(
+                          governorate: _governorate,
+                          city: _city,
+                          onGovernorateChanged: (value) =>
+                              setState(() => _governorate = value),
+                          onCityChanged: (value) => setState(() => _city = value),
                         ),
-                        if (_country == egyptCountryName) ...[
-                          const SizedBox(height: 12),
-                          DropdownButtonFormField<String>(
-                            initialValue: _governorate.isEmpty
-                                ? null
-                                : _governorate,
-                            isExpanded: true,
-                            decoration: InputDecoration(
-                              labelText:
-                                  '\u0627\u0644\u0645\u062d\u0627\u0641\u0638\u0629 *',
-                            ),
-                            hint: Text(
-                              '\u0627\u062e\u062a\u0631 \u0627\u0644\u0645\u062d\u0627\u0641\u0638\u0629',
-                            ),
-                            items: egyptGovernorates
-                                .map(
-                                  (governorate) => DropdownMenuItem(
-                                    value: governorate,
-                                    child: Text(governorate),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) =>
-                                setState(() => _governorate = value ?? ''),
-                            validator: (value) =>
-                                _country == egyptCountryName &&
-                                    (value == null || value.isEmpty)
-                                ? '\u0627\u062e\u062a\u0631 \u0627\u0644\u0645\u062d\u0627\u0641\u0638\u0629'
-                                : null,
-                          ),
-                        ],
                         const SizedBox(height: 20),
                       ],
 

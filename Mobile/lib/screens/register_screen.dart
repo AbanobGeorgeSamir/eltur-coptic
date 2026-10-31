@@ -7,10 +7,10 @@ import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../widgets/residence_location_fields.dart';
 import 'home_screen.dart';
 import 'privacy_policy_screen.dart';
 import '../widgets/phone_field.dart';
-import '../widgets/searchable_country_field.dart';
 import '../widgets/theme_toggle_button.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -47,8 +47,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String _grade = '';
   String _academicYear = '';
   String _college = '';
-  String _country = '';
   String _governorate = '';
+  String _city = '';
 
   static const _grades = <Map<String, String>>[
     {
@@ -182,9 +182,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'college': _college == otherCollegeValue
             ? _otherCollegeController.text.trim()
             : _college,
-      if (isHigherEducationGrade(_grade)) 'country': _country,
-      if (isHigherEducationGrade(_grade) && _country == egyptCountryName)
-        'governorate': _governorate,
+      if (isHigherEducationGrade(_grade)) 'country': egyptCountryName,
+      if (isHigherEducationGrade(_grade)) 'governorate': _governorate,
+      if (isHigherEducationGrade(_grade)) 'city': _city,
     };
 
     var routeReplaced = false;
@@ -336,8 +336,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           _academicYear = '';
                           _college = '';
                           _otherCollegeController.clear();
-                          _country = '';
                           _governorate = '';
+                          _city = '';
                         }
                       });
                     }
@@ -462,52 +462,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ],
                           const SizedBox(height: 12),
-                          SearchableCountryField(
-                            value: _country,
-                            label:
-                                '\u0628\u0644\u062f \u0627\u0644\u0625\u0642\u0627\u0645\u0629 *',
-                            hint: '\u0627\u062e\u062a\u0631',
-                            validator: (value) => value == null || value.isEmpty
-                                ? '\u0627\u062e\u062a\u0631 \u0628\u0644\u062f \u0627\u0644\u0625\u0642\u0627\u0645\u0629'
-                                : null,
-                            onChanged: (value) => setState(() {
-                              _country = value;
-                              if (_country != egyptCountryName) {
-                                _governorate = '';
-                              }
-                            }),
+                          ResidenceLocationFields(
+                            governorate: _governorate,
+                            city: _city,
+                            onGovernorateChanged: (value) =>
+                                setState(() => _governorate = value),
+                            onCityChanged: (value) =>
+                                setState(() => _city = value),
                           ),
-                          if (_country == egyptCountryName) ...[
-                            const SizedBox(height: 12),
-                            DropdownButtonFormField<String>(
-                              initialValue: _governorate.isEmpty
-                                  ? null
-                                  : _governorate,
-                              isExpanded: true,
-                              decoration: InputDecoration(
-                                labelText: 'المحافظة *',
-                                prefixIcon: const Icon(
-                                  Icons.location_city_outlined,
-                                ),
-                              ),
-                              hint: Text('اختر المحافظة'),
-                              items: egyptGovernorates
-                                  .map(
-                                    (governorate) => DropdownMenuItem(
-                                      value: governorate,
-                                      child: Text(governorate),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (value) =>
-                                  setState(() => _governorate = value ?? ''),
-                              validator: (value) =>
-                                  _country == egyptCountryName &&
-                                      (value == null || value.isEmpty)
-                                  ? 'اختر المحافظة'
-                                  : null,
-                            ),
-                          ],
                         ],
                       ),
                     ),

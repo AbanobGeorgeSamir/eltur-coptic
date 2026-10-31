@@ -18,6 +18,7 @@ class QuizScreen extends StatefulWidget {
 class _QuizScreenState extends State<QuizScreen> {
   List<QuizModel> _quizzes = [];
   List<QuizAttemptModel> _myAttempts = [];
+  List<Map<String, dynamic>> _parentAttempts = [];
   Map<String, List<QuizResultModel>> _adminResults = {};
   Map<String, Map<String, String>> _quizAudiences = {};
   String? _savingAudienceId;
@@ -33,11 +34,14 @@ class _QuizScreenState extends State<QuizScreen> {
   Future<void> _loadData() async {
     if (!mounted) return;
     final user = AuthService.currentUser;
-    if (user?.role != 'student' && !isAdminRole(user?.role)) {
+    if (user?.role != 'student' &&
+        user?.role != 'parent' &&
+        !isAdminRole(user?.role)) {
       if (mounted) {
         setState(() {
           _quizzes = [];
           _myAttempts = [];
+          _parentAttempts = [];
           _adminResults = {};
           _error = null;
           _isLoading = false;
@@ -53,6 +57,9 @@ class _QuizScreenState extends State<QuizScreen> {
       final attempts = user?.role == 'student'
           ? await ApiService.getStudentQuizAttempts(studentId)
           : <QuizAttemptModel>[];
+      final parentAttempts = user?.role == 'parent'
+          ? await ApiService.getParentQuizAttempts()
+          : <Map<String, dynamic>>[];
       final adminResults = <String, List<QuizResultModel>>{};
       if (isAdminRole(user?.role)) {
         await Future.wait(
@@ -69,6 +76,7 @@ class _QuizScreenState extends State<QuizScreen> {
               quiz.id: {'grade': quiz.grade, 'meetingGroup': quiz.meetingGroup},
           };
           _myAttempts = attempts;
+          _parentAttempts = parentAttempts;
           _adminResults = adminResults;
           _error = null;
           _isLoading = false;
@@ -82,6 +90,81 @@ class _QuizScreenState extends State<QuizScreen> {
         });
       }
     }
+  }
+
+  Widget _buildParentQuizResults() {
+    final attemptsByQuiz = <String, List<Map<String, dynamic>>>{};
+    for (final attempt in _parentAttempts) {
+      final quiz = attempt['quiz'];
+      final quizId = quiz is Map
+          ? (quiz['_id'] ?? quiz['id'] ?? '').toString()
+          : (quiz ?? '').toString();
+      if (quizId.isEmpty) continue;
+      attemptsByQuiz.putIfAbsent(quizId, () => []).add(attempt);
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const Text(
+            'نتائج اختبارات الأبناء',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          const Text('يمكنك متابعة الاختبارات التي قدمها الأبناء ودرجاتهم.'),
+          if (_error != null) ...[
+            const SizedBox(height: 12),
+            Text(_error!, style: const TextStyle(color: Colors.red)),
+          ],
+          if (_quizzes.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: 24),
+              child: Text('لا توجد اختبارات منشورة حالياً.'),
+            ),
+          for (final quiz in _quizzes)
+            Card(
+              margin: const EdgeInsets.only(top: 12),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      quiz.title,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    if (quiz.description.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(quiz.description),
+                    ],
+                    const SizedBox(height: 8),
+                    for (final attempt in attemptsByQuiz[quiz.id] ?? const [])
+                      Builder(
+                        builder: (context) {
+                          final student = attempt['student'];
+                          final studentName = student is Map
+                              ? student['name']?.toString() ?? 'أحد الأبناء'
+                              : 'أحد الأبناء';
+                          return ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(studentName),
+                            subtitle: Text(
+                              'النتيجة: ${attempt['score'] ?? 0} / ${attempt['total'] ?? 0}',
+                            ),
+                          );
+                        },
+                      ),
+                    if ((attemptsByQuiz[quiz.id] ?? const []).isEmpty)
+                      const Text('لم يقدم أحد الأبناء هذا الاختبار بعد.'),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   Future<void> _saveQuizAudience(QuizModel quiz) async {
@@ -189,6 +272,8 @@ class _QuizScreenState extends State<QuizScreen> {
             : null,
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
+            : userRole == 'parent'
+            ? _buildParentQuizResults()
             : userRole != 'student' && !isAdminRole(userRole)
             ? const Center(
                 child: Padding(

@@ -12,6 +12,7 @@ class UserModel {
   final String college;
   final String country;
   final String governorate;
+  final String city;
   final String meetingGroup;
   final String? assignedAdmin;
   final String fullNameArabic;
@@ -50,6 +51,7 @@ class UserModel {
     this.college = '',
     this.country = '',
     this.governorate = '',
+    this.city = '',
     required this.meetingGroup,
     this.assignedAdmin,
     required this.fullNameArabic,
@@ -82,6 +84,7 @@ class UserModel {
       college: json['college'] ?? '',
       country: json['country'] ?? '',
       governorate: json['governorate'] ?? '',
+      city: json['city'] ?? '',
       meetingGroup: json['meetingGroup'] is Map
           ? (json['meetingGroup']['_id'] ?? json['meetingGroup']['id'] ?? '')
                 .toString()
@@ -124,6 +127,7 @@ class UserModel {
       'college': college,
       'country': country,
       'governorate': governorate,
+      'city': city,
       'meetingGroup': meetingGroup,
       'assignedAdmin': assignedAdmin,
       'fullNameArabic': fullNameArabic,
@@ -153,6 +157,7 @@ class UserModel {
     'college': college,
     'country': country,
     'governorate': governorate,
+    'city': city,
     'meetingGroup': meetingGroup,
     'assignedAdmin': assignedAdmin,
   };

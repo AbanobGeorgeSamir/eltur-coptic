@@ -1058,6 +1058,11 @@ class ApiService {
         .toList();
   }
 
+  static Future<List<Map<String, dynamic>>> getParentQuizAttempts() async =>
+      _dataList(await _request('GET', '/parents/quiz-attempts'))
+          .map((item) => Map<String, dynamic>.from(item as Map))
+          .toList();
+
   static Future<List<QuizResultModel>> getQuizResults(String quizId) async {
     return _dataList(
           await _request(

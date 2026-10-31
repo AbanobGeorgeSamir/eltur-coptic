@@ -144,6 +144,10 @@ export const api = {
   updateQuizAudience: (id, payload) => request(`/quizzes/${encodeURIComponent(id)}/audience`, { method: 'PATCH', body: payload }),
   submitQuiz: (id, answers) => request(`/quizzes/${encodeURIComponent(id)}/submit`, { method: 'POST', body: { answers } }),
   contact: () => request('/contact'),
+  notifications: () => request('/notifications').then((res) => res.data || []),
+  notificationPreferences: () => request('/notification-preferences').then((res) => res.data || { verseUpdates: true }),
+  updateNotificationPreferences: (payload) => request('/notification-preferences', { method: 'PATCH', body: payload }).then((res) => res.data || payload),
+  parentQuizAttempts: () => request('/parents/quiz-attempts').then((res) => res.data || []),
 };
 
 export { API_URL, TOKEN_KEY };

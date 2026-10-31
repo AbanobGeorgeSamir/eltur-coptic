@@ -15,6 +15,7 @@ import '../utils/liturgy_schedule.dart';
 import '../utils/daily_reading_title.dart';
 import '../widgets/fathers_section.dart';
 import '../widgets/theme_toggle_button.dart';
+import '../widgets/church_name_title.dart';
 import '../widgets/upcoming_synaxarium_card.dart';
 import 'agpeya_screen.dart';
 import 'bible_screen.dart';
@@ -822,7 +823,7 @@ class _HomeScreenState extends State<HomeScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          toolbarHeight: 72,
+          toolbarHeight: isWideLayout ? 64 : 88,
           title: Row(
             children: [
               ClipOval(
@@ -834,40 +835,46 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              Expanded(
-                child: Semantics(
-                  label: 'كنيسة موسى النبي ومارمرقس الرسول - طور سيناء',
-                  child: Text(
-                    'كنيسة موسى النبي ومارمرقس الرسول - طور سيناء',
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 14, height: 1.15),
-                  ),
-                ),
-              ),
+              const Expanded(child: ChurchNameTitle()),
             ],
           ),
           actions: [
             const ThemeToggleButton(),
-            IconButton(
-              tooltip: 'الملف الشخصي',
-              icon: const Icon(Icons.person),
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                );
+            PopupMenuButton<String>(
+              tooltip: 'خيارات الحساب',
+              onSelected: (value) async {
+                if (value == 'profile') {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  );
+                } else if (value == 'logout') {
+                  await ApiService.logout();
+                  if (!context.mounted) return;
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (_) => const PublicHomeScreen(),
+                    ),
+                  );
+                }
               },
-            ),
-            IconButton(
-              tooltip: 'تسجيل الخروج',
-              icon: const Icon(Icons.logout),
-              onPressed: () async {
-                await ApiService.logout();
-                if (!context.mounted) return;
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const PublicHomeScreen()),
-                );
-              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: 'profile',
+                  child: ListTile(
+                    leading: Icon(Icons.person_outline),
+                    title: Text('الملف الشخصي'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'logout',
+                  child: ListTile(
+                    leading: Icon(Icons.logout),
+                    title: Text('تسجيل الخروج'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -1597,7 +1604,7 @@ class _HomeScreenState extends State<HomeScreen> {
       Colors.deepPurple,
       const TripsScreen(),
     );
-    if (user?.role == 'student' || isAdmin) {
+    if (user?.role == 'student' || user?.role == 'parent' || isAdmin) {
       addPage(
         'الاختبارات',
         Icons.quiz_rounded,

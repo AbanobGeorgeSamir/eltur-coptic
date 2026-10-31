@@ -358,6 +358,9 @@ test('public API routes respond and protected routes reject anonymous requests',
     const quizAttempts = await makeRequest(server, '/api/quiz-attempts');
     assert.equal(quizAttempts.response.statusCode, 401);
 
+    const parentQuizAttempts = await makeRequest(server, '/api/parents/quiz-attempts');
+    assert.equal(parentQuizAttempts.response.statusCode, 401);
+
     const removedSendOtp = await makeRequest(server, '/api/auth/otp/send', {}, { method: 'POST' });
     assert.equal(removedSendOtp.response.statusCode, 404);
 
@@ -369,6 +372,67 @@ test('public API routes respond and protected routes reject anonymous requests',
     }, { method: 'POST', body: '{' });
     assert.equal(malformedJson.response.statusCode, 400);
     assert.equal(JSON.parse(malformedJson.body).message, 'The request body must contain valid JSON.');
+});
+
+test('parent quiz results include attempts only for approved linked children', async (t) => {
+    const server = http.createServer(app);
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    t.after(() => server.close());
+
+    const parentId = new mongoose.Types.ObjectId();
+    const childId = new mongoose.Types.ObjectId();
+    const quizId = new mongoose.Types.ObjectId();
+    const parent = {
+        _id: parentId,
+        role: 'parent',
+        phone: '+201001234567',
+        parentApprovedStudentIds: [childId],
+        sessionVersion: 0,
+        isActive: true,
+    };
+    const attempts = [{
+        _id: new mongoose.Types.ObjectId(),
+        student: { _id: childId, name: 'Linked Child' },
+        quiz: { _id: quizId, title: 'Bible Quiz' },
+        score: 3,
+        total: 4,
+    }];
+    const originalFindById = User.findById;
+    const originalFind = User.find;
+    const originalAttemptFind = QuizAttempt.find;
+    User.findById = async () => parent;
+    User.find = (filter) => {
+        assert.deepEqual(filter._id.$in.map(String), [String(childId)]);
+        assert.equal(filter.guardianPhone, parent.phone);
+        return {
+            select() { return this; },
+            lean: async () => [{ _id: childId }],
+        };
+    };
+    QuizAttempt.find = (filter) => {
+        assert.deepEqual(filter.student.$in.map(String), [String(childId)]);
+        return {
+            populate() { return this; },
+            sort() { return this; },
+            limit() { return this; },
+            lean: async () => attempts,
+        };
+    };
+    t.after(() => {
+        User.findById = originalFindById;
+        User.find = originalFind;
+        QuizAttempt.find = originalAttemptFind;
+    });
+
+    const token = jwt.sign({ userId: String(parentId), sessionVersion: 0 }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const { response, body } = await makeRequest(server, '/api/parents/quiz-attempts', {
+        authorization: `Bearer ${token}`,
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(JSON.parse(body).data.length, 1);
+    assert.equal(JSON.parse(body).data[0].student.name, 'Linked Child');
+    assert.equal(JSON.parse(body).data[0].score, 3);
 });
 
 test('uploaded PDFs open inline and can be explicitly downloaded', async (t) => {

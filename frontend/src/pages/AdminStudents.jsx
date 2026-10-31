@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/useAuth';
 import { grades, gradeLabel, isGradeAdminRole } from '../data/grades';
 import { ACADEMIC_YEARS, COLLEGES } from '../data/expatriatesData';
 import StudentStudyDetailsFields from '../components/StudentStudyDetailsFields';
-import { countries, EGYPT_COUNTRY_NAME, EGYPT_GOVERNORATES, isHigherEducationGrade } from '../data/residenceOptions';
+import { EGYPT_GOVERNORATES, EGYPT_PLACES_BY_GOVERNORATE, EGYPT_COUNTRY_NAME, isHigherEducationGrade } from '../data/residenceOptions';
 import { collegeChoiceFor } from '../utils/studyDetails';
 
 export default function AdminStudents() {
@@ -21,8 +21,8 @@ export default function AdminStudents() {
   const [filterGrade, setFilterGrade] = useState('');
   const [filterAcademicYear, setFilterAcademicYear] = useState('');
   const [filterCollege, setFilterCollege] = useState('');
-  const [filterCountry, setFilterCountry] = useState('');
   const [filterGovernorate, setFilterGovernorate] = useState('');
+  const [filterCity, setFilterCity] = useState('');
   const [editingId, setEditingId] = useState('');
   const [draft, setDraft] = useState(null);
   const [savingId, setSavingId] = useState('');
@@ -70,28 +70,28 @@ export default function AdminStudents() {
       if (filterGrade && student.grade !== filterGrade) return false;
       if (filterAcademicYear && student.academicYear !== filterAcademicYear) return false;
       if (filterCollege && student.college !== filterCollege) return false;
-      if (filterCountry && student.country !== filterCountry) return false;
       if (filterGovernorate && student.governorate !== filterGovernorate) return false;
+      if (filterCity && student.city !== filterCity) return false;
       if (!normalized) return true;
-      return [student.name, student.email, student.phone, student.whatsappNumber, student.academicYear, student.college, student.country, student.governorate]
+      return [student.name, student.email, student.phone, student.whatsappNumber, student.academicYear, student.college, student.governorate, student.city]
         .some((value) => String(value || '').toLocaleLowerCase('ar').includes(normalized));
     });
-  }, [students, query, filterGrade, filterAcademicYear, filterCollege, filterCountry, filterGovernorate]);
+  }, [students, query, filterGrade, filterAcademicYear, filterCollege, filterGovernorate, filterCity]);
 
   const filterAcademicYearOptions = ACADEMIC_YEARS;
   const filterCollegeOptions = useMemo(() => [...new Set([...COLLEGES.filter((college) => college !== 'أخرى'), ...students.map((student) => student.college).filter(Boolean)])].sort((a, b) => a.localeCompare(b, 'ar')), [students]);
-  const filterCountryOptions = countries;
   const filterGovernorateOptions = [...new Set([...EGYPT_GOVERNORATES, ...students.map((student) => student.governorate).filter(Boolean)])].sort((a, b) => a.localeCompare(b, 'ar'));
+  const filterCityOptions = [...new Set([...(EGYPT_PLACES_BY_GOVERNORATE[filterGovernorate] || Object.values(EGYPT_PLACES_BY_GOVERNORATE).flat()), ...students.map((student) => student.city).filter(Boolean)])].sort((a, b) => a.localeCompare(b, 'ar'));
 
   const pendingCount = visibleStudents.filter((student) => !student.assignedAdmin).length;
-  const hasActiveFilters = Boolean(filterGrade || filterAcademicYear || filterCollege || filterCountry || filterGovernorate || query);
+  const hasActiveFilters = Boolean(filterGrade || filterAcademicYear || filterCollege || filterGovernorate || filterCity || query);
 
   const resetFilters = () => {
     setFilterGrade('');
     setFilterAcademicYear('');
     setFilterCollege('');
-    setFilterCountry('');
     setFilterGovernorate('');
+    setFilterCity('');
     setQuery('');
   };
 
@@ -174,8 +174,8 @@ export default function AdminStudents() {
       academicYear: ACADEMIC_YEARS.includes(student.academicYear) ? student.academicYear : '',
       college: student.college || '',
       collegeChoice: collegeChoiceFor(student.college || ''),
-      country: student.country || '',
       governorate: student.governorate || '',
+      city: student.city || '',
       meetingGroup: student.meetingGroup || '',
     });
   };
@@ -183,8 +183,8 @@ export default function AdminStudents() {
   const updateDraft = (key, value) => setDraft((current) => ({
     ...current,
     [key]: value,
-    ...(key === 'grade' ? { meetingGroup: '', ...(!isHigherEducationGrade(value) ? { academicYear: '', college: '', collegeChoice: '', country: '', governorate: '' } : {}) } : {}),
-    ...(key === 'country' && value !== EGYPT_COUNTRY_NAME ? { governorate: '' } : {}),
+    ...(key === 'grade' ? { meetingGroup: '', ...(!isHigherEducationGrade(value) ? { academicYear: '', college: '', collegeChoice: '', governorate: '', city: '' } : {}) } : {}),
+    ...(key === 'governorate' ? { city: '' } : {}),
   }));
 
   const saveStudent = async (event) => {
@@ -197,6 +197,7 @@ export default function AdminStudents() {
       const studentPayload = {
         ...draft,
         birthDate: draft.birthDate ? new Date(`${draft.birthDate}T12:00:00`).toISOString() : undefined,
+        ...(isHigherEducationGrade(draft.grade) ? { country: EGYPT_COUNTRY_NAME } : {}),
       };
       delete studentPayload.collegeChoice;
       if (draft.grade === (originalStudent?.grade || '')
@@ -307,18 +308,18 @@ export default function AdminStudents() {
           </label>
 
           <label className="block text-xs font-semibold text-slate-400">
-            البلد
-            <select value={filterCountry} onChange={(event) => { setFilterCountry(event.target.value); setFilterGovernorate(''); }} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-sm text-white focus:border-amber-400 focus:outline-none">
-              <option value="">كل البلدان</option>
-              {filterCountryOptions.map((country) => <option key={country.code} value={country.name}>{country.name}</option>)}
+            المحافظة
+            <select value={filterGovernorate} onChange={(event) => { setFilterGovernorate(event.target.value); setFilterCity(''); }} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-sm text-white focus:border-amber-400 focus:outline-none">
+              <option value="">كل المحافظات</option>
+              {filterGovernorateOptions.map((governorate) => <option key={governorate} value={governorate}>{governorate}</option>)}
             </select>
           </label>
 
           <label className="block text-xs font-semibold text-slate-400">
-            المحافظة
-            <select value={filterGovernorate} onChange={(event) => setFilterGovernorate(event.target.value)} disabled={filterCountry && filterCountry !== EGYPT_COUNTRY_NAME} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-sm text-white focus:border-amber-400 focus:outline-none disabled:opacity-50">
-              <option value="">كل المحافظات</option>
-              {filterGovernorateOptions.map((governorate) => <option key={governorate} value={governorate}>{governorate}</option>)}
+            المدينة أو الحي أو المركز
+            <select value={filterCity} onChange={(event) => setFilterCity(event.target.value)} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-sm text-white focus:border-amber-400 focus:outline-none">
+              <option value="">كل الأماكن</option>
+              {filterCityOptions.map((city) => <option key={city} value={city}>{city}</option>)}
             </select>
           </label>
         </div>
@@ -412,7 +413,7 @@ export default function AdminStudents() {
               </div>
 
               {/* Expatriates Information Badges */}
-              {(isHigherEducationGrade(student.grade) || student.academicYear || student.college || student.country || student.governorate) && (
+              {(isHigherEducationGrade(student.grade) || student.academicYear || student.college || student.governorate || student.city) && (
                 <div className="mt-3 flex flex-wrap gap-1.5 pt-2 border-t border-slate-800/80 text-xs">
                   {student.academicYear && (
                     <span className="inline-flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 font-semibold text-amber-300">
@@ -424,11 +425,11 @@ export default function AdminStudents() {
                       <Building2 className="h-3.5 w-3.5" /> الكلية: {student.college}
                     </span>
                   )}
-                  {student.country && (
-                    <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 font-semibold text-emerald-300">البلد: {student.country}</span>
-                  )}
                   {student.governorate && (
                     <span className="inline-flex items-center gap-1 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1 font-semibold text-cyan-200">المحافظة: {student.governorate}</span>
+                  )}
+                  {student.city && (
+                    <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 font-semibold text-emerald-300">المدينة/المركز: {student.city}</span>
                   )}
                 </div>
               )}

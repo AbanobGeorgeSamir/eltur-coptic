@@ -22,7 +22,7 @@ const MeetingGroup = require('../models/MeetingGroup');
 const auth = require('../middleware/authMiddleware');
 const adminOnly = require('../middleware/adminMiddleware');
 const { sanitizeUser } = require('../utils/responses');
-const { countries, egyptGovernorates, egyptCountryName, isHigherEducationGrade } = require('../utils/registrationOptions');
+const { egyptGovernorates, egyptPlacesByGovernorate, egyptCountryName, isHigherEducationGrade } = require('../utils/registrationOptions');
 const { validEmail, validPhone, normalizePhone, hasFourPartName } = require('../utils/validation');
 const { hashPassword } = require('../utils/passwords');
 const { roleLabelFor } = require('../utils/roleLabels');
@@ -1393,7 +1393,7 @@ router.patch('/students/:id', auth, adminOnly, async (req, res, next) => {
 
         const editable = [
             'name', 'phone', 'interests', 'fatherName', 'confessionFather', 'guardianPhone', 'address',
-            'birthDate', 'gender', 'nationalId', 'isDeacon', 'whatsappNumber', 'academicYear', 'college', 'country', 'governorate',
+            'birthDate', 'gender', 'nationalId', 'isDeacon', 'whatsappNumber', 'academicYear', 'college', 'country', 'governorate', 'city',
         ];
         for (const key of editable) {
             if (req.body?.[key] !== undefined) student[key] = req.body[key];
@@ -1433,29 +1433,33 @@ router.patch('/students/:id', auth, adminOnly, async (req, res, next) => {
                     || null;
             }
         }
-        const studyDetailsTouched = ['academicYear', 'college', 'country', 'governorate'].some((field) => req.body?.[field] !== undefined);
+        const studyDetailsTouched = ['academicYear', 'college', 'country', 'governorate', 'city'].some((field) => req.body?.[field] !== undefined);
         const movedToHigherEducation = req.body?.grade !== undefined && isHigherEducationGrade(student.grade);
         if (studyDetailsTouched || movedToHigherEducation) {
             student.academicYear = String(student.academicYear || '').trim();
             student.college = String(student.college || '').trim();
             student.country = String(student.country || '').trim();
             student.governorate = String(student.governorate || '').trim();
-            if (student.academicYear.length > 80 || student.college.length > 160 || student.country.length > 100 || student.governorate.length > 100) {
+            student.city = String(student.city || '').trim();
+            if (student.academicYear.length > 80 || student.college.length > 160 || student.country.length > 100 || student.governorate.length > 100 || student.city.length > 100) {
                 return res.status(422).json({ message: 'Study details are too long.' });
             }
-            if (isHigherEducationGrade(student.grade) && (!student.academicYear || !student.college || !countries.has(student.country))) {
-                return res.status(422).json({ message: 'Academic year, college, and a valid country are required for university students.' });
+            if (isHigherEducationGrade(student.grade) && (!student.academicYear || !student.college || student.country !== egyptCountryName)) {
+                return res.status(422).json({ message: 'Academic year, college, and an Egyptian residence are required for university students.' });
             }
-            if (isHigherEducationGrade(student.grade) && student.country === egyptCountryName && !egyptGovernorates.has(student.governorate)) {
+            if (isHigherEducationGrade(student.grade) && !egyptGovernorates.has(student.governorate)) {
                 return res.status(422).json({ message: 'Choose a valid Egyptian governorate.' });
             }
-            if (student.country !== egyptCountryName) student.governorate = null;
+            if (isHigherEducationGrade(student.grade) && !egyptPlacesByGovernorate.get(student.governorate)?.has(student.city)) {
+                return res.status(422).json({ message: 'Choose a valid locality in that governorate.' });
+            }
         }
         if (req.body?.grade !== undefined && !isHigherEducationGrade(student.grade)) {
             student.academicYear = null;
             student.college = null;
             student.country = null;
             student.governorate = null;
+            student.city = null;
         }
         const email = req.body?.email === undefined
             ? undefined
@@ -2611,6 +2615,24 @@ router.get('/quiz-attempts', auth, async (req, res, next) => {
         const attempts = await QuizAttempt.find({ student: req.user._id })
             .populate('quiz', 'title')
             .sort({ submittedAt: -1 })
+            .lean();
+        return res.json({ data: attempts });
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.get('/parents/quiz-attempts', auth, async (req, res, next) => {
+    try {
+        if (req.user.role !== 'parent') {
+            return res.status(403).json({ message: 'Parent account required.' });
+        }
+        const children = await getChildren(req.user).lean();
+        const attempts = await QuizAttempt.find({ student: { $in: children.map((child) => child._id) } })
+            .populate('quiz', 'title')
+            .populate('student', 'name')
+            .sort({ submittedAt: -1 })
+            .limit(500)
             .lean();
         return res.json({ data: attempts });
     } catch (error) {

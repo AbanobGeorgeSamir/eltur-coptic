@@ -35,7 +35,7 @@ All listed routes are under `/api`; protected routes accept a bearer token from 
 | Bible, psalm, Agpeya, Sunday lessons, liturgy, newsletter, gallery | `GET /ministry/posts?type=...` (optional `page`/`limit`, max 30; use `upcoming=1` for dated liturgies), `POST/PATCH/DELETE /ministry/posts` (admin) |
 | Tasks | `GET /tasks`, `POST /tasks` (admin; provide `studentIds`), `PATCH /tasks/:id/complete` (assigned student) |
 | MCQ quizzes | `GET /quizzes`, `POST /quizzes` (admin), `POST /quizzes/:id/submit` (student), `GET /quiz-attempts` (own student attempts), `GET /quizzes/:id/results` (owner admin) |
-| Parent view | `GET /parents/dashboard` (verified parent; linked by verified guardian phone) |
+| Parent view | `GET /parents/dashboard`, `GET /parents/quiz-attempts` (verified parent; approved linked children only) |
 | Contact/privacy/download | `GET /contact`, `GET /privacy-policy`, `GET /mobile-app/download` |
 | Ayah notifications | `GET /notifications`, `GET/PATCH /notification-preferences`, `POST/DELETE /push-token`; mobile inbox and phone alerts open the latest featured ayah |
 

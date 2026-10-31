@@ -19,6 +19,7 @@ export default function Confession({ showToast }) {
   const [editDate, setEditDate] = useState('');
   const [editNote, setEditNote] = useState('');
   const isAdmin = isAdminRole(user?.role);
+  const canEditRecord = isAdmin || user?.role === 'student';
   const canRecord = isAdmin || user?.role === 'student';
   const latestByStudent = new Map();
   for (const record of records) {
@@ -96,8 +97,8 @@ export default function Confession({ showToast }) {
     <div className="mx-auto max-w-5xl space-y-5" dir="rtl">
       <header className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
         <Heart className="mb-3 h-8 w-8 text-rose-400" />
-        <h1 className="text-2xl font-bold text-white">{isAdmin ? 'سجلات الاعتراف' : 'سجل الاعتراف'}</h1>
-        <p className="mt-2 text-sm text-slate-400">{isAdmin ? 'مواعيد اعتراف طلاب مجموعتك مرتبة من الأحدث.' : 'سجّل موعد اعترافك ليظهر في سجل الخدمة.'}</p>
+        <h1 className="text-2xl font-bold text-white">{isAdmin ? 'سجلات الاعتراف' : user?.role === 'parent' ? 'سجل اعتراف الأبناء' : 'سجل الاعتراف'}</h1>
+        <p className="mt-2 text-sm text-slate-400">{isAdmin ? 'مواعيد اعتراف طلاب مجموعتك مرتبة من الأحدث.' : user?.role === 'parent' ? 'مواعيد الاعتراف المسجلة للأبناء المرتبطين بحسابك.' : 'سجّل موعد اعترافك ليظهر في سجل الخدمة.'}</p>
       </header>
       {canRecord && <form onSubmit={submit} className="space-y-3 rounded-2xl border border-slate-800 bg-slate-900 p-5">
         <h2 className="font-bold text-amber-300">إضافة موعد آخر اعتراف</h2>
@@ -147,7 +148,7 @@ export default function Confession({ showToast }) {
               <p className="mt-1 font-bold text-white">{new Date(record.date).toLocaleDateString('ar-EG')}</p>
               {record.note && <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-300">{record.note}</p>}
             </div>
-            {index === 0 && <button type="button" onClick={() => startEdit(record)} className="rounded-xl border border-amber-500/30 px-3 py-2 text-xs font-bold text-amber-300 hover:bg-amber-500/10">تعديل آخر سجل</button>}
+            {index === 0 && canEditRecord && <button type="button" onClick={() => startEdit(record)} className="rounded-xl border border-amber-500/30 px-3 py-2 text-xs font-bold text-amber-300 hover:bg-amber-500/10">تعديل آخر سجل</button>}
           </div>
         </article>)}
       </div>}

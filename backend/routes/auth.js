@@ -10,7 +10,7 @@ const TripRegistration = require('../models/TripRegistration');
 const { gradeIds, isGradeAdminRole } = require('../config/grades');
 const { hashPassword, verifyPassword, needsRehash } = require('../utils/passwords');
 const { sanitizeUser } = require('../utils/responses');
-const { countries, egyptGovernorates, egyptCountryName, isHigherEducationGrade } = require('../utils/registrationOptions');
+const { egyptGovernorates, egyptPlacesByGovernorate, egyptCountryName, isHigherEducationGrade } = require('../utils/registrationOptions');
 const auth = require('../middleware/authMiddleware');
 const { loginRateLimit, loginAccountRateLimit, registrationRateLimit } = require('../middleware/rateLimit');
 const { isBrowserRequest } = require('../config/origins');
@@ -51,6 +51,7 @@ const normalizeRegistration = (body = {}) => ({
     college: String(body.college || '').trim(),
     country: String(body.country || '').trim(),
     governorate: String(body.governorate || '').trim(),
+    city: String(body.city || '').trim(),
     birthDate: body.birthDate,
     gender: body.gender,
     nationalId: String(body.nationalId || '').trim(),
@@ -73,12 +74,9 @@ const checkRegistration = (input, { parent = false } = {}) => {
         if (input.academicYear.length > 80) return 'Academic year must be 80 characters or fewer.';
         if (!input.college) return 'Choose your college.';
         if (input.college.length > 160) return 'College must be 160 characters or fewer.';
-        if (!countries.has(input.country)) return 'Choose a valid country of residence.';
-        if (input.country === egyptCountryName) {
-            if (!egyptGovernorates.has(input.governorate)) return 'Choose a valid Egyptian governorate.';
-        } else if (input.governorate) {
-            return 'A governorate can only be selected when the country is Egypt.';
-        }
+        if (input.country !== egyptCountryName) return 'Choose a residence inside Egypt.';
+        if (!egyptGovernorates.has(input.governorate)) return 'Choose a valid Egyptian governorate.';
+        if (!egyptPlacesByGovernorate.get(input.governorate)?.has(input.city)) return 'Choose a valid locality in that governorate.';
     }
     if (!validPhone(input.phone)) return 'Phone number must use international format, such as +201001234567.';
     if (input.password.length < 8 || input.password.length > 256) return 'Password must contain between 8 and 256 characters.';
@@ -123,6 +121,7 @@ const completeRegistration = async (req, res, role) => {
                 college: input.college,
                 country: input.country,
                 governorate: input.governorate || null,
+                city: input.city || null,
             } : {}),
             ...(role === 'student' ? {
                 fatherName: input.fatherName,
@@ -220,7 +219,7 @@ router.get(['/user', '/auth/me'], auth, async (req, res, next) => {
 
 router.patch('/users/me', auth, async (req, res, next) => {
     try {
-        const allowed = ['name', 'email', 'phone', 'interests', 'fatherName', 'confessionFather', 'guardianPhone', 'address', 'birthDate', 'gender', 'isDeacon', 'whatsappNumber', 'academicYear', 'college', 'country', 'governorate'];
+        const allowed = ['name', 'email', 'phone', 'interests', 'fatherName', 'confessionFather', 'guardianPhone', 'address', 'birthDate', 'gender', 'isDeacon', 'whatsappNumber', 'academicYear', 'college', 'country', 'governorate', 'city'];
         const changes = {};
         for (const key of allowed) {
             if (req.body?.[key] !== undefined) changes[key] = req.body[key];
@@ -235,12 +234,12 @@ router.patch('/users/me', auth, async (req, res, next) => {
             changes.meetingGroup = null;
             changes.assignedAdmin = null;
         }
-        const studyDetailsTouched = ['academicYear', 'college', 'country', 'governorate'].some((field) => changes[field] !== undefined);
+        const studyDetailsTouched = ['academicYear', 'college', 'country', 'governorate', 'city'].some((field) => changes[field] !== undefined);
         if (studyDetailsTouched) {
             if (req.user.role !== 'student') {
                 return res.status(403).json({ message: 'Study details are only available for student accounts.' });
             }
-            for (const [field, max] of [['academicYear', 80], ['college', 160], ['country', 100], ['governorate', 100]]) {
+            for (const [field, max] of [['academicYear', 80], ['college', 160], ['country', 100], ['governorate', 100], ['city', 100]]) {
                 if (changes[field] !== undefined) {
                     changes[field] = String(changes[field] || '').trim();
                     if (changes[field].length > max) return res.status(422).json({ message: 'Study details are too long.' });
@@ -254,21 +253,27 @@ router.patch('/users/me', auth, async (req, res, next) => {
                 const college = changes.college !== undefined ? changes.college : req.user.college;
                 const country = changes.country !== undefined ? changes.country : req.user.country;
                 const governorate = changes.governorate !== undefined ? changes.governorate : req.user.governorate;
-                if (!academicYear || !college || !countries.has(country)) {
-                    return res.status(422).json({ message: 'Academic year, college, and a valid country are required for university students.' });
+                const city = changes.city !== undefined ? changes.city : req.user.city;
+                if (!academicYear || !college || country !== egyptCountryName) {
+                    return res.status(422).json({ message: 'Academic year, college, and an Egyptian residence are required for university students.' });
                 }
-                if (country === egyptCountryName && !egyptGovernorates.has(governorate)) {
+                if (!egyptGovernorates.has(governorate)) {
                     return res.status(422).json({ message: 'Choose a valid Egyptian governorate.' });
                 }
+                if (!egyptPlacesByGovernorate.get(governorate)?.has(city)) {
+                    return res.status(422).json({ message: 'Choose a valid locality in that governorate.' });
+                }
                 if (studyDetailsTouched) {
-                    changes.country = country;
-                    changes.governorate = country === egyptCountryName ? governorate : null;
+                    changes.country = egyptCountryName;
+                    changes.governorate = governorate;
+                    changes.city = city;
                 }
             } else if (studyDetailsTouched || changes.grade !== undefined) {
                 changes.academicYear = null;
                 changes.college = null;
                 changes.country = null;
                 changes.governorate = null;
+                changes.city = null;
             }
         }
         if (changes.email !== undefined) {
