@@ -3,13 +3,6 @@ const copticMonths = [
   'برمهات', 'برمودة', 'بشنس', 'بؤونة', 'أبيب', 'مسرى', 'النسيء',
 ];
 
-const copticFormatter = new Intl.DateTimeFormat('en-u-ca-coptic-nu-latn', {
-  timeZone: 'UTC',
-  day: 'numeric',
-  month: 'numeric',
-  year: 'numeric',
-});
-
 const cairoDateFormatter = new Intl.DateTimeFormat('en-u-ca-gregory-nu-latn', {
   timeZone: 'Africa/Cairo',
   day: 'numeric',
@@ -22,6 +15,30 @@ const numericParts = (formatter, date) => Object.fromEntries(
     .filter((part) => part.type !== 'literal' && part.type !== 'era')
     .map(({ type, value }) => [type, Number(value)]),
 );
+
+function copticDate(date) {
+  const month = date.getUTCMonth() + 1;
+  const a = Math.floor((14 - month) / 12);
+  const year = date.getUTCFullYear() + 4800 - a;
+  const adjustedMonth = month + 12 * a - 3;
+  const julianDayNumber = date.getUTCDate()
+    + Math.floor((153 * adjustedMonth + 2) / 5)
+    + 365 * year
+    + Math.floor(year / 4)
+    - Math.floor(year / 100)
+    + Math.floor(year / 400)
+    - 32045;
+  const daysSinceEpoch = julianDayNumber - 1825030;
+  const copticYear = Math.floor((4 * daysSinceEpoch + 1463) / 1461);
+  const firstDayOfYear = 365 * (copticYear - 1) + Math.floor(copticYear / 4);
+  const dayOfYear = daysSinceEpoch - firstDayOfYear;
+
+  return {
+    year: copticYear,
+    month: Math.floor(dayOfYear / 30) + 1,
+    day: (dayOfYear % 30) + 1,
+  };
+}
 
 const formatCopticDate = (year, month, day) => {
   const formattedYear = new Intl.NumberFormat('ar-EG', { useGrouping: false }).format(year);
@@ -37,7 +54,7 @@ const relativeDayLabel = (offset) => {
 
 export function getCairoDateLabels(now = new Date()) {
   const today = numericParts(cairoDateFormatter, now);
-  const coptic = numericParts(copticFormatter, new Date(Date.UTC(today.year, today.month - 1, today.day, 12)));
+  const coptic = copticDate(new Date(Date.UTC(today.year, today.month - 1, today.day, 12)));
   const gregorianLabel = new Intl.DateTimeFormat('ar-EG', {
     timeZone: 'Africa/Cairo',
     day: 'numeric',
@@ -55,10 +72,6 @@ export function getCairoDateLabels(now = new Date()) {
   };
 }
 
-export function loadSynaxarium() {
-  return import('../data/synaxarium_coptic_calendar.json').then((module) => module.default);
-}
-
 export function getVisibleSynaxariumObservances(observances, expanded) {
   return expanded ? observances : observances.slice(0, 3);
 }
@@ -72,7 +85,7 @@ export function getUpcomingSynaxariumObservances(now = new Date(), data, lookAhe
 
   for (let offset = 0; offset <= lookAheadDays; offset += 1) {
     const date = new Date(Date.UTC(today.year, today.month - 1, today.day + offset, 12));
-    const coptic = numericParts(copticFormatter, date);
+    const coptic = copticDate(date);
     const dayRecord = daysByDate.get(`${coptic.month}-${coptic.day}`);
     if (!dayRecord || dayRecord.extraction_status !== 'extracted') continue;
 

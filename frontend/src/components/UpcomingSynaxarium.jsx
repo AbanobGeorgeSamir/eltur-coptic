@@ -1,30 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, CalendarDays, ChevronDown } from 'lucide-react';
-import { getCairoDateLabels, getUpcomingSynaxariumObservances, getVisibleSynaxariumObservances, loadSynaxarium } from '../utils/synaxarium';
+import calendar from '../data/synaxarium_coptic_calendar.json';
+import { getCairoDateLabels, getUpcomingSynaxariumObservances, getVisibleSynaxariumObservances } from '../utils/synaxarium';
 
 export default function UpcomingSynaxarium() {
   const [now, setNow] = useState(() => new Date());
-  const [calendar, setCalendar] = useState(undefined);
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    let active = true;
-    loadSynaxarium()
-      .then((data) => { if (active) setCalendar(data); })
-      .catch(() => { if (active) setCalendar(null); });
     const timer = window.setInterval(() => setNow(new Date()), 60_000);
-    return () => {
-      active = false;
-      window.clearInterval(timer);
-    };
+    return () => window.clearInterval(timer);
   }, []);
 
   const dateLabels = useMemo(() => getCairoDateLabels(now), [now]);
-  const observances = useMemo(() => getUpcomingSynaxariumObservances(now, calendar), [now, calendar]);
+  const observances = useMemo(() => getUpcomingSynaxariumObservances(now, calendar), [now]);
   const visibleObservances = getVisibleSynaxariumObservances(observances, expanded);
 
   return (
-    <section aria-busy={calendar === undefined} aria-labelledby="today-synaxarium-title" className="synaxarium-card relative isolate overflow-hidden rounded-3xl border shadow-xl shadow-black/10" dir="rtl">
+    <section aria-labelledby="today-synaxarium-title" className="synaxarium-card relative isolate overflow-hidden rounded-3xl border shadow-xl shadow-black/10" dir="rtl">
       <div aria-hidden="true" className="pointer-events-none absolute -left-20 -top-24 -z-10 h-64 w-64 rounded-full bg-[#7d2038]/[0.07] blur-3xl" />
       <div className="grid gap-5 p-4 sm:p-6 lg:grid-cols-[0.8fr_1.2fr] lg:gap-8 lg:p-7">
         <header className="flex flex-col justify-between gap-5 border-b pb-5 synaxarium-rule lg:border-b-0 lg:border-l lg:pb-0 lg:pl-7">
@@ -42,13 +35,7 @@ export default function UpcomingSynaxarium() {
         </header>
 
         <div>
-          {calendar === undefined ? (
-            <div className="space-y-3" role="status" aria-label="جارٍ تحميل السنكسار">
-              {[0, 1, 2].map((item) => <div key={item} aria-hidden="true" className="synaxarium-rule animate-pulse border-b py-5 last:border-0"><div className="synaxarium-skeleton h-5 w-4/5 rounded" /><div className="synaxarium-skeleton mt-3 h-3 w-2/5 rounded" /></div>)}
-            </div>
-          ) : calendar === null ? (
-            <p role="alert" className="synaxarium-surface rounded-2xl border p-5 text-sm leading-6 text-rose-800">تعذر تحميل تذكارات السنكسار الآن.</p>
-          ) : visibleObservances.length > 0 ? (
+          {visibleObservances.length > 0 ? (
             <ol className="synaxarium-divide divide-y">
               {visibleObservances.map((observance) => (
                 <li key={observance.id} className="relative py-4 first:pt-1 last:pb-1">
