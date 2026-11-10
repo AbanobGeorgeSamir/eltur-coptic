@@ -12,6 +12,7 @@ Ministry management platform with a React web app, a Flutter mobile app and a sh
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=flat-square&logo=flutter&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
 <!-- Add screenshots here, for example: ![Home](docs/home.png) -->
 
@@ -142,3 +143,8 @@ Keep `MONGODB_URI` and `JWT_SECRET` only in the backend project's environment va
 ## Author
 
 **Abanoub George**, Junior Full-Stack Developer · [LinkedIn](https://www.linkedin.com/in/abanob-george-samir) · [GitHub](https://github.com/AbanobGeorgeSamir)
+
+## License
+
+This project is open-source and available under the [MIT License](LICENSE).
+
