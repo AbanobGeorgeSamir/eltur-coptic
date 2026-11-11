@@ -26,17 +26,21 @@ test('web and mobile share identical study choices', () => {
   assert.deepEqual(mobileGroups, collegeGroups);
 });
 
-test('all residence choices and Egypt governorates sync to Flutter', () => {
-  const codes = options.countries.map(({ code }) => code);
-  const names = options.countries.map(({ name }) => name);
-
-  assert.ok(options.countries.length >= 249);
-  assert.equal(new Set(codes).size, codes.length);
-  assert.equal(new Set(names).size, names.length);
-  assert.equal(options.countries.find(({ code }) => code === 'EG')?.name, options.egyptCountryName);
+test('Egypt governorates and places sync to Flutter', () => {
+  assert.equal(options.egyptCountryCode, 'EG');
+  assert.ok(options.egyptCountryName);
   assert.equal(options.egyptGovernorates.length, 27);
+  assert.equal(new Set(options.egyptGovernorates).size, options.egyptGovernorates.length);
+
   const southSinai = String.fromCodePoint(0x62c, 0x646, 0x648, 0x628, 0x20, 0x633, 0x64a, 0x646, 0x627, 0x621);
   assert.ok(options.egyptGovernorates.includes(southSinai));
+
+  for (const governorate of options.egyptGovernorates) {
+    assert.ok(
+      Array.isArray(options.egyptPlacesByGovernorate[governorate]),
+      `places are defined for governorate ${governorate}`,
+    );
+  }
 
   execFileSync(process.execPath, [path.join(root, 'scripts/sync-registration-options.mjs'), '--check'], {
     cwd: root,

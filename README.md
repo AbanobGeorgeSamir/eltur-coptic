@@ -2,8 +2,9 @@
 
 Ministry management platform with a React web app, a Flutter mobile app and a shared Express and MongoDB REST API. It organizes students into study groups and gives each group's administrators their own scoped view of content, activities, attendance, tasks and quizzes.
 
-**[Live site](https://eltur-coptic.vercel.app)**
+**[Live site](https://eltur-coptic.vercel.app)** · **[API health](https://eltur-coptic-api-server.vercel.app/api/health)**
 
+[![CI](https://github.com/AbanobGeorgeSamir/eltur-coptic/actions/workflows/ci.yml/badge.svg)](https://github.com/AbanobGeorgeSamir/eltur-coptic/actions/workflows/ci.yml)
 ![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white)
@@ -122,9 +123,14 @@ cd backend && npm test                      # syntax checks + Node test runner
 cd frontend && npm test && npm run lint && npm run build
 ```
 
-The backend tests cover authentication and sessions, validation, rate limiting, security headers and notifications.
+The backend tests cover authentication and sessions, registration rules, validation, rate limiting, security headers and notifications. The frontend tests check that web and mobile share the same study choices, residence options and liturgical data. GitHub Actions runs all of them, plus lint and build, on every push and pull request.
 
 ## Deployment
+
+| Component | Production URL |
+| --- | --- |
+| Web app (React) | [eltur-coptic.vercel.app](https://eltur-coptic.vercel.app) |
+| REST API (Express) | [eltur-coptic-api-server.vercel.app](https://eltur-coptic-api-server.vercel.app/api/health) |
 
 Use two Vercel projects connected to this repository.
 
@@ -140,11 +146,10 @@ Keep `MONGODB_URI` and `JWT_SECRET` only in the backend project's environment va
 - [`backend/README.md`](backend/README.md): API routes, account setup and production data handling
 - [`backend/DATABASE_BACKUP.md`](backend/DATABASE_BACKUP.md): encrypted database backup and isolated restore procedure
 
-## Author
-
-**Abanoub George**, Junior Full-Stack Developer · [LinkedIn](https://www.linkedin.com/in/abanob-george-samir) · [GitHub](https://github.com/AbanobGeorgeSamir)
-
 ## License
 
-This project is open-source and available under the [MIT License](LICENSE).
+Released under the [MIT License](LICENSE).
 
+## Author
+
+**Abanoub George Samir** · Junior Full-Stack Developer · [Portfolio](https://devabanobgeorge.vercel.app) · [LinkedIn](https://www.linkedin.com/in/abanob-george-samir) · [GitHub](https://github.com/AbanobGeorgeSamir)
